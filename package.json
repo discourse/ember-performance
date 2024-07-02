@@ -37,7 +37,9 @@
     "@glimmer/tracking": "^1.1.2",
     "ascii-table": "^0.0.9",
     "benchmark": "bestiejs/benchmark.js#main",
+    "bootstrap": "^4.6.2",
     "broccoli-asset-rev": "^3.0.0",
+    "chart.js": "^4.4.3",
     "concurrently": "^8.2.2",
     "ember-auto-import": "^2.7.2",
     "ember-cli": "~5.8.1",
@@ -69,7 +71,6 @@
     "headjs": "^1.0.3",
     "javascript-natural-sort": "^0.7.1",
     "loader.js": "^4.7.0",
-    "numeral": "^2.0.6",
     "prettier": "^3.2.5",
     "qunit": "^2.20.1",
     "qunit-dom": "^2.0.0",
@@ -84,8 +85,5 @@
   },
   "ember": {
     "edition": "octane"
-  },
-  "dependencies": {
-    "chart.js": "^4.4.3"
   }
 }

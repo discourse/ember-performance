@@ -3,7 +3,7 @@ import { tracked } from "@glimmer/tracking";
 import { action, computed } from "@ember/object";
 import { equal, gt } from "@ember/object/computed";
 import { htmlSafe } from "@ember/template";
-import numeral from "numeral";
+import { formatNumber } from "../helpers/format-number";
 
 export default class BenchmarkReport extends Component {
   @tracked mode = "html";
@@ -41,12 +41,16 @@ export default class BenchmarkReport extends Component {
           emberVersion: testGroupReport.emberVersion,
           result,
         });
-        test.chartData.push([
-          testGroupReport.emberVersion.name,
-          result.mean,
-          result.mean - (result.mean * result.rme) / 100,
-          result.mean + (result.mean * result.rme) / 100,
-        ]);
+
+        test.chartData.push({
+          emberVersion: testGroupReport.emberVersion.name,
+          mean: result.mean,
+          margin_error_lower: Math.max(
+            result.mean - (result.mean * result.rme) / 100,
+            0,
+          ),
+          margin_error_upper: result.mean + (result.mean * result.rme) / 100,
+        });
 
         tests[result.name] = test;
       });
@@ -74,10 +78,20 @@ export default class BenchmarkReport extends Component {
       testGroupReport.results.forEach((item) => {
         table.addRow(
           item.name,
-          numeral(item.hz).format("0,0.00") + " / sec",
-          "∓" + numeral(item.rme).format("0,0.00") + "%",
-          numeral(item.samples).format(),
-          numeral(item.mean).format("0,0.00") + " ms",
+          formatNumber(item.hz, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }) + " / sec",
+          "∓" +
+            formatNumber(item.rme, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }) +
+            "%",
+          formatNumber(item.samples, {
+            maximumFractionDigits: 0,
+          }),
+          formatNumber(item.mean) + " ms",
         );
       });
     });

@@ -74,14 +74,12 @@ module.exports = function (defaults) {
         },
       },
     },
-    "ember-bootstrap": {
-      bootstrapVersion: 4,
-      importBootstrapCSS: true,
-    },
     fingerprint: {
       enabled: false,
     },
   });
+
+  app.import("vendor/bootstrap.css");
 
   return new MergeTrees(
     [

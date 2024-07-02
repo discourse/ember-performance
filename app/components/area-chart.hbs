@@ -1,5 +1,7 @@
   <div class="chart-canvas-container"
     {{did-insert this.scheduleChartRendering}}
+    {{did-update this.scheduleChartRendering}}
+    {{will-destroy this.scheduleChartRendering}}
   >
     <canvas class="chart-canvas"></canvas>
   </div>

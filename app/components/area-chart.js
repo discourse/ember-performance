@@ -1,32 +1,29 @@
 import Component from "@glimmer/component";
 import { schedule } from "@ember/runloop";
 import Chart from "chart.js/auto";
+import { formatNumber } from "../helpers/format-number";
 
 export default class AreaChart extends Component {
   limit = 8;
   total = 0;
   options = null;
 
-  // willDestroyElement() {
-  //   super.willDestroyElement(...arguments);
-  //
-  //   window.removeEventListener("resize", this._resizeHandler);
-  //
-  //   this._resetChart();
-  // }
-  //
-  // didReceiveAttrs() {
-  //   super.didReceiveAttrs(...arguments);
-  //   this.scheduleChartRendering();
-  // }
-
   scheduleChartRendering = (element) => {
     schedule("afterRender", () => {
-      this._renderChart(element && element.querySelector(".chart-canvas"));
+      this.#renderChart(element && element.querySelector(".chart-canvas"));
     });
   };
 
-  _renderChart(canvasElement) {
+  #chart;
+
+  resetChart() {
+    if (this.#chart) {
+      this.#chart.destroy();
+      this.#chart = null;
+    }
+  }
+
+  #renderChart(canvasElement) {
     if (!canvasElement) {
       return;
     }
@@ -36,51 +33,52 @@ export default class AreaChart extends Component {
 
     const [axis, ...datasets] = chartData;
 
-    const labels = datasets.map((d) => d[0]);
+    const labels = datasets.map((d) => d.emberVersion);
 
     const data = {
       labels,
       datasets: [
         {
-          data: datasets.map((v) => v[1]),
+          label: "Mean",
+          data: datasets.map((v) => {
+            return v.mean;
+          }),
           backgroundColor: "transparent",
-          borderColor: "red",
+          borderColor: "steelblue",
           pointRadius: 2,
+          pointBackgroundColor: "steelblue",
+          pointBorderColor: "steelblue",
           borderWidth: 5,
         },
         {
-          data: datasets.map((v) => v[2]),
+          data: datasets.map((v) => v.margin_error_lower),
           backgroundColor: "rgb(0, 0, 0, 0.1)",
           borderColor: "transparent",
           fill: 0,
           pointRadius: 0,
-          borderWidth: 1,
-          pointBackgroundColor: "blue",
-          pointBorderColor: "purple",
+          borderWidth: 0,
         },
         {
-          data: datasets.map((v) => v[3]),
+          data: datasets.map((v) => v.margin_error_upper),
           backgroundColor: "rgb(0, 0, 0, 0.1)",
           borderColor: "transparent",
           fill: 0,
           pointRadius: 0,
-          borderWidth: 1,
-          pointBackgroundColor: "blue",
-          pointBorderColor: "purple",
+          borderWidth: 0,
         },
       ],
     };
 
-    this._resetChart();
+    this.resetChart();
 
     if (!canvasElement) {
       return;
     }
 
-    this._chart = new Chart(context, this._buildChartConfig(data, { axis }));
+    this.#chart = new Chart(context, this.#buildChartConfig(data, { axis }));
   }
 
-  _buildChartConfig(data, { axis } = {}) {
+  #buildChartConfig(data, { axis } = {}) {
     return {
       type: "line",
       data,
@@ -102,9 +100,14 @@ export default class AreaChart extends Component {
           },
           y: {
             type: "linear",
-            grace: "5%",
+            grace: 0,
             title: {
               display: false,
+            },
+            ticks: {
+              callback: function (value) {
+                return formatNumber(value);
+              },
             },
           },
         },
@@ -120,25 +123,23 @@ export default class AreaChart extends Component {
           filler: {
             propagate: false,
           },
-          customTitle: {
-            display: true,
-            text: "Number of defects",
-            color: "blue",
+          tooltip: {
+            displayColors: false,
+            filter: (context) => {
+              return context.datasetIndex === 0;
+            },
+            callbacks: {
+              label: (context) => `${formatNumber(context.parsed.y)}ms`,
+            },
           },
         },
         pointBackgroundColor: "#fff",
         radius: 10,
         interaction: {
+          mode: "index",
           intersect: false,
         },
       },
     };
-  }
-
-  _resetChart() {
-    if (this._chart) {
-      this._chart.destroy();
-      this._chart = null;
-    }
   }
 }

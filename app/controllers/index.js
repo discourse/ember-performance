@@ -86,14 +86,23 @@ export default class IndexController extends Controller {
   @action
   addFeature() {
     let f = this.newFlagName;
+
     if (f && f.length) {
-      this.featureFlags.addObject(this.newFlagName);
-      this.set("newFlagName", "");
+      if (!this.featureFlags.includes(this.newFlagName)) {
+        this.featureFlags.push(this.newFlagName);
+      }
+      this.newFlagName = "";
     }
   }
 
   @action
-  removeFeature(f) {
-    this.featureFlags.removeObject(f);
+  removeFeature(featureFlag) {
+    const ffIndex = this.featureFlags.indexOf(featureFlag);
+
+    if (ffIndex === -1) {
+      return;
+    }
+
+    this.featureFlags.splice(ffIndex, 1);
   }
 }

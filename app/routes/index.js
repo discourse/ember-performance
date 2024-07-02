@@ -1,5 +1,6 @@
 import Route from "@ember/routing/route";
 import config from "ember-performance/config/environment";
+import { TrackedArray } from "tracked-built-ins";
 
 const BENCHMARKS = config.BENCHMARKS;
 
@@ -79,7 +80,7 @@ export default class IndexRoute extends Route {
       session,
       report,
       emberVersions: model.emberVersions,
-      featureFlags,
+      featureFlags: new TrackedArray(featureFlags),
     });
   }
 }

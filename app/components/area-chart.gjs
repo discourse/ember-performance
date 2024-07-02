@@ -1,4 +1,7 @@
 import Component from "@glimmer/component";
+import didInsert from "@ember/render-modifiers/modifiers/did-insert";
+import didUpdate from "@ember/render-modifiers/modifiers/did-update";
+import willDestroy from "@ember/render-modifiers/modifiers/will-destroy";
 import { schedule } from "@ember/runloop";
 import Chart from "chart.js/auto";
 import { formatNumber } from "../helpers/format-number";
@@ -142,4 +145,15 @@ export default class AreaChart extends Component {
       },
     };
   }
+
+  <template>
+    <div
+      class="chart-canvas-container"
+      {{didInsert this.scheduleChartRendering}}
+      {{didUpdate this.scheduleChartRendering}}
+      {{willDestroy this.scheduleChartRendering}}
+    >
+      <canvas class="chart-canvas"></canvas>
+    </div>
+  </template>
 }

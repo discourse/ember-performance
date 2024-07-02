@@ -1,9 +1,12 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
+import { fn } from "@ember/helper";
+import { on } from "@ember/modifier";
 import { action, computed } from "@ember/object";
 import { equal, gt } from "@ember/object/computed";
 import { htmlSafe } from "@ember/template";
 import { formatNumber } from "../helpers/format-number";
+import AreaChart from "./area-chart";
 
 export default class BenchmarkReport extends Component {
   @tracked mode = "html";
@@ -103,4 +106,87 @@ export default class BenchmarkReport extends Component {
   switchMode(mode) {
     this.mode = mode;
   }
+
+  <template>
+    <h4>Results:</h4>
+
+    <ul class="nav nav-tabs">
+      <li role="presentation" class={{if this.isHtmlMode "active"}}>
+        {{! template-lint-disable no-invalid-interactive }}
+        <a {{on "click" (fn this.switchMode "html")}}>HTML</a>
+      </li>
+      <li role="presentation" class={{if this.isTextMode "active"}}>
+        {{! template-lint-disable no-invalid-interactive }}
+        <a {{on "click" (fn this.switchMode "text")}}>Text</a>
+      </li>
+    </ul>
+
+    {{#if this.isHtmlMode}}
+      {{#each-in this.groupedTests as |name test|}}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{test.name}}</h3>
+          </div>
+          <div class="panel-body">
+            {{#if this.showGraph}}
+              <AreaChart
+                @data={{test.chartData}}
+                @options={{this.chartOptions}}
+              />
+            {{/if}}
+            <table
+              class="table table-striped table-hover table-condensed table-responsive"
+            >
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th class="numeric">Speed</th>
+                  <th class="numeric">Error</th>
+                  <th class="numeric">Samples</th>
+                  <th class="numeric">Mean</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each test.data as |item|}}
+                  <tr>
+                    <td>
+                      <strong>{{test.name}}</strong>
+                      <span
+                        class="label label-primary"
+                      >{{item.emberVersion.name}}</span>
+                    </td>
+                    <td class="numeric">{{formatNumber
+                        item.result.hz
+                        minimumFractionDigits=2
+                        maximumFractionDigits=2
+                      }}
+                      / sec
+                    </td>
+                    <td class="numeric">&#x2213;
+                      {{formatNumber
+                        item.result.rme
+                        minimumFractionDigits=2
+                        maximumFractionDigits=2
+                      }}%
+                    </td>
+                    <td class="numeric">{{item.result.samples}}</td>
+                    <td class="numeric">{{formatNumber
+                        item.result.mean
+                        mode="auto"
+                      }}
+                      ms
+                    </td>
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {{/each-in}}
+    {{else}}
+      <pre class="text-results">{{this.asciiTable}}</pre>
+    {{/if}}
+
+    <hr />
+  </template>
 }

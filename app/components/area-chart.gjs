@@ -22,7 +22,7 @@ export default class AreaChart extends Component {
       this.#chart.destroy();
       this.#chart = null;
     }
-  }
+  };
 
   #chart;
 

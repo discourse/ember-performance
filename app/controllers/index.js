@@ -64,6 +64,11 @@ export default class IndexController extends Controller {
   }
 
   @action
+  toggleEnabled(target, evt) {
+    set(target, "isEnabled", evt.target.checked);
+  }
+
+  @action
   selectAllTests() {
     this.model.forEach((t) => set(t, "isEnabled", true));
   }
@@ -81,6 +86,11 @@ export default class IndexController extends Controller {
   @action
   selectNoVersions() {
     this.nonCustomEmberVersions.forEach((v) => set(v, "isEnabled", false));
+  }
+
+  @action
+  updateNewFlagName(evt) {
+    this.newFlagName = evt.target.value;
   }
 
   @action

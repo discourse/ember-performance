@@ -3,7 +3,6 @@ import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import RouteTemplate from "ember-route-template";
 import BenchmarkReport from "../components/benchmark-report";
-import withEventValue from "../helpers/with-event-value";
 
 export default RouteTemplate(
   <template>
@@ -32,7 +31,7 @@ export default RouteTemplate(
             <input
               type="checkbox"
               checked={{test.isEnabled}}
-              {{on "change" (withEventValue (fn (mut test.isEnabled)))}}
+              {{on "change" (fn @controller.toggleEnabled test)}}
             />
             {{test.name}}
           </label>
@@ -61,7 +60,7 @@ export default RouteTemplate(
             <input
               type="checkbox"
               checked={{emberVersion.isEnabled}}
-              {{on "change" (withEventValue (fn (mut emberVersion.isEnabled)))}}
+              {{on "change" (fn @controller.toggleEnabled emberVersion)}}
             />
 
             {{emberVersion.name}}
@@ -101,7 +100,7 @@ export default RouteTemplate(
       <input
         value={{@controller.newFlagName}}
         placeholder="Flag Name"
-        {{on "change" (withEventValue (fn (mut @controller.newFlagName)))}}
+        {{on "input" @controller.updateNewFlagName}}
       />
       <button
         type="button"

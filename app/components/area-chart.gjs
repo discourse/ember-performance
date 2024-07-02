@@ -17,14 +17,14 @@ export default class AreaChart extends Component {
     });
   };
 
-  #chart;
-
-  resetChart() {
+  resetChart = () => {
     if (this.#chart) {
       this.#chart.destroy();
       this.#chart = null;
     }
   }
+
+  #chart;
 
   #renderChart(canvasElement) {
     if (!canvasElement) {
@@ -151,7 +151,7 @@ export default class AreaChart extends Component {
       class="chart-canvas-container"
       {{didInsert this.scheduleChartRendering}}
       {{didUpdate this.scheduleChartRendering}}
-      {{willDestroy this.scheduleChartRendering}}
+      {{willDestroy this.resetChart}}
     >
       <canvas class="chart-canvas"></canvas>
     </div>

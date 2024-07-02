@@ -29,7 +29,6 @@ export default RouteTemplate(
       {{#each @controller.model as |test|}}
         <div>
           <label>
-            {{test.isEnabled}}
             <input
               type="checkbox"
               checked={{test.isEnabled}}

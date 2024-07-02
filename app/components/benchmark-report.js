@@ -2,6 +2,7 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action, computed } from "@ember/object";
 import { equal, gt } from "@ember/object/computed";
+import { htmlSafe } from "@ember/template";
 import numeral from "numeral";
 
 export default class BenchmarkReport extends Component {
@@ -82,7 +83,7 @@ export default class BenchmarkReport extends Component {
       });
     });
 
-    return result + table.toString();
+    return htmlSafe(result + table.toString());
   }
 
   @action

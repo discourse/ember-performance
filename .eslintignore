@@ -10,5 +10,11 @@
 !.*
 .*/
 
+# vendor files
+/vendor/
+
+# ember
+/ember/
+
 # ember-try
 /.node_modules.ember-try/

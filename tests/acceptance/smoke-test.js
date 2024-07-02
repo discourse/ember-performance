@@ -1,21 +1,13 @@
-import Ember from 'ember';
-import { module, test } from 'qunit';
-import startApp from 'ember-performance/tests/helpers/start-app';
+import { currentURL,visit } from "@ember/test-helpers";
+import { setupApplicationTest } from "ember-qunit";
+import { module, test } from "qunit";
 
-module('Acceptance | smoke', {
-  beforeEach: function() {
-    this.application = startApp();
-  },
+module("Acceptance | smoke", function (hooks) {
+  setupApplicationTest(hooks);
 
-  afterEach: function() {
-    Ember.run(this.application, 'destroy');
-  }
-});
+  test("visiting /", async function (assert) {
+    await visit("/");
 
-test('visiting /', function(assert) {
-  visit('/');
-
-  andThen(function() {
-    assert.equal(currentURL(), '/');
+    assert.strictEqual(currentURL(), "/");
   });
 });

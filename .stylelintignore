@@ -4,5 +4,8 @@
 # compiled output
 /dist/
 
+# vendor files
+/vendor/
+
 # addons
 /.node_modules.ember-try/

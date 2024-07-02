@@ -55,11 +55,10 @@ export default class BenchmarkReport extends Component {
     return tests;
   }
 
-  @computed("report.testGroupReports.[]")
   get asciiTable() {
     let result = "User Agent: " + navigator.userAgent + "\n";
 
-    const featureFlags = this.get("report.featureFlags");
+    const featureFlags = this.args.report.featureFlags;
     if (featureFlags && featureFlags.length) {
       result += "Feature Flags: " + featureFlags.join(", ") + "\n";
     }

@@ -1,7 +1,8 @@
+/* global head Ember TestSession */
+
 (function () {
-  var templates = {
-    base:
-      "{{#if this.showContents}}{{benchmarked-component data=this.data}}{{/if}}",
+  const templates = {
+    base: "{{#if this.showContents}}{{benchmarked-component data=this.data}}{{/if}}",
 
     "render-list":
       "<table>" +
@@ -87,19 +88,21 @@
   // Generate div-wrapped versions of each template
   // so that glimmer template-only tests can be compared fairly
   // with regular Ember components
-  for (k in templates) {
-    if (k === "base") continue;
+  for (let k in templates) {
+    if (k === "base") {
+      continue;
+    }
     templates[k + "-wrapped"] = "<div>" + templates[k] + "</div>";
   }
 
-  var testSession = TestSession.recover();
-  var testGroup = testSession.currentTestGroup();
+  const testSession = TestSession.recover();
+  const testGroup = testSession.currentTestGroup();
 
   if (testGroup.emberVersion.name === "3.8.3") {
     // This old version doesn't support kwargs in {{#link-to}}
-    for (k in templates) {
+    Object.keys(templates).forEach((k) => {
       templates[k] = templates[k].replace("#link-to route=", "#link-to ");
-    }
+    });
   }
 
   head.load("/ember/loader.js", function () {
@@ -107,14 +110,17 @@
       testGroup.compiledTemplates = {};
 
       let precompile;
+
       if (require.entries["ember-template-compiler/index"]) {
         precompile = require("ember-template-compiler/index").precompile;
       } else {
         precompile = Ember.Handlebars.precompile;
       }
+
       Object.keys(templates).forEach(function (key) {
         testGroup.compiledTemplates[key] = precompile(templates[key], false);
       });
+
       testSession.save();
 
       testSession.goToNextUrl();

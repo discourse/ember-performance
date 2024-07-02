@@ -1,4 +1,4 @@
-/* global RenderTemplateTestClient */
+/* global RenderTemplateTestClient TestClient */
 
 (function () {
   RenderTemplateTestClient.run({
@@ -10,7 +10,7 @@
         {
           people: TestClient.PEOPLE_JSON,
         },
-        { componentMode: "glimmer-template-only" }
+        { componentMode: "glimmer-template-only" },
       );
     },
 

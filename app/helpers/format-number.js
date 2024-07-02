@@ -1,6 +1,6 @@
-import numeral from "numeral";
 import { isArray } from "@ember/array";
 import { helper as buildHelper } from "@ember/component/helper";
+import numeral from "numeral";
 
 export function formatNumber(params, hash) {
   let { format } = hash || {};

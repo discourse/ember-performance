@@ -1,33 +1,33 @@
-import Ember from 'ember';
-import config from 'ember-performance/config/environment';
+import Route from "@ember/routing/route";
+import config from "ember-performance/config/environment";
 
 const BENCHMARKS = config.BENCHMARKS;
 
-const EMBER_VERSIONS = config.LOCAL_EMBER_VERSIONS.map(version => {
+const EMBER_VERSIONS = config.LOCAL_EMBER_VERSIONS.map((version) => {
   return {
     name: version,
     path: `/ember/ember-${version}.prod.js`,
     compilerPath: `/ember/ember-${version}.template-compiler.js`,
     isEnabled: false,
-    isCustom: false
+    isCustom: false,
   };
 });
 
-EMBER_VERSIONS[EMBER_VERSIONS.length-1].isEnabled = true;
+EMBER_VERSIONS[EMBER_VERSIONS.length - 1].isEnabled = true;
 
 EMBER_VERSIONS.push({
-  name: 'custom version',
-  path: '',
-  compilerPath: '',
+  name: "custom version",
+  path: "",
+  compilerPath: "",
   isEnabled: false,
-  isCustom: true
+  isCustom: true,
 });
 
-export default Ember.Route.extend({
+export default class IndexRoute extends Route {
   model() {
     let session = window.TestSession.recover();
 
-    let tests = BENCHMARKS.map(test => {
+    let tests = BENCHMARKS.map((test) => {
       if (session) {
         test.isEnabled = session.isTestEnabled(test);
       } else {
@@ -37,14 +37,16 @@ export default Ember.Route.extend({
       return test;
     });
 
-    let emberVersions = EMBER_VERSIONS.map(emberVersion => {
+    let emberVersions = EMBER_VERSIONS.map((emberVersion) => {
       if (session) {
         emberVersion.isEnabled = session.isVersionEnabled(emberVersion);
       }
 
-      if(emberVersion.isCustom) {
-        emberVersion.path = localStorage.getItem('ember-perf-ember-url');
-        emberVersion.compilerPath = localStorage.getItem('ember-perf-compiler-url');
+      if (emberVersion.isCustom) {
+        emberVersion.path = localStorage.getItem("ember-perf-ember-url");
+        emberVersion.compilerPath = localStorage.getItem(
+          "ember-perf-compiler-url",
+        );
       }
 
       return emberVersion;
@@ -53,9 +55,9 @@ export default Ember.Route.extend({
     return {
       tests,
       emberVersions,
-      session
+      session,
     };
-  },
+  }
 
   setupController(controller, model) {
     let session = model.session;
@@ -66,7 +68,7 @@ export default Ember.Route.extend({
     }
 
     let featureFlags = [];
-    let flagsJson = localStorage.getItem('ember-perf-flags');
+    let flagsJson = localStorage.getItem("ember-perf-flags");
 
     if (flagsJson && flagsJson.length) {
       featureFlags = JSON.parse(flagsJson);
@@ -77,7 +79,7 @@ export default Ember.Route.extend({
       session,
       report,
       emberVersions: model.emberVersions,
-      featureFlags
+      featureFlags,
     });
   }
-});
+}

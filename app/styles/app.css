@@ -31,16 +31,21 @@ pre.text-results {
   margin-top: 10px;
 }
 
-th.numeric, td.numeric{
+th.numeric,
+td.numeric {
   text-align: right;
 }
 
 #scratch {
   color: white !important;
 
-  table { color: white !important; }
+  table {
+    color: white !important;
+  }
 
-  a { color: white !important; }
+  a {
+    color: white !important;
+  }
 }
 
 .form-group {

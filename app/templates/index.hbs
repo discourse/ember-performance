@@ -1,5 +1,5 @@
-{{#if report}}
-  {{benchmark-report report=report}}
+{{#if this.report}}
+  <BenchmarkReport @report={{this.report}} />
 {{/if}}
 
 <h4>
@@ -9,13 +9,13 @@
 </h4>
 
 <div class="form-group">
-  {{#each model as |test|}}
+  {{#each this.model as |test|}}
     <div>
       <label>
         <input type="checkbox"
                checked={{test.isEnabled}}
                onchange={{action (mut test.isEnabled) value="target.checked"}}>
-               {{test.name}}
+        {{test.name}}
       </label>
     </div>
   {{/each}}
@@ -27,7 +27,7 @@
   <button {{action "selectNoVersions"}} type="button" class="btn btn-default btn-xs">None</button>
 </h4>
 <div class="form-group">
-  {{#each emberVersions as |emberVersion|}}
+  {{#each this.emberVersions as |emberVersion|}}
     <div>
       <label>
 
@@ -38,8 +38,8 @@
         {{emberVersion.name}}
         {{#if emberVersion.isCustom}}
           {{#if emberVersion.isEnabled}}
-            <br />PATH: {{input value=emberVersion.path}}
-            <br />COMPILER PATH: {{input value=emberVersion.compilerPath}}
+            <br />PATH: <Input @value={{emberVersion.path}} />
+            <br />COMPILER PATH: <Input @value={{emberVersion.compilerPath}} />
           {{/if}}
         {{/if}}
       </label>
@@ -48,29 +48,30 @@
 </div>
 
 <label>Feature Flags</label>
-{{#if featureFlags}}
+{{#if this.featureFlags}}
   <table class='table'>
     <tbody>
-      {{#each featureFlags as |featureFlag|}}
-        <tr>
-          <td style='width: 20%'>{{featureFlag}}</td>
-          <td>
-            <button class="btn btn-danger btn-xs" {{action "removeFeature" featureFlag}}>remove</button>
-          </td>
-        </tr>
-      {{/each}}
+    {{#each featureFlags as |featureFlag|}}
+      <tr>
+        <td style='width: 20%'>{{featureFlag}}</td>
+        <td>
+          <button type="button" class="btn btn-danger btn-xs" {{action "removeFeature" featureFlag}}>remove</button>
+        </td>
+      </tr>
+    {{/each}}
     </tbody>
   </table>
 {{/if}}
 <div class='form-group'>
-  <input value={{newFlagName}}
+  <input value={{this.newFlagName}}
          placeholder="Flag Name"
-         onchange={{action (mut newFlagName) value="target.value"}} />
-  <button class="btn :btn-default :btn-xs {{if addFeatureDisabled 'disabled'}}"
-          {{action "addFeature"}}>Add Feature</button>
+         onchange={{action (mut this.newFlagName) value="target.value"}} />
+  <button type="button" class="btn :btn-default :btn-xs {{if this.addFeatureDisabled 'disabled'}}"
+    {{action "addFeature"}}>Add Feature
+  </button>
 </div>
 
 <div class='footer'>
-  <button class='btn btn-primary' {{action "start"}} disabled={{cantStart}}>Run Tests</button>
-  <button class='btn btn-primary' {{action "profile"}} disabled={{cantStart}}>Run Tests with Profile</button>
+  <button type="button" class='btn btn-primary' {{action "start"}} disabled={{this.cantStart}}>Run Tests</button>
+  <button type="button" class='btn btn-primary' {{action "profile"}} disabled={{this.cantStart}}>Run Tests with Profile</button>
 </div>

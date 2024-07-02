@@ -1,15 +1,16 @@
 /* global head, Benchmark, TestSession, RSVP */
+
 (function () {
-  var MACRO_MAX_TIME = 15000;
-  var MACRO_MIN_TIME = 2000;
-  var MACRO_STOP_RME = 3.0;
-  var MIN_SAMPLES = 5;
+  let MACRO_MAX_TIME = 15000;
+  let MACRO_MIN_TIME = 2000;
+  let MACRO_STOP_RME = 3.0;
+  let MIN_SAMPLES = 5;
 
   /**
    * T-Distribution two-tailed critical values for 95% confidence
    * http://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm
    */
-  var tTable = {
+  let tTable = {
     1: 12.706,
     2: 4.303,
     3: 3.182,
@@ -49,22 +50,13 @@
     document.getElementById(id).innerText = txt;
   }
 
-  function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(location.search);
-    return results === null
-      ? ""
-      : decodeURIComponent(results[1].replace(/\+/g, " "));
-  }
-
   // Use benchmark.js to run a microbenchmark
   function microBenchmark(test) {
     return new RSVP.Promise(function (resolve) {
       update("status-text", "Running Micro Benchmark...");
 
       setTimeout(function () {
-        var suite = new Benchmark.Suite();
+        let suite = new Benchmark.Suite();
 
         suite.add(test.name, test.test, {
           setup: test.setup,
@@ -75,7 +67,7 @@
         suite.on("cycle", function (evt) {
           test.reset();
 
-          var r = evt.target;
+          let r = evt.target;
           resolve({
             name: r.name,
             hz: r.hz,
@@ -89,7 +81,7 @@
         });
 
         suite.on("error", function (evt) {
-          var err = evt.target.error;
+          let err = evt.target.error;
           update("status-text", "Error: " + err.message);
           throw err;
         });
@@ -105,33 +97,33 @@
     return new RSVP.Promise(function (resolve) {
       update("status-text", "Running Benchmark...");
 
-      var samples = [];
-      var sum = 0;
+      let samples = [];
+      let sum = 0;
 
-      var resetPromise = t.reset();
-      var result = { name: t.name };
-      var startTime = new Date().getTime();
+      let resetPromise = t.reset();
+      let result = { name: t.name };
+      let startTime = new Date().getTime();
 
-      var tester = function () {
+      let tester = function () {
         update("progress", "" + samples.length + " samples taken.");
 
-        var t1 = new Date().getTime();
+        let t1 = new Date().getTime();
 
         RSVP.Promise.resolve(t.test()).then(function () {
-          var elapsed = new Date().getTime() - t1,
+          let elapsed = new Date().getTime() - t1,
             nextPromise = t.reset();
 
           sum += elapsed;
           samples.push(elapsed);
 
           result.mean = sum / samples.length;
-          var squareSum = 0;
-          for (var j = 0; j < samples.length; j++) {
-            var diff = samples[j] - result.mean;
+          let squareSum = 0;
+          for (let j = 0; j < samples.length; j++) {
+            let diff = samples[j] - result.mean;
             squareSum += diff * diff;
           }
           result.deviation = squareSum / samples.length;
-          var standardErr = result.deviation / Math.sqrt(samples.length),
+          let standardErr = result.deviation / Math.sqrt(samples.length),
             critical =
               tTable[Math.round(result.samples - 1) || 1] || tTable.infinity;
 
@@ -139,9 +131,9 @@
           result.samples = samples.length;
           result.hz = 1000.0 / result.mean;
 
-          var totalEllapsed = new Date().getTime() - startTime;
+          let totalEllapsed = new Date().getTime() - startTime;
 
-          var next = function () {
+          let next = function () {
             // Loop until the min time is passed and the rme is low, or the max time ellapsed
             if (
               samples.length < MIN_SAMPLES ||
@@ -186,7 +178,7 @@
   }
 
   TestClient.run = function (test) {
-    var session = TestSession.recover();
+    let session = TestSession.recover();
     if (session.enableProfile) {
       buildProfileClient(this, test).start();
     } else {
@@ -196,8 +188,8 @@
 
   TestClient.prototype = {
     template: function (templateName) {
-      var compiled = this.session.getCompiledTemplate(templateName);
-      var template = JSON.parse(compiled);
+      let compiled = this.session.getCompiledTemplate(templateName);
+      let template = JSON.parse(compiled);
       return require("@ember/-internals/glimmer").template(template);
     },
 
@@ -211,23 +203,21 @@
     },
 
     profile: function () {
-      var test = this;
+      let test = this;
 
       return new RSVP.Promise(function (resolve) {
         // Why on earth do we reset before we run?, must be a mistake?
-        var resetPromise = test.reset();
+        let resetPromise = test.reset();
 
-        var tester = function () {
-          var result = test.test();
+        let tester = function () {
+          let result = test.test();
 
           if (typeof result === "object" && typeof result.then === "function") {
             // we should chain these promises correctly
             RSVP.Promise.resolve(result).then(function () {
-              console.profileEnd();
               resolve({ skipRedirect: true });
             });
           } else {
-            console.profile(test.name);
             resolve({ skipRedirect: true });
           }
         };
@@ -243,15 +233,15 @@
     },
 
     recoverSession: function () {
-      var session = (this.session = TestSession.recover());
-      var testGroup = session.currentTestGroup();
+      let session = (this.session = TestSession.recover());
+      let testGroup = session.currentTestGroup();
 
       if (session) {
         this.testItem = session.currentTestItem();
 
         update(
           "remaining-text",
-          session.remainingTestCount() + " test(s) remaining"
+          session.remainingTestCount() + " test(s) remaining",
         );
         this.emberUrl = testGroup.emberVersion.path;
         update("ember-version", testGroup.emberVersion.name);
@@ -264,7 +254,7 @@
       update("status-text", "Loading...");
       this.recoverSession();
 
-      var deps = [];
+      let deps = [];
 
       if (!this.noEmber) {
         if (
@@ -272,7 +262,7 @@
           this.session.featureFlags &&
           this.session.featureFlags.length
         ) {
-          var features = {};
+          let features = {};
           this.session.featureFlags.forEach(function (f) {
             features[f] = true;
           });
@@ -284,20 +274,25 @@
         deps = ["/ember/jquery-2.1.1.min.js", this.emberUrl];
       }
 
-      var test = this;
+      let test = this;
 
       // Once the test completes
-      var complete = function (result) {
+      let complete = function (result) {
         test.testItem.result = result;
         test.session.progress();
         test.session.goToNextUrl();
       };
 
-      var patchModules = () => {
-        if (this.noEmber) return;
+      let patchModules = () => {
+        if (this.noEmber) {
+          return;
+        }
         try {
           require("@ember/object");
         } catch {
+          /* eslint-disable ember/new-module-imports */
+          /* global Ember */
+
           // Non-exhaustive polyfill based on https://github.com/ember-cli/ember-rfc176-data
           // This allows us to use the `require`-based syntax, even on older ember versions
           define("@ember/object", ["exports"], function (_exports) {
@@ -326,11 +321,13 @@
           define("ember", ["exports"], function (_exports) {
             _exports.default = Ember;
           });
+
+          /* eslint-enable ember/new-module-imports */
         }
       };
 
       // What to run when our dependencies have loaded
-      var runner = function () {
+      let runner = function () {
         patchModules();
         RSVP.Promise.resolve(test.setup())
           .then(function () {
@@ -338,6 +335,7 @@
           })
           .then(complete)
           .catch(function (error) {
+            // eslint-disable-next-line no-console
             console.error(error);
           });
       };
@@ -364,11 +362,11 @@
   };
 
   MicroTestClient.prototype.profile = function () {
-    var setup = functionToString(this.setup);
-    var test = functionToString(this.test);
-    var teardown = functionToString(this.teardown);
+    let setup = functionToString(this.setup);
+    let test = functionToString(this.test);
+    let teardown = functionToString(this.teardown);
 
-    var functionSpec =
+    let functionSpec =
       "" +
       setup +
       "\n" +
@@ -381,7 +379,7 @@
       teardown +
       "\n";
 
-    var run = new Function(functionSpec);
+    let run = new Function(functionSpec);
 
     return new RSVP.Promise(function (resolve) {
       setTimeout(function () {
@@ -396,13 +394,13 @@
   window.MicroTestClient = MicroTestClient;
 
   function buildProfileClient(Klass, test) {
-    var runner = new Klass(test);
+    let runner = new Klass(test);
     runner.run = runner.profile;
     return runner;
   }
 
   function functionToString(fn) {
-    var string = fn.toString();
+    let string = fn.toString();
     string = (/^[^{]+\{([\s\S]*)}\s*$/.exec(string) || 0)[1];
     string = (string || "").replace(/^\s+|\s+$/g, "");
     return string;
@@ -418,9 +416,9 @@
   RenderTemplateTestClient.prototype.setupTemplateTest = function (
     templateName,
     data,
-    { componentMode = "classic" } = {}
+    { componentMode = "classic" } = {},
   ) {
-    const Ember = require("ember").default;
+    require("ember").default;
     const Application = require("@ember/application").default;
     const Resolver = require("ember-resolver").default;
     const Controller = require("@ember/controller").default;
@@ -439,20 +437,20 @@
     this.registry.register("template:index", this.template("base"));
     this.registry.register(
       "template:components/benchmarked-component",
-      this.template(templateName)
+      this.template(templateName),
     );
 
     if (componentMode === "classic") {
       const ClassicComponent = require("@ember/component").default;
       this.registry.register(
         "component:benchmarked-component",
-        ClassicComponent.extend({})
+        ClassicComponent.extend({}),
       );
     } else if (componentMode === "glimmer") {
       const GlimmerComponent = require("@glimmer/component").default;
       this.registry.register(
         "component:benchmarked-component",
-        class extends GlimmerComponent {}
+        class extends GlimmerComponent {},
       );
     } else if (componentMode === "glimmer-template-only") {
       // Glimmer template-only - no need to register anything

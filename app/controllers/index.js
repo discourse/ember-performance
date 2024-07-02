@@ -1,96 +1,99 @@
-import Ember from 'ember';
+import { tracked } from "@glimmer/tracking";
+import Controller from "@ember/controller";
+import { action, set } from "@ember/object";
+import { empty, filterBy, or } from "@ember/object/computed";
 
-const {
-  computed: {
-    filterBy,
-    empty,
-    reads,
-    or
+export default class IndexController extends Controller {
+  @tracked emberVersions;
+  @tracked report = null;
+  @tracked sending = false;
+  @tracked error = false;
+  @tracked sent = false;
+  @tracked featureFlags = null;
+  @tracked newFlagName = null;
+
+  @filterBy("model", "isEnabled", true) enabledTests;
+  @filterBy("emberVersions", "isEnabled", true) enabledEmberVersions;
+  @filterBy("emberVersions", "isCustom", false) nonCustomEmberVersions;
+  @empty("newFlagName") addFeatureDisabled;
+  @empty("enabledTests") hasNoEnabledTests;
+  @empty("enabledEmberVersions") hasNoEnabledEmberVersions;
+  @or("hasNoEnabledTests", "hasNoEnabledEmberVersions") cantStart;
+
+  get customEmberVersion() {
+    return this.emberVersions[this.emberVersions.length - 1];
   }
-} = Ember;
-
-export default Ember.Controller.extend({
-  init() {
-    this._super(...arguments);
-
-    this.report = null;
-    this.sending = false;
-    this.error = false;
-    this.sent = false;
-    this.featureFlags = null;
-    this.newFlagName = null;
-  },
-
-  enabledTests: filterBy('model', 'isEnabled', true),
-  enabledEmberVersions: filterBy('emberVersions', 'isEnabled', true),
-  nonCustomEmberVersions: filterBy('emberVersions', 'isCustom', false),
-  addFeatureDisabled: empty('newFlagName'),
-  customEmberVersion: reads('emberVersions.lastObject'),
-  hasNoEnabledTests: empty('enabledTests'),
-  hasNoEnabledEmberVersions: empty('enabledEmberVersions'),
-  cantStart: or('hasNoEnabledTests', 'hasNoEnabledEmberVersions'),
 
   run(options = {}) {
-    let enabledEmberVersions = this.get('enabledEmberVersions');
-    let enabledTests = this.get('enabledTests');
+    let enabledEmberVersions = this.enabledEmberVersions;
+    let enabledTests = this.enabledTests;
 
     // Remember any custom urls we set for another run
-    let customEmberVersion = this.get('customEmberVersion');
+    let customEmberVersion = this.customEmberVersion;
     if (customEmberVersion.isEnabled) {
-      localStorage.setItem('ember-perf-ember-url', customEmberVersion.path);
-      localStorage.setItem('ember-perf-compiler-url', customEmberVersion.compilerPath);
+      localStorage.setItem("ember-perf-ember-url", customEmberVersion.path);
+      localStorage.setItem(
+        "ember-perf-compiler-url",
+        customEmberVersion.compilerPath,
+      );
     } else {
-      localStorage.removeItem('ember-perf-ember-url');
-      localStorage.removeItem('ember-perf-compiler-url');
+      localStorage.removeItem("ember-perf-ember-url");
+      localStorage.removeItem("ember-perf-compiler-url");
     }
 
-    localStorage.setItem('ember-perf-flags', JSON.stringify(this.get('featureFlags')));
+    localStorage.setItem("ember-perf-flags", JSON.stringify(this.featureFlags));
 
     let testSession = new window.TestSession();
 
     testSession.setup(enabledEmberVersions, enabledTests);
-    testSession.featureFlags = this.get('featureFlags');
+    testSession.featureFlags = this.featureFlags;
     testSession.enableProfile = options.enableProfile || false;
     testSession.save();
 
     testSession.goToNextUrl();
-  },
+  }
 
-  actions: {
-    profile() {
-      this.run({ enableProfile: true });
-    },
+  @action
+  profile() {
+    this.run({ enableProfile: true });
+  }
 
-    start() {
-      this.run();
-    },
+  @action
+  start() {
+    this.run();
+  }
 
-    selectAllTests() {
-      this.get('model').setEach('isEnabled', true);
-    },
+  @action
+  selectAllTests() {
+    this.model.forEach((t) => set(t, "isEnabled", true));
+  }
 
-    selectNoTests() {
-      this.get('model').setEach('isEnabled', false);
-    },
+  @action
+  selectNoTests() {
+    this.model.forEach((t) => set(t, "isEnabled", false));
+  }
 
-    selectAllVersions() {
-      this.get('nonCustomEmberVersions').setEach('isEnabled', true);
-    },
+  @action
+  selectAllVersions() {
+    this.nonCustomEmberVersions.forEach((v) => set(v, "isEnabled", true));
+  }
 
-    selectNoVersions() {
-      this.get('emberVersions').setEach('isEnabled', false);
-    },
+  @action
+  selectNoVersions() {
+    this.nonCustomEmberVersions.forEach((v) => set(v, "isEnabled", false));
+  }
 
-    addFeature() {
-      let f = this.get('newFlagName');
-      if (f && f.length) {
-        this.get('featureFlags').addObject(this.get('newFlagName'));
-        this.set('newFlagName', '');
-      }
-    },
-
-    removeFeature(f) {
-      this.get('featureFlags').removeObject(f);
+  @action
+  addFeature() {
+    let f = this.newFlagName;
+    if (f && f.length) {
+      this.featureFlags.addObject(this.newFlagName);
+      this.set("newFlagName", "");
     }
   }
-});
+
+  @action
+  removeFeature(f) {
+    this.featureFlags.removeObject(f);
+  }
+}

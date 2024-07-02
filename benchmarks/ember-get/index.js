@@ -1,24 +1,26 @@
-/* global TestClient */
-MicroTestClient.run({
-  name: 'Ember.get',
+/* global MicroTestClient */
+let obj;
 
-  setup: function() {
+MicroTestClient.run({
+  name: "Ember.get",
+
+  setup: function () {
     const EmberObject = require("@ember/object").default;
 
-    var obj = EmberObject.create({
+    obj = EmberObject.create({
       thingId: 1234,
       person: EmberObject.create({
-        name: 'Evil Trout',
+        name: "Evil Trout",
         pet: EmberObject.create({
-          name: 'Rover'
-        })
-      })
+          name: "Rover",
+        }),
+      }),
     });
   },
 
-  test: function() {
-    obj.get('thingId');
-    obj.get('person.name');
-    obj.get('person.pet.name');
-  }
+  test: function () {
+    obj.get("thingId");
+    obj.get("person.name");
+    obj.get("person.pet.name");
+  },
 });

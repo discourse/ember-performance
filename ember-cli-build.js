@@ -1,59 +1,60 @@
-/* global require, module */
-var EmberApp = require("ember-cli/lib/broccoli/ember-app");
-var MergeTrees = require("broccoli-merge-trees");
-var Concat = require("broccoli-concat");
-var CopyIndex = require("./lib/copy-index");
-var Funnel = require("broccoli-funnel");
+"use strict";
 
-var bowerTree = new Funnel("bower_components", {
+const EmberApp = require("ember-cli/lib/broccoli/ember-app");
+const MergeTrees = require("broccoli-merge-trees");
+const Concat = require("broccoli-concat");
+const CopyIndex = require("./lib/copy-index");
+const Funnel = require("broccoli-funnel");
+
+const clientDepsTree = new Funnel("node_modules", {
   include: [
     "headjs/dist/1.0.0/head.js",
     "benchmark/benchmark.js",
-    "rsvp/rsvp.js",
+    "rsvp/dist/rsvp.js",
     "ascii-table/ascii-table.js",
     "lodash/lodash.js",
   ],
 });
 
-var clientTree = new MergeTrees(["test-client", bowerTree], {
+const clientTree = new MergeTrees(["test-client", clientDepsTree], {
   annotation: "test-client merge",
 });
 
-var testClient = new Concat(clientTree, {
+const testClient = new Concat(clientTree, {
   headerFiles: [
     "test-client.js",
     "test-session.js",
     "headjs/dist/1.0.0/head.js",
     "lodash/lodash.js",
     "benchmark/benchmark.js",
-    "rsvp/rsvp.js",
+    "rsvp/dist/rsvp.js",
     "ascii-table/ascii-table.js",
     "people.js",
   ],
   outputFile: "/assets/test-client.js",
 });
 
-var compileTemplatesTree = new Funnel("compile-templates", {
+const compileTemplatesTree = new Funnel("compile-templates", {
   include: ["index.{html,js}"],
   destDir: "compile-templates",
 });
 
-var benchmarksIndexJs = new Funnel("benchmarks", {
+const benchmarksIndexJs = new Funnel("benchmarks", {
   include: ["**/*.js"],
   destDir: "benchmarks",
 });
 
-var benchmarksIndexHtml = new CopyIndex(benchmarksIndexJs, {
+const benchmarksIndexHtml = new CopyIndex(benchmarksIndexJs, {
   annotation: "Copy index.html to benchmark",
 });
 
-var emberTree = new Funnel("ember", {
+const emberTree = new Funnel("ember", {
   include: ["**/*.js"],
   destDir: "ember",
 });
 
 module.exports = function (defaults) {
-  var app = new EmberApp(defaults, {
+  const app = new EmberApp(defaults, {
     "ember-bootstrap": {
       bootstrapVersion: 4,
       importBootstrapCSS: true,
@@ -62,7 +63,6 @@ module.exports = function (defaults) {
       enabled: false,
     },
   });
-  app.import("vendor/bootstrap.css");
 
   return new MergeTrees(
     [
@@ -75,6 +75,6 @@ module.exports = function (defaults) {
     ],
     {
       annotation: "final dist merge",
-    }
+    },
   );
 };

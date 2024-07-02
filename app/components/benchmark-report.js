@@ -1,24 +1,30 @@
-import Ember from "ember";
+import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { action, computed } from "@ember/object";
+import { equal, gt } from "@ember/object/computed";
 import numeral from "numeral";
-import { version } from "ember-performance/app";
 
-const {
-  computed,
-  computed: { equal, gt },
-} = Ember;
+export default class BenchmarkReport extends Component {
+  @tracked mode = "html";
+  @equal("mode", "html") isHtmlMode;
+  @equal("mode", "text") isTextMode;
+  @gt("args.report.testGroupReports.length", 1) showGraph;
 
-export default Ember.Component.extend({
-  ajax: Ember.inject.service(),
-  mode: "html",
-  isHtmlMode: equal("mode", "html"),
-  isTextMode: equal("mode", "text"),
-  showGraph: gt("report.testGroupReports.length", 1),
+  chartOptions = {
+    title: "Time (ms) (lower is better)",
+    hAxis: {
+      title: "Ember Version",
+    },
+    intervals: { style: "area" },
+    legend: "none",
+  };
 
-  groupedTests: computed("report.testGroupReports.[]", function () {
-    var tests = {};
-    this.get("report.testGroupReports").forEach((testGroupReport) => {
+  @computed("args.report.testGroupReports.[]")
+  get groupedTests() {
+    const tests = {};
+    this.args.report.testGroupReports.forEach((testGroupReport) => {
       testGroupReport.results.forEach((result) => {
-        var test = tests[result.name] || {
+        const test = tests[result.name] || {
           name: result.name,
           data: [],
           chartData: [
@@ -32,7 +38,7 @@ export default Ember.Component.extend({
         };
         test.data.push({
           emberVersion: testGroupReport.emberVersion,
-          result: result,
+          result,
         });
         test.chartData.push([
           testGroupReport.emberVersion.name,
@@ -46,50 +52,41 @@ export default Ember.Component.extend({
     });
 
     return tests;
-  }),
+  }
 
-  asciiTable: computed("report.testGroupReports.[]", function () {
-    var result = "User Agent: " + navigator.userAgent + "\n";
+  @computed("report.testGroupReports.[]")
+  get asciiTable() {
+    let result = "User Agent: " + navigator.userAgent + "\n";
 
-    var featureFlags = this.get("report.featureFlags");
+    const featureFlags = this.get("report.featureFlags");
     if (featureFlags && featureFlags.length) {
       result += "Feature Flags: " + featureFlags.join(", ") + "\n";
     }
     result += "\n";
 
-    var table = new window.AsciiTable("Ember Performance Suite - Results");
+    const table = new window.AsciiTable("Ember Performance Suite - Results");
 
     table.setHeading("Name", "Speed", "Error", "Samples", "Mean");
 
-    this.get("report.testGroupReports").forEach((testGroupReport) => {
+    this.args.report.testGroupReports.forEach((testGroupReport) => {
       table.addRow(" -- Ember " + testGroupReport.emberVersion.name + " -- ");
 
-      testGroupReport.results.forEach((result) => {
+      testGroupReport.results.forEach((item) => {
         table.addRow(
-          result.name,
-          numeral(result.hz).format("0,0.00") + " / sec",
-          "∓" + numeral(result.rme).format("0,0.00") + "%",
-          numeral(result.samples).format(),
-          numeral(result.mean).format("0,0.00") + " ms"
+          item.name,
+          numeral(item.hz).format("0,0.00") + " / sec",
+          "∓" + numeral(item.rme).format("0,0.00") + "%",
+          numeral(item.samples).format(),
+          numeral(item.mean).format("0,0.00") + " ms",
         );
       });
     });
 
     return result + table.toString();
-  }),
+  }
 
-  chartOptions: {
-    title: "Time (ms) (lower is better)",
-    hAxis: {
-      title: "Ember Version",
-    },
-    intervals: { style: "area" },
-    legend: "none",
-  },
-
-  actions: {
-    switchMode(mode) {
-      this.set("mode", mode);
-    },
-  },
-});
+  @action
+  switchMode(mode) {
+    this.mode = mode;
+  }
+}

@@ -1,19 +1,19 @@
-/* global RenderTemplateTestClient */
+/* global RenderTemplateTestClient TestClient */
 
-(function() {
+(function () {
   RenderTemplateTestClient.run({
-    name: 'Render List',
+    name: "Render List",
 
-    setup: function() {
-      this.setupTemplateTest('render-list', { people: TestClient.PEOPLE_JSON });
+    setup: function () {
+      this.setupTemplateTest("render-list", { people: TestClient.PEOPLE_JSON });
     },
 
-    reset: function() {
+    reset: function () {
       this.hideComponent();
     },
 
-    test: function() {
+    test: function () {
       this.showComponent();
-    }
+    },
   });
 })();

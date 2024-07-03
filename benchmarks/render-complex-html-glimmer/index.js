@@ -15,47 +15,47 @@
       });
 
       let listItems = [];
-      for (var i = 0; i < 50; i++) {
+      for (let i = 0; i < 50; i++) {
         listItems.pushObject(
           MyThing.create({
             a: "a" + i,
             b: "b" + i,
             c: "c" + i,
-          })
+          }),
         );
       }
 
       this.setupTemplateTest(
         "complex-list-main-wrapped",
         { items: listItems },
-        { componentMode: "glimmer" }
+        { componentMode: "glimmer" },
       );
 
       this.registry.register(
         "template:components/component-render",
-        this.template("complex-list-component-wrapped")
+        this.template("complex-list-component-wrapped"),
       );
       this.registry.register(
         "template:components/nested-component",
-        this.template("complex-list-nested-wrapped")
+        this.template("complex-list-nested-wrapped"),
       );
       this.registry.register(
         "template:components/buffer-render",
-        this.template("complex-list-data-wrapped")
+        this.template("complex-list-data-wrapped"),
       );
 
       const GlimmerComponent = require("@glimmer/component").default;
       this.registry.register(
         "component:component-render",
-        class extends GlimmerComponent {}
+        class extends GlimmerComponent {},
       );
       this.registry.register(
         "component:nested-component",
-        class extends GlimmerComponent {}
+        class extends GlimmerComponent {},
       );
       this.registry.register(
         "component:buffer-render",
-        class extends GlimmerComponent {}
+        class extends GlimmerComponent {},
       );
     },
 

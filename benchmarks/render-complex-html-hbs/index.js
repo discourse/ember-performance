@@ -1,8 +1,7 @@
 /* global TestClient */
-(function () {
-  var compiled;
 
-  var templates = {
+(function () {
+  let templates = {
     "complex-list-main":
       "<div>" +
       "<ul>" +
@@ -29,9 +28,9 @@
     "complex-list-data": "<div>{{data}}</div>",
   };
 
-  var compiledTemplates = {};
+  let compiledTemplates = {};
 
-  var listItems = [];
+  let listItems = [];
 
   TestClient.run({
     name: "Render Complex List (Raw HBS)",
@@ -46,25 +45,28 @@
         }),
       });
 
-      for (var i = 0; i < 50; i++) {
+      for (let i = 0; i < 50; i++) {
         listItems.pushObject(
           MyThing.create({
             a: "a" + i,
             b: "b" + i,
             c: "c" + i,
-          })
+          }),
         );
       }
 
+      // eslint-disable-next-line ember/no-global-jquery
       return $.getScript("/ember/handlebars.js").then(function () {
+        /* global Handlebars */
         Handlebars.registerHelper("raw", function (templateName, helper) {
           return compiledTemplates[templateName](helper.hash);
         });
-        for (const templateName in templates) {
+
+        Object.keys(templates).forEach((templateName) => {
           compiledTemplates[templateName] = Handlebars.compile(
-            templates[templateName]
+            templates[templateName],
           );
-        }
+        });
       });
     },
 

@@ -1,6 +1,12 @@
-import resolver from './helpers/resolver';
-import {
-  setResolver
-} from 'ember-qunit';
+import { setApplication } from "@ember/test-helpers";
+import Application from "ember-performance/app";
+import config from "ember-performance/config/environment";
+import { start } from "ember-qunit";
+import * as QUnit from "qunit";
+import { setup } from "qunit-dom";
 
-setResolver(resolver);
+setApplication(Application.create(config.APP));
+
+setup(QUnit.assert);
+
+start();

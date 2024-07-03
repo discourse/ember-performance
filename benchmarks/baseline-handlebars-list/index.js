@@ -1,8 +1,8 @@
 /* global TestClient */
 (function () {
-  var compiled;
+  let compiled;
 
-  var template =
+  let template =
     "<table>" +
     "<tbody>" +
     "{{#each people}}" +
@@ -21,7 +21,9 @@
     name: "Baseline: Handlebars List",
 
     setup: function () {
+      // eslint-disable-next-line ember/no-global-jquery
       return $.getScript("/ember/handlebars.js").then(function () {
+        /* global Handlebars */
         compiled = Handlebars.compile(template);
       });
     },

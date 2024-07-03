@@ -16,13 +16,13 @@
       });
 
       let listItems = [];
-      for (var i = 0; i < 50; i++) {
+      for (let i = 0; i < 50; i++) {
         listItems.pushObject(
           MyThing.create({
             a: "a" + i,
             b: "b" + i,
             c: "c" + i,
-          })
+          }),
         );
       }
 
@@ -30,26 +30,26 @@
 
       this.registry.register(
         "template:components/component-render",
-        this.template("complex-list-component")
+        this.template("complex-list-component"),
       );
       this.registry.register(
         "template:components/nested-component",
-        this.template("complex-list-nested")
+        this.template("complex-list-nested"),
       );
       this.registry.register(
         "template:components/buffer-render",
-        this.template("complex-list-data")
+        this.template("complex-list-data"),
       );
 
       // Default for template-only components is Glimmer
       // We want to use classic components for this benchmark
       this.registry.register(
         "component:component-render",
-        Component.extend({})
+        Component.extend({}),
       );
       this.registry.register(
         "component:nested-component",
-        Component.extend({})
+        Component.extend({}),
       );
       this.registry.register("component:buffer-render", Component.extend({}));
     },

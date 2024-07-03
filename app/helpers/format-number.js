@@ -1,24 +1,30 @@
-import numeral from "numeral";
-import { isArray } from "@ember/array";
 import { helper as buildHelper } from "@ember/component/helper";
 
+const currentLocale = Intl.NumberFormat().resolvedOptions().locale;
+
 export function formatNumber(params, hash) {
-  let { format } = hash || {};
+  const { mode } = hash ?? { mode: "auto" };
+
   let number = params;
 
-  if (isArray(params)) {
-    number = params[0];
+  if (mode !== "auto") {
+    return Intl.NumberFormat(currentLocale, hash).format(number);
   }
 
-  if (typeof number === "undefined") {
-    number = null;
+  const [, exponent] = Number(number)
+    .toExponential()
+    .split("e")
+    .map((item) => Number(item));
+
+  if (exponent >= 0) {
+    return Intl.NumberFormat(currentLocale, {
+      minimumFractionDigits: 3,
+    }).format(number);
   }
 
-  if (isNaN(number)) {
-    number = null;
-  }
-
-  return numeral(number).format(format);
+  return Intl.NumberFormat(currentLocale, {
+    minimumFractionDigits: Math.abs(exponent) + 2,
+  }).format(number);
 }
 
 export default buildHelper(formatNumber);

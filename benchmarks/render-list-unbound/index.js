@@ -1,20 +1,21 @@
-/* global RenderTemplateTestClient */
+/* global RenderTemplateTestClient TestClient */
 
-(function() {
-
+(function () {
   RenderTemplateTestClient.run({
-    name: 'Render List (Unbound)',
+    name: "Render List (Unbound)",
 
-    setup: function() {
-      this.setupTemplateTest('render-list-unbound', { people: TestClient.PEOPLE_JSON });
+    setup: function () {
+      this.setupTemplateTest("render-list-unbound", {
+        people: TestClient.PEOPLE_JSON,
+      });
     },
 
-    reset: function() {
+    reset: function () {
       this.hideComponent();
     },
 
-    test: function() {
+    test: function () {
       this.showComponent();
-    }
+    },
   });
 })();

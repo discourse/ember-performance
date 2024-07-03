@@ -102,7 +102,8 @@ export default class BenchmarkReport extends Component {
   }
 
   @action
-  switchMode(mode) {
+  switchMode(mode, event) {
+    event.preventDefault();
     this.mode = mode;
   }
 
@@ -111,12 +112,10 @@ export default class BenchmarkReport extends Component {
 
     <ul class="nav nav-tabs">
       <li role="presentation" class={{if this.isHtmlMode "active"}}>
-        {{! template-lint-disable no-invalid-interactive }}
-        <a {{on "click" (fn this.switchMode "html")}}>HTML</a>
+        <a href {{on "click" (fn this.switchMode "html")}}>HTML</a>
       </li>
       <li role="presentation" class={{if this.isTextMode "active"}}>
-        {{! template-lint-disable no-invalid-interactive }}
-        <a {{on "click" (fn this.switchMode "text")}}>Text</a>
+        <a href {{on "click" (fn this.switchMode "text")}}>Text</a>
       </li>
     </ul>
 

@@ -1,8 +1,6 @@
 import Component from "@glimmer/component";
-import didInsert from "@ember/render-modifiers/modifiers/did-insert";
-import didUpdate from "@ember/render-modifiers/modifiers/did-update";
-import { schedule } from "@ember/runloop";
 import Chart from "chart.js/auto";
+import { modifier } from "ember-modifier";
 import { formatNumber } from "../helpers/format-number";
 
 export default class AreaChart extends Component {
@@ -10,22 +8,17 @@ export default class AreaChart extends Component {
   total = 0;
   options = null;
 
-  scheduleChartRendering = (element) => {
-    schedule("afterRender", () => {
-      this.#renderChart(element && element.querySelector(".chart-canvas"));
-    });
-  };
+  renderChart = modifier((element) => {
+    this._renderChart(element?.querySelector(".chart-canvas"));
 
-  resetChart = () => {
-    if (this.#chart) {
-      this.#chart.destroy();
-      this.#chart = null;
-    }
-  };
+    return () => {
+      this._chart?.destroy();
+    };
+  });
 
-  #chart;
+  _chart = null;
 
-  #renderChart(canvasElement) {
+  _renderChart(canvasElement) {
     if (!canvasElement) {
       return;
     }
@@ -71,16 +64,15 @@ export default class AreaChart extends Component {
       ],
     };
 
-    this.resetChart();
-
     if (!canvasElement) {
       return;
     }
 
-    this.#chart = new Chart(context, this.#buildChartConfig(data, { axis }));
+    this._chart?.destroy();
+    this._chart = new Chart(context, this.buildChartConfig(data, { axis }));
   }
 
-  #buildChartConfig(data, { axis } = {}) {
+  buildChartConfig(data, { axis } = {}) {
     return {
       type: "line",
       data,
@@ -146,11 +138,7 @@ export default class AreaChart extends Component {
   }
 
   <template>
-    <div
-      class="chart-canvas-container"
-      {{didInsert this.scheduleChartRendering}}
-      {{didUpdate this.scheduleChartRendering}}
-    >
+    <div class="chart-canvas-container" {{this.renderChart}}>
       <canvas class="chart-canvas"></canvas>
     </div>
   </template>

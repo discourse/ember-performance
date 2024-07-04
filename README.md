@@ -22,16 +22,13 @@ the performance of the Ember.js framework. The general strategy is:
 ### To run in development mode
 
 1. `npm install`
-2. `npm install -g bower`
-3. `bower install`
-4. `npm run server`
-5. `bin/launch-chrome http://localhost:4200`
+2. `npm start`
+3. `Open http://localhost:4200`
 
 ### To build for production mode
 
 1. `npm install`
-2. `npm install -g bower`
-3. `npm run prod-server`
+2. `npm run build`
 
 And open a browser to http://localhost:4200
 
@@ -41,10 +38,10 @@ To add a new ember version, you'll need to build a production bundle.
 Navigate to an empty scratch directory outside of this project, install
 ember-cli, then run:
 ```bash
-VERSION=4.0.1
-ember new myapp --yarn --skip-git --skip-bower --no-welcome
+VERSION=5.9.0
+ember new myapp --skip-git
 cd myapp
-yarn add -D ember-source@$VERSION
+npm install --save-dev ember-source@$VERSION
 ```
 
 Edit `ember-cli-build.js` to disable minification and sourcemaps:
@@ -56,8 +53,19 @@ let app = new EmberApp(defaults, {
 });
 ```
 
+Edit `config/environment.js` to enable prototype extensions:
+
+```javascript
+...
+EmberENV: {
+  EXTEND_PROTOTYPES: true,
+  ...
+},
+...
+```
+
 ```bash
-yarn build --target production
+npm run build
 mv dist/assets/vendor-*.js ../../ember-performance/ember/ember-$VERSION.prod.js
 mv node_modules/ember-source/dist/ember-template-compiler.js ../../ember-performance/ember/ember-$VERSION.template-compiler.js
 ```

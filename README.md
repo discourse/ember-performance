@@ -38,7 +38,7 @@ To add a new ember version, you'll need to build a production bundle.
 Navigate to an empty scratch directory outside of this project, install
 ember-cli, then run:
 ```bash
-VERSION=5.9.0
+VERSION=5.10.0
 ember new myapp --skip-git
 cd myapp
 npm install --save-dev ember-source@$VERSION

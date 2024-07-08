@@ -36,16 +36,10 @@ td.numeric {
   text-align: right;
 }
 
-#scratch {
+#scratch,
+#scratch table,
+#scratch a {
   color: white !important;
-
-  table {
-    color: white !important;
-  }
-
-  a {
-    color: white !important;
-  }
 }
 
 .form-group {

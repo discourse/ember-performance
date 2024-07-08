@@ -1,5 +1,6 @@
 /* eslint-disable no-var */
 /* globals global globalThis self */
+/* eslint-disable-next-line no-unused-vars */
 var define, require;
 
 (function () {
@@ -7,12 +8,12 @@ var define, require;
     typeof globalThis !== 'undefined'
       ? globalThis
       : typeof self !== 'undefined'
-      ? self
-      : typeof window !== 'undefined'
-      ? window
-      : typeof global !== 'undefined'
-      ? global
-      : null;
+        ? self
+        : typeof window !== 'undefined'
+          ? window
+          : typeof global !== 'undefined'
+            ? global
+            : null;
 
   if (globalObj === null) {
     throw new Error('unable to locate global object');
@@ -71,7 +72,10 @@ var define, require;
       }
     }
 
-    callback.apply(this, reified);
+    const result = callback.apply(this, reified);
+    if (!deps.includes('exports') || result !== undefined) {
+      exports = seen[name] = result;
+    }
 
     return exports;
   }

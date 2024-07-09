@@ -32,43 +32,9 @@ the performance of the Ember.js framework. The general strategy is:
 
 And open a browser to http://localhost:4200
 
-### Adding a new Ember Version
+### Updating Ember version bundles
 
-To add a new ember version, you'll need to build a production bundle.
-Navigate to an empty scratch directory outside of this project, install
-ember-cli, then run:
-```bash
-VERSION=5.10.0
-ember new myapp --skip-git
-cd myapp
-npm install --save-dev ember-source@$VERSION
-```
-
-Edit `ember-cli-build.js` to disable minification and sourcemaps:
-
-```javascript
-let app = new EmberApp(defaults, {
-  'ember-cli-terser': { enabled: false },
-  sourcemaps: { enabled: false },
-});
-```
-
-Edit `config/environment.js` to enable prototype extensions:
-
-```javascript
-...
-EmberENV: {
-  EXTEND_PROTOTYPES: true,
-  ...
-},
-...
-```
-
-```bash
-npm run build
-mv dist/assets/vendor-*.js ../../ember-performance/ember/ember-$VERSION.prod.js
-mv node_modules/ember-source/dist/ember-template-compiler.js ../../ember-performance/ember/ember-$VERSION.template-compiler.js
-```
+To add a new ember version, update the version list in  `scripts/build-ember-assets.js`, and run it. It will generate appropriately named js files under `ember/`.
 
 ### License
 

@@ -30,7 +30,7 @@
 
   let compiledTemplates = {};
 
-  let listItems = [];
+  let listItems;
 
   TestClient.run({
     name: "Render Complex List (Raw HBS)",
@@ -38,12 +38,15 @@
     setup: function () {
       const EmberObject = require("@ember/object").default;
       const computed = require("@ember/object").computed;
+      const A = require("@ember/array").A;
 
       const MyThing = EmberObject.extend({
         d: computed("a", "b", function () {
           return this.get("a") + this.get("b");
         }),
       });
+
+      listItems = A([]);
 
       for (let i = 0; i < 50; i++) {
         listItems.pushObject(

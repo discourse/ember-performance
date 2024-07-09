@@ -7,6 +7,7 @@
     setup() {
       const EmberObject = require("@ember/object").default;
       const computed = require("@ember/object").computed;
+      const A = require("@ember/array").A;
 
       const MyThing = EmberObject.extend({
         d: computed("a", "b", function () {
@@ -14,7 +15,7 @@
         }),
       });
 
-      let listItems = [];
+      let listItems = A([]);
       for (let i = 0; i < 50; i++) {
         listItems.pushObject(
           MyThing.create({

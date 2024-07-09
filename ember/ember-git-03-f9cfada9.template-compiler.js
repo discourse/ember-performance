@@ -6,7 +6,7 @@
  *            Portions Copyright 2008-2011 Apple Inc. All rights reserved.
  * @license   Licensed under MIT license
  *            See https://raw.github.com/emberjs/ember.js/master/LICENSE
- * @version   5.9.0
+ * @version   5.10.0-alpha.1+f9cfada9
  */
 
 /* eslint-disable no-var */
@@ -222,18 +222,6 @@ define("@ember/-internals/environment/index", ["exports"], function (_exports) {
     LOG_VERSION: true,
     RAISE_ON_DEPRECATION: false,
     STRUCTURED_PROFILE: false,
-    /**
-      Whether to insert a `<div class="ember-view" />` wrapper around the
-      application template. See RFC #280.
-         This is not intended to be set directly, as the implementation may change in
-      the future. Use `@ember/optional-features` instead.
-         @property _APPLICATION_TEMPLATE_WRAPPER
-      @for EmberENV
-      @type Boolean
-      @default true
-      @private
-    */
-    _APPLICATION_TEMPLATE_WRAPPER: true,
     /**
       Whether to use Glimmer Component semantics (as opposed to the classic "Curly"
       components semantics) for template-only components. See RFC #278.
@@ -1996,7 +1984,6 @@ define("@ember/debug/lib/deprecate", ["exports", "@ember/-internals/environment"
       let updatedMessage = formatMessage(message, options);
       console.warn("DEPRECATION: " + updatedMessage); // eslint-disable-line no-console
     });
-
     let captureErrorForStack;
     if (new Error().stack) {
       captureErrorForStack = () => new Error();
@@ -2335,7 +2322,6 @@ define("@ember/debug/lib/warn", ["exports", "@ember/debug/index", "@ember/debug/
       console.warn("WARNING: " + message);
       /* eslint-enable no-console */
     });
-
     _exports.missingOptionsDeprecation = missingOptionsDeprecation = 'When calling `warn` you ' + 'must provide an `options` hash as the third parameter.  ' + '`options` should include an `id` property.';
     _exports.missingOptionsIdDeprecation = missingOptionsIdDeprecation = 'When calling `warn` you must provide `id` in options.';
     /**
@@ -9139,7 +9125,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
 
       // node.loc = node.loc.withEnd(end);
     }
-
     get currentAttr() {
       return (0, _util.expect)(this.currentAttribute, 'expected attribute');
     }
@@ -15095,7 +15080,6 @@ define("@handlebars/parser/index", ["exports"], function (_exports) {
             }
             return false; // rule action called reject() implying the next rule should be tested instead.
           }
-
           return false;
         },
         // return next match in input
@@ -17088,7 +17072,7 @@ define("ember/version", ["exports"], function (_exports) {
     value: true
   });
   _exports.default = void 0;
-  var _default = _exports.default = "5.9.0";
+  var _default = _exports.default = "5.10.0-alpha.1+f9cfada9";
 });
 define("simple-html-tokenizer", ["exports"], function (_exports) {
   "use strict";
@@ -19354,7 +19338,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("beforeDoctypeName" /* beforeDoctypeName */);
           }
         },
-
         beforeDoctypeName: function () {
           var char = this.consume();
           if (isSpace(char)) {
@@ -19401,7 +19384,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             }
           }
         },
-
         afterDoctypePublicKeyword: function () {
           var char = this.peek();
           if (isSpace(char)) {
@@ -19419,7 +19401,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("beforeData" /* beforeData */);
           }
         },
-
         doctypePublicIdentifierDoubleQuoted: function () {
           var char = this.consume();
           if (char === '"') {
@@ -19455,7 +19436,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("doctypeSystemIdentifierSingleQuoted" /* doctypeSystemIdentifierSingleQuoted */);
           }
         },
-
         betweenDoctypePublicAndSystemIdentifiers: function () {
           var char = this.consume();
           if (isSpace(char)) {
@@ -19469,7 +19449,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("doctypeSystemIdentifierSingleQuoted" /* doctypeSystemIdentifierSingleQuoted */);
           }
         },
-
         doctypeSystemIdentifierDoubleQuoted: function () {
           var char = this.consume();
           if (char === '"') {
@@ -19501,7 +19480,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("beforeData" /* beforeData */);
           }
         },
-
         commentStart: function () {
           var char = this.consume();
           if (char === '-') {
@@ -19514,7 +19492,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("comment" /* comment */);
           }
         },
-
         commentStartDash: function () {
           var char = this.consume();
           if (char === '-') {
@@ -19527,7 +19504,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("comment" /* comment */);
           }
         },
-
         comment: function () {
           var char = this.consume();
           if (char === '-') {
@@ -19545,7 +19521,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("comment" /* comment */);
           }
         },
-
         commentEnd: function () {
           var char = this.consume();
           if (char === '>') {
@@ -19556,7 +19531,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("comment" /* comment */);
           }
         },
-
         tagName: function () {
           var char = this.consume();
           if (isSpace(char)) {
@@ -19751,7 +19725,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("beforeAttributeName" /* beforeAttributeName */);
           }
         },
-
         selfClosingStartTag: function () {
           var char = this.peek();
           if (char === '>') {
@@ -19763,7 +19736,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
             this.transitionTo("beforeAttributeName" /* beforeAttributeName */);
           }
         },
-
         endTagOpen: function () {
           var char = this.consume();
           if (char === '@' || char === ':' || isAlpha(char)) {
@@ -19813,7 +19785,6 @@ define("simple-html-tokenizer", ["exports"], function (_exports) {
         this.transitionTo("beforeData" /* beforeData */);
       }
     };
-
     EventedTokenizer.prototype.peek = function () {
       return this.input.charAt(this.index);
     };

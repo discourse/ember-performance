@@ -6,7 +6,7 @@
  *            Portions Copyright 2008-2011 Apple Inc. All rights reserved.
  * @license   Licensed under MIT license
  *            See https://raw.github.com/emberjs/ember.js/master/LICENSE
- * @version   5.7.0
+ * @version   5.10.0-alpha.1+a474b88f
  */
 
 /* eslint-disable no-var */
@@ -271,6 +271,28 @@ define("@ember/-internals/environment/index", ["exports"], function (_exports) {
     */
     _DEBUG_RENDER_TREE: true /* DEBUG */,
     /**
+     Whether to force all deprecations to be enabled. This is used internally by
+     Ember to enable deprecations in tests. It is not intended to be set in
+     projects.
+        @property _ALL_DEPRECATIONS_ENABLED
+     @for EmberENV
+     @type Boolean
+     @default false
+     @private
+     */
+    _ALL_DEPRECATIONS_ENABLED: false,
+    /**
+     Override the version of ember-source used to determine when deprecations "break".
+     This is used internally by Ember to test with deprecated features "removed".
+     This is never intended to be set by projects.
+     @property _OVERRIDE_DEPRECATION_VERSION
+     @for EmberENV
+     @type string | null
+     @default null
+     @private
+     */
+    _OVERRIDE_DEPRECATION_VERSION: null,
+    /**
       Whether the app defaults to using async observers.
          This is not intended to be set directly, as the implementation may change in
       the future. Use `@ember/optional-features` instead.
@@ -317,6 +339,8 @@ define("@ember/-internals/environment/index", ["exports"], function (_exports) {
         ENV[flag] = EmberENV[flag] !== false;
       } else if (defaultValue === false) {
         ENV[flag] = EmberENV[flag] === true;
+      } else {
+        ENV[flag] = EmberENV[flag];
       }
     }
     let {
@@ -1010,6 +1034,7 @@ define("@ember/canary-features/index", ["exports", "@ember/-internals/environmen
   //   }
   //   return value;
   // }
+  //
   // export const FLAG_NAME = featureValue(FEATURES.FLAG_NAME);
 });
 define("@ember/debug/container-debug-adapter", ["exports", "@ember/-internals/string", "@ember/object", "@ember/utils", "@ember/-internals/owner", "@ember/application/namespace"], function (_exports, _string, _object, _utils, _owner, _namespace) {
@@ -3147,7 +3172,7 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           } = normalized;
           let builtParams = params ? buildParams(params, symbols) : null;
           let builtHash = hash ? buildHash(hash, symbols) : null;
-          let builtExpr = buildCallHead(path, trusted ? _wireFormat.VariableResolutionContext.AmbiguousInvoke : _wireFormat.VariableResolutionContext.AmbiguousAppendInvoke, symbols);
+          let builtExpr = buildCallHead(path, trusted ? _wireFormat.VariableResolutionContext.ResolveAsHelperHead : _wireFormat.VariableResolutionContext.ResolveAsComponentOrHelperHead, symbols);
           return [[trusted ? _wireFormat.SexpOpcodes.TrustingAppend : _wireFormat.SexpOpcodes.Append, [_wireFormat.SexpOpcodes.Call, builtExpr, builtParams, builtHash]]];
         }
       case HeadKind.Literal:
@@ -3207,8 +3232,8 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     let block = buildBlock(normalized.blocks['default'], childSymbols, childSymbols.paramSymbols);
     let inverse = normalized.blocks['else'] ? buildBlock(normalized.blocks['else'], symbols, []) : null;
     switch (name) {
-      case 'with':
-        return [_wireFormat.SexpOpcodes.With, (0, _util.expect)(params, 'with requires params')[0], block, inverse];
+      case 'let':
+        return [_wireFormat.SexpOpcodes.Let, (0, _util.expect)(params, 'let requires params'), block];
       case 'if':
         return [_wireFormat.SexpOpcodes.If, (0, _util.expect)(params, 'if requires params')[0], block, inverse];
       case 'each':
@@ -3387,15 +3412,15 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         if (context === 'Strict') {
           op = _wireFormat.SexpOpcodes.GetStrictKeyword;
         } else if (context === 'AppendBare') {
-          op = _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHeadOrThisFallback;
+          op = _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHead;
         } else if (context === 'AppendInvoke') {
           op = _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHead;
         } else if (context === 'TrustedAppendBare') {
-          op = _wireFormat.SexpOpcodes.GetFreeAsHelperHeadOrThisFallback;
+          op = _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
         } else if (context === 'TrustedAppendInvoke') {
           op = _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
         } else if (context === 'AttrValueBare') {
-          op = _wireFormat.SexpOpcodes.GetFreeAsHelperHeadOrThisFallback;
+          op = _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
         } else if (context === 'AttrValueInvoke') {
           op = _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
         } else if (context === 'SubExpression') {
@@ -3412,6 +3437,7 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     if (path === undefined || path.length === 0) {
       return [op, sym];
     } else {
+      (0, _util.assert)(op !== _wireFormat.SexpOpcodes.GetStrictKeyword, '[BUG] keyword with a path');
       return [op, sym, path];
     }
   }
@@ -3433,13 +3459,9 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     switch (context) {
       case _wireFormat.VariableResolutionContext.Strict:
         return _wireFormat.SexpOpcodes.GetStrictKeyword;
-      case _wireFormat.VariableResolutionContext.AmbiguousAppend:
-        return _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHeadOrThisFallback;
-      case _wireFormat.VariableResolutionContext.AmbiguousAppendInvoke:
+      case _wireFormat.VariableResolutionContext.ResolveAsComponentOrHelperHead:
         return _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHead;
-      case _wireFormat.VariableResolutionContext.AmbiguousInvoke:
-        return _wireFormat.SexpOpcodes.GetFreeAsHelperHeadOrThisFallback;
-      case _wireFormat.VariableResolutionContext.ResolveAsCallHead:
+      case _wireFormat.VariableResolutionContext.ResolveAsHelperHead:
         return _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
       case _wireFormat.VariableResolutionContext.ResolveAsModifierHead:
         return _wireFormat.SexpOpcodes.GetFreeAsModifierHead;
@@ -3491,7 +3513,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
   class If extends (0, _syntax.node)('If').fields() {}
   class IfInline extends (0, _syntax.node)('IfInline').fields() {}
   class Each extends (0, _syntax.node)('Each').fields() {}
-  class With extends (0, _syntax.node)('With').fields() {}
   class Let extends (0, _syntax.node)('Let').fields() {}
   class WithDynamicVars extends (0, _syntax.node)('WithDynamicVars').fields() {}
   class GetDynamicVar extends (0, _syntax.node)('GetDynamicVar').fields() {}
@@ -3499,7 +3520,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
   class InvokeComponent extends (0, _syntax.node)('InvokeComponent').fields() {}
   class NamedBlocks extends (0, _syntax.node)('NamedBlocks').fields() {}
   class NamedBlock extends (0, _syntax.node)('NamedBlock').fields() {}
-  class EndBlock extends (0, _syntax.node)('EndBlock').fields() {}
   class AppendTrustedHTML extends (0, _syntax.node)('AppendTrustedHTML').fields() {}
   class AppendTextNode extends (0, _syntax.node)('AppendTextNode').fields() {}
   class AppendComment extends (0, _syntax.node)('AppendComment').fields() {}
@@ -3511,16 +3531,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
   class Yield extends (0, _syntax.node)('Yield').fields() {}
   class Debugger extends (0, _syntax.node)('Debugger').fields() {}
   class CallExpression extends (0, _syntax.node)('CallExpression').fields() {}
-  class DeprecatedCallExpression extends (0, _syntax.node)('DeprecatedCallExpression').fields() {}
   class Modifier extends (0, _syntax.node)('Modifier').fields() {}
   class InvokeBlock extends (0, _syntax.node)('InvokeBlock').fields() {}
   class SplatAttr extends (0, _syntax.node)('SplatAttr').fields() {}
   class PathExpression extends (0, _syntax.node)('PathExpression').fields() {}
-  class GetWithResolver extends (0, _syntax.node)('GetWithResolver').fields() {}
-  class GetSymbol extends (0, _syntax.node)('GetSymbol').fields() {}
-  class GetFreeWithContext extends (0, _syntax.node)('GetFreeWithContext').fields() {}
-  /** strict mode */
-  class GetFree extends (0, _syntax.node)('GetFree').fields() {}
   class Missing extends (0, _syntax.node)('Missing').fields() {}
   class InterpolateExpression extends (0, _syntax.node)('InterpolateExpression').fields() {}
   class HasBlock extends (0, _syntax.node)('HasBlock').fields() {}
@@ -3696,75 +3710,13 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       return this.toArray().mapOk(arr => OptionalList(arr));
     }
   }
-  function hasPath(node) {
-    return node.callee.type === 'Path';
-  }
-  function isHelperInvocation(node) {
-    if (!hasPath(node)) {
-      return false;
-    }
-    return !node.args.isEmpty();
-  }
-  function isSimplePath(path) {
-    if (path.type === 'Path') {
-      let {
-        ref: head,
-        tail: parts
-      } = path;
-      return head.type === 'Free' && !_syntax.ASTv2.isStrictResolution(head.resolution) && parts.length === 0;
-    } else {
-      return false;
-    }
-  }
-  function isStrictHelper(expr) {
-    if (expr.callee.type !== 'Path') {
-      return true;
-    }
-    if (expr.callee.ref.type !== 'Free') {
-      return true;
-    }
-    return _syntax.ASTv2.isStrictResolution(expr.callee.ref.resolution);
-  }
-  function assertIsValidModifier(helper) {
-    if (isStrictHelper(helper) || isSimplePath(helper.callee)) {
-      return;
-    }
-    throw (0, _syntax.generateSyntaxError)("`" + printPath(helper.callee) + "` is not a valid name for a modifier", helper.loc);
-  }
-  function printPath(path) {
-    switch (path.type) {
-      case 'Literal':
-        return JSON.stringify(path.value);
-      case 'Path':
-        {
-          let printedPath = [printPathHead(path.ref)];
-          printedPath.push(...path.tail.map(t => t.chars));
-          return printedPath.join('.');
-        }
-      case 'Call':
-        return "(" + printPath(path.callee) + " ...)";
-      case 'DeprecatedCall':
-        return "" + path.callee.name;
-      case 'Interpolate':
-        throw (0, _util.unreachable)('a concat statement cannot appear as the head of an expression');
-    }
-  }
-  function printPathHead(head) {
-    switch (head.type) {
-      case 'Arg':
-        return head.name.chars;
-      case 'Free':
-      case 'Local':
-        return head.name;
-      case 'This':
-        return 'this';
-    }
-  }
   class NormalizeExpressions {
     visit(node, state) {
       switch (node.type) {
         case 'Literal':
           return Ok(this.Literal(node));
+        case 'Keyword':
+          return Ok(this.Keyword(node));
         case 'Interpolate':
           return this.Interpolate(node, state);
         case 'Path':
@@ -3777,8 +3729,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
             }
             return this.CallExpression(node, state);
           }
-        case 'DeprecatedCall':
-          return this.DeprecaedCallExpression(node, state);
       }
     }
     visitList(nodes, state) {
@@ -3816,6 +3766,9 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     Literal(literal) {
       return literal;
     }
+    Keyword(keyword) {
+      return keyword;
+    }
     Interpolate(expr, state) {
       let parts = expr.parts.map(convertPathToCallIfKeyword);
       return VISIT_EXPRS.visitList(parts, state).mapOk(parts => new InterpolateExpression({
@@ -3824,8 +3777,8 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       }));
     }
     CallExpression(expr, state) {
-      if (!hasPath(expr)) {
-        throw new Error("unimplemented subexpression at the head of a subexpression");
+      if (expr.callee.type === 'Call') {
+        throw new Error("unimplemented: subexpression at the head of a subexpression");
       } else {
         return Result.all(VISIT_EXPRS.visit(expr.callee, state), VISIT_EXPRS.Args(expr.args, state)).mapOk(_ref4 => {
           let [callee, args] = _ref4;
@@ -3837,26 +3790,14 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         });
       }
     }
-    DeprecaedCallExpression(_ref5, _state) {
-      let {
-        arg,
-        callee,
-        loc
-      } = _ref5;
-      return Ok(new DeprecatedCallExpression({
-        loc,
-        arg,
-        callee
-      }));
-    }
-    Args(_ref6, state) {
+    Args(_ref5, state) {
       let {
         positional,
         named,
         loc
-      } = _ref6;
-      return Result.all(this.Positional(positional, state), this.NamedArguments(named, state)).mapOk(_ref7 => {
-        let [positional, named] = _ref7;
+      } = _ref5;
+      return Result.all(this.Positional(positional, state), this.NamedArguments(named, state)).mapOk(_ref6 => {
+        let [positional, named] = _ref6;
         return new Args({
           loc,
           positional,
@@ -3913,13 +3854,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       }
       let path = getCalleeExpression(node);
       if (path !== null && path.type === 'Path' && path.ref.type === 'Free') {
-        if (path.tail.length > 0) {
-          if (path.ref.resolution.serialize() === 'Loose') {
-            // cannot be a keyword reference, keywords do not allow paths (must be
-            // relying on implicit this fallback)
-            return false;
-          }
-        }
         return path.ref.name === this.keyword;
       } else {
         return false;
@@ -4110,18 +4044,18 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
   function keywords(type) {
     return new Keywords(type);
   }
-  function toAppend(_ref8) {
+  function toAppend(_ref7) {
     let {
       assert,
       translate
-    } = _ref8;
+    } = _ref7;
     return {
       assert,
-      translate(_ref9, value) {
+      translate(_ref8, value) {
         let {
           node,
           state
-        } = _ref9;
+        } = _ref8;
         let result = translate({
           node,
           state
@@ -4171,19 +4105,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     };
   }
   function translateCurryKeyword(curriedType) {
-    return (_ref10, _ref11) => {
+    return (_ref9, _ref10) => {
       let {
         node,
         state
-      } = _ref10;
+      } = _ref9;
       let {
         definition,
         args
-      } = _ref11;
+      } = _ref10;
       let definitionResult = VISIT_EXPRS.visit(definition, state);
       let argsResult = VISIT_EXPRS.Args(args, state);
-      return Result.all(definitionResult, argsResult).mapOk(_ref12 => {
-        let [definition, args] = _ref12;
+      return Result.all(definitionResult, argsResult).mapOk(_ref11 => {
+        let [definition, args] = _ref11;
         return new Curry({
           loc: node.loc,
           curriedType,
@@ -4215,11 +4149,11 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     }
     return Ok(varName);
   }
-  function translateGetDynamicVarKeyword(_ref13, name) {
+  function translateGetDynamicVarKeyword(_ref12, name) {
     let {
       node,
       state
-    } = _ref13;
+    } = _ref12;
     return VISIT_EXPRS.visit(name, state).mapOk(name => new GetDynamicVar({
       name,
       loc: node.loc
@@ -4252,13 +4186,13 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     };
   }
   function translateHasBlockKeyword(type) {
-    return (_ref14, target) => {
+    return (_ref13, target) => {
       let {
         node,
         state: {
           scope
         }
-      } = _ref14;
+      } = _ref13;
       let block = type === 'has-block' ? new HasBlock({
         loc: node.loc,
         target,
@@ -4308,21 +4242,21 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
   }
   function translateIfUnlessInlineKeyword(type) {
     let inverted = type === 'unless';
-    return (_ref15, _ref16) => {
+    return (_ref14, _ref15) => {
       let {
         node,
         state
-      } = _ref15;
+      } = _ref14;
       let {
         condition,
         truthy,
         falsy
-      } = _ref16;
+      } = _ref15;
       let conditionResult = VISIT_EXPRS.visit(condition, state);
       let truthyResult = VISIT_EXPRS.visit(truthy, state);
       let falsyResult = falsy ? VISIT_EXPRS.visit(falsy, state) : Ok(null);
-      return Result.all(conditionResult, truthyResult, falsyResult).mapOk(_ref17 => {
-        let [condition, truthy, falsy] = _ref17;
+      return Result.all(conditionResult, truthyResult, falsyResult).mapOk(_ref16 => {
+        let [condition, truthy, falsy] = _ref16;
         if (inverted) {
           condition = new Not({
             value: condition,
@@ -4356,11 +4290,11 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     }
     return Ok(positional);
   }
-  function translateLogKeyword(_ref18, positional) {
+  function translateLogKeyword(_ref17, positional) {
     let {
       node,
       state
-    } = _ref18;
+    } = _ref17;
     return VISIT_EXPRS.Positional(positional, state).mapOk(positional => new Log({
       positional,
       loc: node.loc
@@ -4395,15 +4329,15 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         }
       }
     },
-    translate(_ref19, _ref20) {
+    translate(_ref18, _ref19) {
       let {
         node,
         state
-      } = _ref19;
+      } = _ref18;
       let {
         target,
         positional
-      } = _ref20;
+      } = _ref19;
       return VISIT_EXPRS.Positional(positional, state).mapOk(positional => new Yield({
         loc: node.loc,
         target,
@@ -4429,13 +4363,13 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         }
       }
     },
-    translate(_ref21) {
+    translate(_ref20) {
       let {
         node,
         state: {
           scope
         }
-      } = _ref21;
+      } = _ref20;
       scope.setHasDebugger();
       return Ok(new Debugger({
         loc: node.loc,
@@ -4444,19 +4378,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     }
   }).kw('component', {
     assert: assertCurryKeyword(_vm.CurriedTypes.Component),
-    translate(_ref22, _ref23) {
+    translate(_ref21, _ref22) {
       let {
         node,
         state
-      } = _ref22;
+      } = _ref21;
       let {
         definition,
         args
-      } = _ref23;
+      } = _ref22;
       let definitionResult = VISIT_EXPRS.visit(definition, state);
       let argsResult = VISIT_EXPRS.Args(args, state);
-      return Result.all(definitionResult, argsResult).mapOk(_ref24 => {
-        let [definition, args] = _ref24;
+      return Result.all(definitionResult, argsResult).mapOk(_ref23 => {
+        let [definition, args] = _ref23;
         return new InvokeComponent({
           loc: node.loc,
           definition,
@@ -4467,19 +4401,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     }
   }).kw('helper', {
     assert: assertCurryKeyword(_vm.CurriedTypes.Helper),
-    translate(_ref25, _ref26) {
+    translate(_ref24, _ref25) {
       let {
         node,
         state
-      } = _ref25;
+      } = _ref24;
       let {
         definition,
         args
-      } = _ref26;
+      } = _ref25;
       let definitionResult = VISIT_EXPRS.visit(definition, state);
       let argsResult = VISIT_EXPRS.Args(args, state);
-      return Result.all(definitionResult, argsResult).mapOk(_ref27 => {
-        let [definition, args] = _ref27;
+      return Result.all(definitionResult, argsResult).mapOk(_ref26 => {
+        let [definition, args] = _ref26;
         let text = new CallExpression({
           callee: definition,
           args,
@@ -4514,20 +4448,20 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         destination
       });
     },
-    translate(_ref28, _ref29) {
+    translate(_ref27, _ref28) {
       let {
         node,
         state
-      } = _ref28;
+      } = _ref27;
       let {
         insertBefore,
         destination
-      } = _ref29;
+      } = _ref28;
       let named = node.blocks.get('default');
       let body = VISIT_STMTS.NamedBlock(named, state);
       let destinationResult = VISIT_EXPRS.visit(destination, state);
-      return Result.all(body, destinationResult).andThen(_ref30 => {
-        let [body, destination] = _ref30;
+      return Result.all(body, destinationResult).andThen(_ref29 => {
+        let [body, destination] = _ref29;
         if (insertBefore) {
           return VISIT_EXPRS.visit(insertBefore, state).mapOk(insertBefore => ({
             body,
@@ -4543,12 +4477,12 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
             })
           });
         }
-      }).mapOk(_ref31 => {
+      }).mapOk(_ref30 => {
         let {
           body,
           destination,
           insertBefore
-        } = _ref31;
+        } = _ref30;
         return new InElement({
           loc: node.loc,
           block: body,
@@ -4577,21 +4511,21 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         condition
       });
     },
-    translate(_ref32, _ref33) {
+    translate(_ref31, _ref32) {
       let {
         node,
         state
-      } = _ref32;
+      } = _ref31;
       let {
         condition
-      } = _ref33;
+      } = _ref32;
       let block = node.blocks.get('default');
       let inverse = node.blocks.get('else');
       let conditionResult = VISIT_EXPRS.visit(condition, state);
       let blockResult = VISIT_STMTS.NamedBlock(block, state);
       let inverseResult = inverse ? VISIT_STMTS.NamedBlock(inverse, state) : Ok(null);
-      return Result.all(conditionResult, blockResult, inverseResult).mapOk(_ref34 => {
-        let [condition, block, inverse] = _ref34;
+      return Result.all(conditionResult, blockResult, inverseResult).mapOk(_ref33 => {
+        let [condition, block, inverse] = _ref33;
         return new If({
           loc: node.loc,
           condition,
@@ -4619,21 +4553,21 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         condition
       });
     },
-    translate(_ref35, _ref36) {
+    translate(_ref34, _ref35) {
       let {
         node,
         state
-      } = _ref35;
+      } = _ref34;
       let {
         condition
-      } = _ref36;
+      } = _ref35;
       let block = node.blocks.get('default');
       let inverse = node.blocks.get('else');
       let conditionResult = VISIT_EXPRS.visit(condition, state);
       let blockResult = VISIT_STMTS.NamedBlock(block, state);
       let inverseResult = inverse ? VISIT_STMTS.NamedBlock(inverse, state) : Ok(null);
-      return Result.all(conditionResult, blockResult, inverseResult).mapOk(_ref37 => {
-        let [condition, block, inverse] = _ref37;
+      return Result.all(conditionResult, blockResult, inverseResult).mapOk(_ref36 => {
+        let [condition, block, inverse] = _ref36;
         return new If({
           loc: node.loc,
           condition: new Not({
@@ -4666,69 +4600,27 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         key
       });
     },
-    translate(_ref38, _ref39) {
+    translate(_ref37, _ref38) {
       let {
         node,
         state
-      } = _ref38;
+      } = _ref37;
       let {
         value,
         key
-      } = _ref39;
+      } = _ref38;
       let block = node.blocks.get('default');
       let inverse = node.blocks.get('else');
       let valueResult = VISIT_EXPRS.visit(value, state);
       let keyResult = key ? VISIT_EXPRS.visit(key, state) : Ok(null);
       let blockResult = VISIT_STMTS.NamedBlock(block, state);
       let inverseResult = inverse ? VISIT_STMTS.NamedBlock(inverse, state) : Ok(null);
-      return Result.all(valueResult, keyResult, blockResult, inverseResult).mapOk(_ref40 => {
-        let [value, key, block, inverse] = _ref40;
+      return Result.all(valueResult, keyResult, blockResult, inverseResult).mapOk(_ref39 => {
+        let [value, key, block, inverse] = _ref39;
         return new Each({
           loc: node.loc,
           value,
           key,
-          block,
-          inverse
-        });
-      });
-    }
-  }).kw('with', {
-    assert(node) {
-      let {
-        args
-      } = node;
-      if (!args.named.isEmpty()) {
-        return Err((0, _syntax.generateSyntaxError)("{{#with}} cannot receive named parameters, received " + args.named.entries.map(e => e.name.chars).join(', '), args.named.loc));
-      }
-      if (args.positional.size > 1) {
-        return Err((0, _syntax.generateSyntaxError)("{{#with}} can only receive one positional parameter. Received " + args.positional.size + " parameters", args.positional.loc));
-      }
-      let value = args.nth(0);
-      if (value === null) {
-        return Err((0, _syntax.generateSyntaxError)("{{#with}} requires a value as its first positional parameter, did not receive any parameters", args.loc));
-      }
-      return Ok({
-        value
-      });
-    },
-    translate(_ref41, _ref42) {
-      let {
-        node,
-        state
-      } = _ref41;
-      let {
-        value
-      } = _ref42;
-      let block = node.blocks.get('default');
-      let inverse = node.blocks.get('else');
-      let valueResult = VISIT_EXPRS.visit(value, state);
-      let blockResult = VISIT_STMTS.NamedBlock(block, state);
-      let inverseResult = inverse ? VISIT_STMTS.NamedBlock(inverse, state) : Ok(null);
-      return Result.all(valueResult, blockResult, inverseResult).mapOk(_ref43 => {
-        let [value, block, inverse] = _ref43;
-        return new With({
-          loc: node.loc,
-          value,
           block,
           inverse
         });
@@ -4752,19 +4644,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         positional: args.positional
       });
     },
-    translate(_ref44, _ref45) {
+    translate(_ref40, _ref41) {
       let {
         node,
         state
-      } = _ref44;
+      } = _ref40;
       let {
         positional
-      } = _ref45;
+      } = _ref41;
       let block = node.blocks.get('default');
       let positionalResult = VISIT_EXPRS.Positional(positional, state);
       let blockResult = VISIT_STMTS.NamedBlock(block, state);
-      return Result.all(positionalResult, blockResult).mapOk(_ref46 => {
-        let [positional, block] = _ref46;
+      return Result.all(positionalResult, blockResult).mapOk(_ref42 => {
+        let [positional, block] = _ref42;
         return new Let({
           loc: node.loc,
           positional,
@@ -4778,19 +4670,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         named: node.args.named
       });
     },
-    translate(_ref47, _ref48) {
+    translate(_ref43, _ref44) {
       let {
         node,
         state
-      } = _ref47;
+      } = _ref43;
       let {
         named
-      } = _ref48;
+      } = _ref44;
       let block = node.blocks.get('default');
       let namedResult = VISIT_EXPRS.NamedArguments(named, state);
       let blockResult = VISIT_STMTS.NamedBlock(block, state);
-      return Result.all(namedResult, blockResult).mapOk(_ref49 => {
-        let [named, block] = _ref49;
+      return Result.all(namedResult, blockResult).mapOk(_ref45 => {
+        let [named, block] = _ref45;
         return new WithDynamicVars({
           loc: node.loc,
           named,
@@ -4800,20 +4692,20 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     }
   }).kw('component', {
     assert: assertCurryKeyword(_vm.CurriedTypes.Component),
-    translate(_ref50, _ref51) {
+    translate(_ref46, _ref47) {
       let {
         node,
         state
-      } = _ref50;
+      } = _ref46;
       let {
         definition,
         args
-      } = _ref51;
+      } = _ref47;
       let definitionResult = VISIT_EXPRS.visit(definition, state);
       let argsResult = VISIT_EXPRS.Args(args, state);
       let blocksResult = VISIT_STMTS.NamedBlocks(node.blocks, state);
-      return Result.all(definitionResult, argsResult, blocksResult).mapOk(_ref52 => {
-        let [definition, args, blocks] = _ref52;
+      return Result.all(definitionResult, argsResult, blocksResult).mapOk(_ref48 => {
+        let [definition, args, blocks] = _ref48;
         return new InvokeComponent({
           loc: node.loc,
           definition,
@@ -4931,17 +4823,14 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       });
     }
     modifier(modifier) {
-      if (isHelperInvocation(modifier)) {
-        assertIsValidModifier(modifier);
-      }
       let translated = MODIFIER_KEYWORDS.translate(modifier, this.state);
       if (translated !== null) {
         return translated;
       }
       let head = VISIT_EXPRS.visit(modifier.callee, this.state);
       let args = VISIT_EXPRS.Args(modifier.args, this.state);
-      return Result.all(head, args).mapOk(_ref53 => {
-        let [head, args] = _ref53;
+      return Result.all(head, args).mapOk(_ref49 => {
+        let [head, args] = _ref49;
         return new Modifier({
           loc: modifier.loc,
           callee: head,
@@ -4979,8 +4868,8 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       if (typeAttr) {
         attrs.add(this.attr(typeAttr));
       }
-      return Result.all(args.toArray(), attrs.toArray()).mapOk(_ref54 => {
-        let [args, attrs] = _ref54;
+      return Result.all(args.toArray(), attrs.toArray()).mapOk(_ref50 => {
+        let [args, attrs] = _ref50;
         return {
           attrs,
           args: new NamedArguments({
@@ -4993,8 +4882,8 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     prepare() {
       let attrs = this.attrs();
       let modifiers = new ResultArray(this.element.modifiers.map(m => this.modifier(m))).toArray();
-      return Result.all(attrs, modifiers).mapOk(_ref55 => {
-        let [result, modifiers] = _ref55;
+      return Result.all(attrs, modifiers).mapOk(_ref51 => {
+        let [result, modifiers] = _ref51;
         let {
           attrs,
           args
@@ -5011,11 +4900,11 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       });
     }
   }
-  function hasDynamicFeatures(_ref56) {
+  function hasDynamicFeatures(_ref52) {
     let {
       attrs,
       modifiers
-    } = _ref56;
+    } = _ref52;
     // ElementModifier needs the special ComponentOperations
     if (modifiers.length > 0) {
       return true;
@@ -5030,10 +4919,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       this.tag = tag;
       this.element = element;
     }
-    arg(attr, _ref57) {
+    arg(attr, _ref53) {
       let {
         state
-      } = _ref57;
+      } = _ref53;
       let name = attr.name;
       return VISIT_EXPRS.visit(convertPathToCallIfKeyword(attr.value), state).mapOk(value => new NamedArgument({
         loc: attr.loc,
@@ -5041,11 +4930,11 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         value
       }));
     }
-    toStatement(component, _ref58) {
+    toStatement(component, _ref54) {
       let {
         args,
         params
-      } = _ref58;
+      } = _ref54;
       let {
         element,
         state
@@ -5072,10 +4961,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     arg(attr) {
       return Err((0, _syntax.generateSyntaxError)(attr.name.chars + " is not a valid attribute name. @arguments are only allowed on components, but the tag for this element (`" + this.tag.chars + "`) is a regular, non-component HTML element.", attr.loc));
     }
-    toStatement(classified, _ref59) {
+    toStatement(classified, _ref55) {
       let {
         params
-      } = _ref59;
+      } = _ref55;
       let {
         state,
         element
@@ -5119,8 +5008,8 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       }
       let head = VISIT_EXPRS.visit(node.callee, state);
       let args = VISIT_EXPRS.Args(node.args, state);
-      return Result.all(head, args).andThen(_ref60 => {
-        let [head, args] = _ref60;
+      return Result.all(head, args).andThen(_ref56 => {
+        let [head, args] = _ref56;
         return this.NamedBlocks(node.blocks, state).mapOk(blocks => new InvokeBlock({
           loc: node.loc,
           head,
@@ -5217,6 +5106,296 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       }
     }
   }
+  var ResolutionType = /*#__PURE__*/function (ResolutionType) {
+    ResolutionType["Value"] = "value";
+    ResolutionType["Component"] = "component";
+    ResolutionType["Helper"] = "helper";
+    ResolutionType["Modifier"] = "modifier";
+    ResolutionType["ComponentOrHelper"] = "component or helper";
+    return ResolutionType;
+  }(ResolutionType || {});
+  class StrictModeValidationPass {
+    // This is done at the end of all the keyword normalizations
+    // At this point any free variables that isn't a valid keyword
+    // in its context should be considered a syntax error. We
+    // probably had various opportunities to do this inline in the
+    // earlier passes, but this aims to produce a better syntax
+    // error as we don't always have the right loc-context to do
+    // so in the other spots.
+    static validate(template) {
+      return new this(template).validate();
+    }
+    constructor(template) {
+      this.template = template;
+    }
+    validate() {
+      return this.Statements(this.template.body).mapOk(() => this.template);
+    }
+    Statements(statements) {
+      let result = Ok(null);
+      for (let statement of statements) {
+        result = result.andThen(() => this.Statement(statement));
+      }
+      return result;
+    }
+    NamedBlocks(_ref57) {
+      let {
+        blocks
+      } = _ref57;
+      let result = Ok(null);
+      for (let block of blocks.toArray()) {
+        result = result.andThen(() => this.NamedBlock(block));
+      }
+      return result;
+    }
+    NamedBlock(block) {
+      return this.Statements(block.body);
+    }
+    Statement(statement) {
+      switch (statement.type) {
+        case 'InElement':
+          return this.InElement(statement);
+        case 'Debugger':
+          return Ok(null);
+        case 'Yield':
+          return this.Yield(statement);
+        case 'AppendTrustedHTML':
+          return this.AppendTrustedHTML(statement);
+        case 'AppendTextNode':
+          return this.AppendTextNode(statement);
+        case 'Component':
+          return this.Component(statement);
+        case 'SimpleElement':
+          return this.SimpleElement(statement);
+        case 'InvokeBlock':
+          return this.InvokeBlock(statement);
+        case 'AppendComment':
+          return Ok(null);
+        case 'If':
+          return this.If(statement);
+        case 'Each':
+          return this.Each(statement);
+        case 'Let':
+          return this.Let(statement);
+        case 'WithDynamicVars':
+          return this.WithDynamicVars(statement);
+        case 'InvokeComponent':
+          return this.InvokeComponent(statement);
+      }
+    }
+    Expressions(expressions) {
+      let result = Ok(null);
+      for (let expression of expressions) {
+        result = result.andThen(() => this.Expression(expression));
+      }
+      return result;
+    }
+    Expression(expression, span, resolution) {
+      if (span === void 0) {
+        span = expression;
+      }
+      switch (expression.type) {
+        case 'Literal':
+        case 'Keyword':
+        case 'Missing':
+        case 'This':
+        case 'Arg':
+        case 'Local':
+        case 'HasBlock':
+        case 'HasBlockParams':
+        case 'GetDynamicVar':
+          return Ok(null);
+        case 'PathExpression':
+          return this.Expression(expression.head, span, resolution);
+        case 'Free':
+          return this.errorFor(expression.name, span, resolution);
+        case 'InterpolateExpression':
+          return this.InterpolateExpression(expression, span, resolution);
+        case 'CallExpression':
+          return this.CallExpression(expression, span, resolution != null ? resolution : ResolutionType.Helper);
+        case 'Not':
+          return this.Expression(expression.value, span, resolution);
+        case 'IfInline':
+          return this.IfInline(expression);
+        case 'Curry':
+          return this.Curry(expression);
+        case 'Log':
+          return this.Log(expression);
+      }
+    }
+    Args(args) {
+      return this.Positional(args.positional).andThen(() => this.NamedArguments(args.named));
+    }
+    Positional(positional, span) {
+      let result = Ok(null);
+      let expressions = positional.list.toArray();
+
+      // For cases like {{yield foo}}, when there is only a single argument, it
+      // makes for a slightly better error to report that entire span. However,
+      // when there are more than one, we need to be specific.
+      if (expressions.length === 1) {
+        result = this.Expression(expressions[0], span);
+      } else {
+        result = this.Expressions(expressions);
+      }
+      return result;
+    }
+    NamedArguments(_ref58) {
+      let {
+        entries
+      } = _ref58;
+      let result = Ok(null);
+      for (let arg of entries.toArray()) {
+        result = result.andThen(() => this.NamedArgument(arg));
+      }
+      return result;
+    }
+    NamedArgument(arg) {
+      if (arg.value.type === 'CallExpression') {
+        return this.Expression(arg.value, arg, ResolutionType.Helper);
+      } else {
+        return this.Expression(arg.value, arg);
+      }
+    }
+    ElementParameters(_ref59) {
+      let {
+        body
+      } = _ref59;
+      let result = Ok(null);
+      for (let param of body.toArray()) {
+        result = result.andThen(() => this.ElementParameter(param));
+      }
+      return result;
+    }
+    ElementParameter(param) {
+      switch (param.type) {
+        case 'StaticAttr':
+          return Ok(null);
+        case 'DynamicAttr':
+          return this.DynamicAttr(param);
+        case 'Modifier':
+          return this.Modifier(param);
+        case 'SplatAttr':
+          return Ok(null);
+      }
+    }
+    DynamicAttr(attr) {
+      if (attr.value.type === 'CallExpression') {
+        return this.Expression(attr.value, attr, ResolutionType.Helper);
+      } else {
+        return this.Expression(attr.value, attr);
+      }
+    }
+    Modifier(modifier) {
+      return this.Expression(modifier.callee, modifier, ResolutionType.Modifier).andThen(() => this.Args(modifier.args));
+    }
+    InElement(inElement) {
+      return this.Expression(inElement.destination)
+      // Unfortunately we lost the `insertBefore=` part of the span
+      .andThen(() => this.Expression(inElement.insertBefore)).andThen(() => this.NamedBlock(inElement.block));
+    }
+    Yield(statement) {
+      return this.Positional(statement.positional, statement);
+    }
+    AppendTrustedHTML(statement) {
+      return this.Expression(statement.html, statement);
+    }
+    AppendTextNode(statement) {
+      if (statement.text.type === 'CallExpression') {
+        return this.Expression(statement.text, statement, ResolutionType.ComponentOrHelper);
+      } else {
+        return this.Expression(statement.text, statement);
+      }
+    }
+    Component(statement) {
+      return this.Expression(statement.tag, statement, ResolutionType.Component).andThen(() => this.ElementParameters(statement.params)).andThen(() => this.NamedArguments(statement.args)).andThen(() => this.NamedBlocks(statement.blocks));
+    }
+    SimpleElement(statement) {
+      return this.ElementParameters(statement.params).andThen(() => this.Statements(statement.body));
+    }
+    InvokeBlock(statement) {
+      return this.Expression(statement.head, statement.head, ResolutionType.Component).andThen(() => this.Args(statement.args)).andThen(() => this.NamedBlocks(statement.blocks));
+    }
+    If(statement) {
+      return this.Expression(statement.condition, statement).andThen(() => this.NamedBlock(statement.block)).andThen(() => {
+        if (statement.inverse) {
+          return this.NamedBlock(statement.inverse);
+        } else {
+          return Ok(null);
+        }
+      });
+    }
+    Each(statement) {
+      return this.Expression(statement.value, statement).andThen(() => {
+        if (statement.key) {
+          return this.Expression(statement.key, statement);
+        } else {
+          return Ok(null);
+        }
+      }).andThen(() => this.NamedBlock(statement.block)).andThen(() => {
+        if (statement.inverse) {
+          return this.NamedBlock(statement.inverse);
+        } else {
+          return Ok(null);
+        }
+      });
+    }
+    Let(statement) {
+      return this.Positional(statement.positional).andThen(() => this.NamedBlock(statement.block));
+    }
+    WithDynamicVars(statement) {
+      return this.NamedArguments(statement.named).andThen(() => this.NamedBlock(statement.block));
+    }
+    InvokeComponent(statement) {
+      return this.Expression(statement.definition, statement, ResolutionType.Component).andThen(() => this.Args(statement.args)).andThen(() => {
+        if (statement.blocks) {
+          return this.NamedBlocks(statement.blocks);
+        } else {
+          return Ok(null);
+        }
+      });
+    }
+    InterpolateExpression(expression, span, resolution) {
+      let expressions = expression.parts.toArray();
+      if (expressions.length === 1) {
+        return this.Expression(expressions[0], span, resolution);
+      } else {
+        return this.Expressions(expressions);
+      }
+    }
+    CallExpression(expression, span, resolution) {
+      return this.Expression(expression.callee, span, resolution).andThen(() => this.Args(expression.args));
+    }
+    IfInline(expression) {
+      return this.Expression(expression.condition).andThen(() => this.Expression(expression.truthy)).andThen(() => {
+        if (expression.falsy) {
+          return this.Expression(expression.falsy);
+        } else {
+          return Ok(null);
+        }
+      });
+    }
+    Curry(expression) {
+      let resolution;
+      if (expression.curriedType === _vm.CurriedTypes.Component) {
+        resolution = ResolutionType.Component;
+      } else if (expression.curriedType === _vm.CurriedTypes.Helper) {
+        resolution = ResolutionType.Helper;
+      } else {
+        resolution = ResolutionType.Modifier;
+      }
+      return this.Expression(expression.definition, expression, resolution).andThen(() => this.Args(expression.args));
+    }
+    Log(expression) {
+      return this.Positional(expression.positional, expression);
+    }
+    errorFor(name, span, type) {
+      if (type === void 0) {
+        type = ResolutionType.Value;
+      }
+      return Err((0, _syntax.generateSyntaxError)("Attempted to resolve a " + type + " in a strict mode template, but that value was not in scope: " + name, (0, _syntax.loc)(span)));
+    }
+  }
 
   /**
    * Normalize the AST from @glimmer/syntax into the HIR. The HIR has special
@@ -5260,15 +5439,19 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     // create a new context for the normalization pass
     let state = new NormalizationState(root.table, isStrict);
     let body = VISIT_STMTS.visitList(root.body, state);
-    return body.mapOk(body => new Template({
+    let template = body.mapOk(body => new Template({
       loc: root.loc,
       scope: root.table,
       body: body.toArray()
     }));
+    if (isStrict) {
+      template = template.andThen(template => StrictModeValidationPass.validate(template));
+    }
+    return template;
   }
   class WireFormatDebugger {
-    constructor(_ref61) {
-      let [_statements, symbols, _hasEval, upvars] = _ref61;
+    constructor(_ref60) {
+      let [_statements, symbols, _hasEval, upvars] = _ref60;
       this.upvars = void 0;
       this.symbols = void 0;
       this.upvars = upvars;
@@ -5341,15 +5524,9 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           case _wireFormat.SexpOpcodes.Concat:
             return ['concat', this.formatParams(opcode[1])];
           case _wireFormat.SexpOpcodes.GetStrictKeyword:
-            return ['get-strict-free', this.upvars[opcode[1]], opcode[2]];
-          case _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHeadOrThisFallback:
-            return ['GetFreeAsComponentOrHelperHeadOrThisFallback', this.upvars[opcode[1]], opcode[2]];
+            return ['get-strict-free', this.upvars[opcode[1]]];
           case _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHead:
             return ['GetFreeAsComponentOrHelperHead', this.upvars[opcode[1]], opcode[2]];
-          case _wireFormat.SexpOpcodes.GetFreeAsHelperHeadOrThisFallback:
-            return ['GetFreeAsHelperHeadOrThisFallback', this.upvars[opcode[1]], opcode[2]];
-          case _wireFormat.SexpOpcodes.GetFreeAsDeprecatedHelperHeadOrThisFallback:
-            return ['GetFreeAsDeprecatedHelperHeadOrThisFallback', this.upvars[opcode[1]]];
           case _wireFormat.SexpOpcodes.GetFreeAsHelperHead:
             return ['GetFreeAsHelperHead', this.upvars[opcode[1]], opcode[2]];
           case _wireFormat.SexpOpcodes.GetFreeAsComponentHead:
@@ -5376,8 +5553,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
             return ['not'];
           case _wireFormat.SexpOpcodes.Each:
             return ['each', this.formatOpcode(opcode[1]), opcode[2] ? this.formatOpcode(opcode[2]) : null, this.formatBlock(opcode[3]), opcode[4] ? this.formatBlock(opcode[4]) : null];
-          case _wireFormat.SexpOpcodes.With:
-            return ['with', this.formatOpcode(opcode[1]), this.formatBlock(opcode[2]), opcode[3] ? this.formatBlock(opcode[3]) : null];
           case _wireFormat.SexpOpcodes.Let:
             return ['let', this.formatParams(opcode[1]), this.formatBlock(opcode[2])];
           case _wireFormat.SexpOpcodes.Log:
@@ -5442,10 +5617,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           return undefined;
         case 'Literal':
           return this.Literal(expr);
+        case 'Keyword':
+          return this.Keyword(expr);
         case 'CallExpression':
           return this.CallExpression(expr);
-        case 'DeprecatedCallExpression':
-          return this.DeprecatedCallExpression(expr);
         case 'PathExpression':
           return this.PathExpression(expr);
         case 'Arg':
@@ -5474,10 +5649,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           return this.Log(expr);
       }
     }
-    Literal(_ref62) {
+    Literal(_ref61) {
       let {
         value
-      } = _ref62;
+      } = _ref61;
       if (value === undefined) {
         return [_wireFormat.SexpOpcodes.Undefined];
       } else {
@@ -5487,97 +5662,91 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
     Missing() {
       return undefined;
     }
-    HasBlock(_ref63) {
+    HasBlock(_ref62) {
+      let {
+        symbol
+      } = _ref62;
+      return [_wireFormat.SexpOpcodes.HasBlock, [_wireFormat.SexpOpcodes.GetSymbol, symbol]];
+    }
+    HasBlockParams(_ref63) {
       let {
         symbol
       } = _ref63;
-      return [_wireFormat.SexpOpcodes.HasBlock, [_wireFormat.SexpOpcodes.GetSymbol, symbol]];
-    }
-    HasBlockParams(_ref64) {
-      let {
-        symbol
-      } = _ref64;
       return [_wireFormat.SexpOpcodes.HasBlockParams, [_wireFormat.SexpOpcodes.GetSymbol, symbol]];
     }
-    Curry(_ref65) {
+    Curry(_ref64) {
       let {
         definition,
         curriedType,
         args
-      } = _ref65;
+      } = _ref64;
       return [_wireFormat.SexpOpcodes.Curry, EXPR.expr(definition), curriedType, EXPR.Positional(args.positional), EXPR.NamedArguments(args.named)];
     }
-    Local(_ref66) {
+    Local(_ref65) {
       let {
         isTemplateLocal,
         symbol
-      } = _ref66;
+      } = _ref65;
       return [isTemplateLocal ? _wireFormat.SexpOpcodes.GetLexicalSymbol : _wireFormat.SexpOpcodes.GetSymbol, symbol];
     }
-    GetWithResolver(_ref67) {
+    Keyword(_ref66) {
       let {
         symbol
-      } = _ref67;
-      return [_wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHeadOrThisFallback, symbol];
+      } = _ref66;
+      return [_wireFormat.SexpOpcodes.GetStrictKeyword, symbol];
     }
-    PathExpression(_ref68) {
+    PathExpression(_ref67) {
       let {
         head,
         tail
-      } = _ref68;
+      } = _ref67;
       let getOp = EXPR.expr(head);
+      (0, _util.assert)(getOp[0] !== _wireFormat.SexpOpcodes.GetStrictKeyword, '[BUG] keyword in a PathExpression');
       return [...getOp, EXPR.Tail(tail)];
     }
-    InterpolateExpression(_ref69) {
+    InterpolateExpression(_ref68) {
       let {
         parts
-      } = _ref69;
+      } = _ref68;
       return [_wireFormat.SexpOpcodes.Concat, parts.map(e => EXPR.expr(e)).toArray()];
     }
-    CallExpression(_ref70) {
+    CallExpression(_ref69) {
       let {
         callee,
         args
-      } = _ref70;
+      } = _ref69;
       return [_wireFormat.SexpOpcodes.Call, EXPR.expr(callee), ...EXPR.Args(args)];
     }
-    DeprecatedCallExpression(_ref71) {
-      let {
-        arg,
-        callee
-      } = _ref71;
-      return [_wireFormat.SexpOpcodes.GetFreeAsDeprecatedHelperHeadOrThisFallback, callee.symbol, [arg.chars]];
-    }
-    Tail(_ref72) {
+    Tail(_ref70) {
       let {
         members
-      } = _ref72;
+      } = _ref70;
       return (0, _util.mapPresentArray)(members, member => member.chars);
     }
-    Args(_ref73) {
+    Args(_ref71) {
       let {
         positional,
         named
-      } = _ref73;
+      } = _ref71;
       return [this.Positional(positional), this.NamedArguments(named)];
     }
-    Positional(_ref74) {
+    Positional(_ref72) {
       let {
         list
-      } = _ref74;
+      } = _ref72;
       return list.map(l => EXPR.expr(l)).toPresentArray();
     }
-    NamedArgument(_ref75) {
+    NamedArgument(_ref73) {
       let {
         key,
         value
-      } = _ref75;
+      } = _ref73;
       return [key.chars, EXPR.expr(value)];
     }
-    NamedArguments(_ref76) {
+    NamedArguments(_ref74) {
       let {
         entries: pairs
-      } = _ref76;
+      } = _ref74;
       let list = pairs.toArray();
       if ((0, _util.isPresentArray)(list)) {
         let names = [];
@@ -5594,34 +5763,34 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         return null;
       }
     }
-    Not(_ref77) {
+    Not(_ref75) {
       let {
         value
-      } = _ref77;
+      } = _ref75;
       return [_wireFormat.SexpOpcodes.Not, EXPR.expr(value)];
     }
-    IfInline(_ref78) {
+    IfInline(_ref76) {
       let {
         condition,
         truthy,
         falsy
-      } = _ref78;
+      } = _ref76;
       let expr = [_wireFormat.SexpOpcodes.IfInline, EXPR.expr(condition), EXPR.expr(truthy)];
       if (falsy) {
         expr.push(EXPR.expr(falsy));
       }
       return expr;
     }
-    GetDynamicVar(_ref79) {
+    GetDynamicVar(_ref77) {
       let {
         name
-      } = _ref79;
+      } = _ref77;
       return [_wireFormat.SexpOpcodes.GetDynamicVar, EXPR.expr(name)];
     }
-    Log(_ref80) {
+    Log(_ref78) {
       let {
         positional
-      } = _ref80;
+      } = _ref78;
       return [_wireFormat.SexpOpcodes.Log, this.Positional(positional)];
     }
   }
@@ -5674,8 +5843,6 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           return this.If(stmt);
         case 'Each':
           return this.Each(stmt);
-        case 'With':
-          return this.With(stmt);
         case 'Let':
           return this.Let(stmt);
         case 'WithDynamicVars':
@@ -5686,20 +5853,20 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           return (0, _util.exhausted)(stmt);
       }
     }
-    Yield(_ref81) {
+    Yield(_ref79) {
       let {
         to,
         positional
-      } = _ref81;
+      } = _ref79;
       return [_wireFormat.SexpOpcodes.Yield, to, EXPR.Positional(positional)];
     }
-    InElement(_ref82) {
+    InElement(_ref80) {
       let {
         guid,
         insertBefore,
         destination,
         block
-      } = _ref82;
+      } = _ref80;
       let wireBlock = CONTENT.NamedBlock(block)[1];
       // let guid = args.guid;
       let wireDestination = EXPR.expr(destination);
@@ -5710,59 +5877,59 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
         return [_wireFormat.SexpOpcodes.InElement, wireBlock, guid, wireDestination, wireInsertBefore];
       }
     }
-    InvokeBlock(_ref83) {
+    InvokeBlock(_ref81) {
       let {
         head,
         args,
         blocks
-      } = _ref83;
+      } = _ref81;
       return [_wireFormat.SexpOpcodes.Block, EXPR.expr(head), ...EXPR.Args(args), CONTENT.NamedBlocks(blocks)];
     }
-    AppendTrustedHTML(_ref84) {
+    AppendTrustedHTML(_ref82) {
       let {
         html
-      } = _ref84;
+      } = _ref82;
       return [_wireFormat.SexpOpcodes.TrustingAppend, EXPR.expr(html)];
     }
-    AppendTextNode(_ref85) {
+    AppendTextNode(_ref83) {
       let {
         text
-      } = _ref85;
+      } = _ref83;
       return [_wireFormat.SexpOpcodes.Append, EXPR.expr(text)];
     }
-    AppendComment(_ref86) {
+    AppendComment(_ref84) {
       let {
         value
-      } = _ref86;
+      } = _ref84;
       return [_wireFormat.SexpOpcodes.Comment, value.chars];
     }
-    SimpleElement(_ref87) {
+    SimpleElement(_ref85) {
       let {
         tag,
         params,
         body,
         dynamicFeatures
-      } = _ref87;
+      } = _ref85;
       let op = dynamicFeatures ? _wireFormat.SexpOpcodes.OpenElementWithSplat : _wireFormat.SexpOpcodes.OpenElement;
       return new WireStatements([[op, deflateTagName(tag.chars)], ...CONTENT.ElementParameters(params).toArray(), [_wireFormat.SexpOpcodes.FlushElement], ...CONTENT.list(body), [_wireFormat.SexpOpcodes.CloseElement]]);
     }
-    Component(_ref88) {
+    Component(_ref86) {
       let {
         tag,
         params,
         args,
         blocks
-      } = _ref88;
+      } = _ref86;
       let wireTag = EXPR.expr(tag);
       let wirePositional = CONTENT.ElementParameters(params);
       let wireNamed = EXPR.NamedArguments(args);
       let wireNamedBlocks = CONTENT.NamedBlocks(blocks);
       return [_wireFormat.SexpOpcodes.Component, wireTag, wirePositional.toPresentArray(), wireNamed, wireNamedBlocks];
     }
-    ElementParameters(_ref89) {
+    ElementParameters(_ref87) {
       let {
         body
-      } = _ref89;
+      } = _ref87;
       return body.map(p => CONTENT.ElementParameter(p));
     }
     ElementParameter(param) {
@@ -5777,10 +5944,10 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
           return [_wireFormat.SexpOpcodes.Modifier, EXPR.expr(param.callee), ...EXPR.Args(param.args)];
       }
     }
-    NamedBlocks(_ref90) {
+    NamedBlocks(_ref88) {
       let {
         blocks
-      } = _ref90;
+      } = _ref88;
       let names = [];
       let serializedBlocks = [];
       for (let block of blocks.toArray()) {
@@ -5790,85 +5957,77 @@ define("@glimmer/compiler", ["exports", "@glimmer/util", "@glimmer/wire-format",
       }
       return names.length > 0 ? [names, serializedBlocks] : null;
     }
-    NamedBlock(_ref91) {
+    NamedBlock(_ref89) {
       let {
         name,
         body,
         scope
-      } = _ref91;
+      } = _ref89;
       let nameChars = name.chars;
       if (nameChars === 'inverse') {
         nameChars = 'else';
       }
       return [nameChars, [CONTENT.list(body), scope.slots]];
     }
-    If(_ref92) {
+    If(_ref90) {
       let {
         condition,
         block,
         inverse
-      } = _ref92;
+      } = _ref90;
       return [_wireFormat.SexpOpcodes.If, EXPR.expr(condition), CONTENT.NamedBlock(block)[1], inverse ? CONTENT.NamedBlock(inverse)[1] : null];
     }
-    Each(_ref93) {
+    Each(_ref91) {
       let {
         value,
         key,
         block,
         inverse
-      } = _ref93;
+      } = _ref91;
       return [_wireFormat.SexpOpcodes.Each, EXPR.expr(value), key ? EXPR.expr(key) : null, CONTENT.NamedBlock(block)[1], inverse ? CONTENT.NamedBlock(inverse)[1] : null];
     }
-    With(_ref94) {
-      let {
-        value,
-        block,
-        inverse
-      } = _ref94;
-      return [_wireFormat.SexpOpcodes.With, EXPR.expr(value), CONTENT.NamedBlock(block)[1], inverse ? CONTENT.NamedBlock(inverse)[1] : null];
-    }
-    Let(_ref95) {
+    Let(_ref92) {
       let {
         positional,
         block
-      } = _ref95;
+      } = _ref92;
       return [_wireFormat.SexpOpcodes.Let, EXPR.Positional(positional), CONTENT.NamedBlock(block)[1]];
     }
-    WithDynamicVars(_ref96) {
+    WithDynamicVars(_ref93) {
       let {
         named,
         block
-      } = _ref96;
+      } = _ref93;
       return [_wireFormat.SexpOpcodes.WithDynamicVars, EXPR.NamedArguments(named), CONTENT.NamedBlock(block)[1]];
     }
-    InvokeComponent(_ref97) {
+    InvokeComponent(_ref94) {
       let {
         definition,
         args,
         blocks
-      } = _ref97;
+      } = _ref94;
       return [_wireFormat.SexpOpcodes.InvokeComponent, EXPR.expr(definition), EXPR.Positional(args.positional), EXPR.NamedArguments(args.named), blocks ? CONTENT.NamedBlocks(blocks) : null];
     }
   }
   const CONTENT = new ContentEncoder();
-  function staticAttr(_ref98) {
+  function staticAttr(_ref95) {
     let {
       name,
       value,
       namespace
-    } = _ref98;
+    } = _ref95;
     let out = [deflateAttrName(name.chars), value.chars];
     if (namespace) {
       out.push(namespace);
     }
     return out;
   }
-  function dynamicAttr(_ref99) {
+  function dynamicAttr(_ref96) {
     let {
       name,
       value,
       namespace
-    } = _ref99;
+    } = _ref96;
     let out = [deflateAttrName(name.chars), EXPR.expr(value)];
     if (namespace) {
       out.push(namespace);
@@ -6156,7 +6315,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       switch (node.type) {
         case 'MustacheStatement':
         case 'BlockStatement':
-        case 'PartialStatement':
         case 'MustacheCommentStatement':
         case 'CommentStatement':
         case 'TextNode':
@@ -6173,8 +6331,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         case 'PathExpression':
         case 'SubExpression':
           return this.Expression(node);
-        case 'Program':
-          return this.Block(node);
         case 'ConcatStatement':
           // should have an AttrNode parent
           return this.ConcatStatement(node);
@@ -6220,8 +6376,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
           return this.MustacheStatement(statement);
         case 'BlockStatement':
           return this.BlockStatement(statement);
-        case 'PartialStatement':
-          return this.PartialStatement(statement);
         case 'MustacheCommentStatement':
           return this.MustacheCommentStatement(statement);
         case 'CommentStatement':
@@ -6231,12 +6385,16 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         case 'ElementNode':
           return this.ElementNode(statement);
         case 'Block':
-        case 'Template':
           return this.Block(statement);
+        case 'Template':
+          return this.Template(statement);
         case 'AttrNode':
           // should have element
           return this.AttrNode(statement);
       }
+    }
+    Template(template) {
+      this.TopLevelStatements(template.body);
     }
     Block(block) {
       /*
@@ -6358,7 +6516,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       if (this.handledByOverride(mustache)) {
         return;
       }
-      this.buffer += mustache.escaped ? '{{' : '{{{';
+      this.buffer += mustache.trusting ? '{{{' : '{{';
       if (mustache.strip.open) {
         this.buffer += '~';
       }
@@ -6368,7 +6526,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       if (mustache.strip.close) {
         this.buffer += '~';
       }
-      this.buffer += mustache.escaped ? '}}' : '}}}';
+      this.buffer += mustache.trusting ? '}}}' : '}}';
     }
     BlockStatement(block) {
       if (this.handledByOverride(block)) {
@@ -6408,16 +6566,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     }
     BlockParams(blockParams) {
       this.buffer += " as |" + blockParams.join(' ') + "|";
-    }
-    PartialStatement(partial) {
-      if (this.handledByOverride(partial)) {
-        return;
-      }
-      this.buffer += '{{>';
-      this.Expression(partial.name);
-      this.Params(partial.params);
-      this.Hash(partial.hash);
-      this.buffer += '}}';
     }
     ConcatStatement(concat) {
       if (this.handledByOverride(concat)) {
@@ -6555,8 +6703,18 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     let printer = new Printer(options);
     return printer.print(ast);
   }
-  function isKeyword(word) {
-    return word in KEYWORDS_TYPES;
+  function isKeyword(word, type) {
+    if (word in KEYWORDS_TYPES) {
+      if (type === undefined) {
+        return true;
+      } else {
+        let types = KEYWORDS_TYPES[word];
+        // This seems like a TypeScript bug – it inferred types as never[]?
+        return types.includes(type);
+      }
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -6564,6 +6722,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    * language, and where their valid usages are.
    */
   const KEYWORDS_TYPES = _exports.KEYWORDS_TYPES = {
+    action: ['Call', 'Modifier'],
     component: ['Call', 'Append', 'Block'],
     debugger: ['Append'],
     'each-in': ['Block'],
@@ -6574,17 +6733,14 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     if: ['Call', 'Append', 'Block'],
     'in-element': ['Block'],
     let: ['Block'],
-    'link-to': ['Append', 'Block'],
     log: ['Call', 'Append'],
-    modifier: ['Call'],
+    modifier: ['Call', 'Modifier'],
     mount: ['Append'],
     mut: ['Call', 'Append'],
     outlet: ['Append'],
-    'query-params': ['Call'],
     readonly: ['Call', 'Append'],
     unbound: ['Call', 'Append'],
     unless: ['Call', 'Append', 'Block'],
-    with: ['Block'],
     yield: ['Append']
   };
   const UNKNOWN_POSITION = Object.freeze({
@@ -6695,6 +6851,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     // This big block is the bulk of the heavy lifting in this file. It facilitates exhaustiveness
     // checking so that matchers can ensure they've actually covered all the cases (and TypeScript
     // will treat it as an exhaustive match).
+
     when(left, right, callback) {
       this._whens.get(left, () => new When()).add(right, callback);
       return this;
@@ -7680,13 +7837,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   // ensure stays in sync with typing
   // ParentNode and ChildKey types are derived from VisitorKeysMap
   const visitorKeys = _exports.visitorKeys = {
-    Program: ['body'],
     Template: ['body'],
     Block: ['body'],
     MustacheStatement: ['path', 'params', 'hash'],
     BlockStatement: ['path', 'params', 'hash', 'program', 'inverse'],
     ElementModifierStatement: ['path', 'params', 'hash'],
-    PartialStatement: ['name', 'params', 'hash'],
     CommentStatement: [],
     MustacheCommentStatement: [],
     ElementNode: ['attributes', 'modifiers', 'children', 'comments'],
@@ -7695,18 +7850,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     ConcatStatement: ['parts'],
     SubExpression: ['path', 'params', 'hash'],
     PathExpression: [],
-    PathHead: [],
     StringLiteral: [],
     BooleanLiteral: [],
     NumberLiteral: [],
     NullLiteral: [],
     UndefinedLiteral: [],
     Hash: ['pairs'],
-    HashPair: ['value'],
-    // v2 new nodes
-    NamedBlock: ['attributes', 'modifiers', 'children', 'comments'],
-    SimpleElement: ['attributes', 'modifiers', 'children', 'comments'],
-    Component: ['head', 'attributes', 'modifiers', 'children', 'comments']
+    HashPair: ['value']
   };
   const TraversalError = function () {
     TraversalError.prototype = Object.create(Error.prototype);
@@ -7803,8 +7953,9 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     return keyVisitor.All;
   }
   function getNodeHandler(visitor, nodeType) {
-    if (nodeType === 'Template' || nodeType === 'Block') {
-      if (visitor.Program) {
+    if (visitor.Program) {
+      if (nodeType === 'Template' && !visitor.Template || nodeType === 'Block' && !visitor.Block) {
+        (0, _util.deprecate)("The 'Program' visitor node is deprecated. Use 'Template' or 'Block' instead (node was '" + nodeType + "') ");
         return visitor.Program;
       }
     }
@@ -7967,87 +8118,25 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       switch (node.type) {
         case 'Block':
         case 'Template':
-          return visitors.Program(this, node, callback);
+          walkBody(this, node.body, callback);
+          return;
         case 'ElementNode':
-          return visitors.ElementNode(this, node, callback);
+          walkBody(this, node.children, callback);
+          return;
         case 'BlockStatement':
-          return visitors.BlockStatement(this, node, callback);
+          this.visit(node.program, callback);
+          this.visit(node.inverse || null, callback);
+          return;
         default:
           return;
       }
     }
   }
   _exports.Walker = _exports.Path = Walker;
-  const visitors = {
-    Program(walker, node, callback) {
-      walkBody(walker, node.body, callback);
-    },
-    Template(walker, node, callback) {
-      walkBody(walker, node.body, callback);
-    },
-    Block(walker, node, callback) {
-      walkBody(walker, node.body, callback);
-    },
-    ElementNode(walker, node, callback) {
-      walkBody(walker, node.children, callback);
-    },
-    BlockStatement(walker, node, callback) {
-      walker.visit(node.program, callback);
-      walker.visit(node.inverse || null, callback);
-    }
-  };
   function walkBody(walker, body, callback) {
     for (const child of body) {
       walker.visit(child, callback);
     }
-  }
-
-  // Regex to validate the identifier for block parameters.
-  // Based on the ID validation regex in Handlebars.
-
-  let ID_INVERSE_PATTERN = /[!"#%&'()*+./;<=>@[\\\]^`{|}~]/u;
-
-  // Checks the element's attributes to see if it uses block params.
-  // If it does, registers the block params with the program and
-  // removes the corresponding attributes from the element.
-
-  function parseElementBlockParams(element) {
-    let params = parseBlockParams(element);
-    if (params) element.blockParams = params;
-  }
-  function parseBlockParams(element) {
-    let l = element.attributes.length;
-    let attrNames = [];
-    for (let i = 0; i < l; i++) {
-      attrNames.push((0, _util.unwrap)(element.attributes[i]).name);
-    }
-    let asIndex = attrNames.indexOf('as');
-    if (asIndex === -1 && attrNames.length > 0 && (0, _util.unwrap)(attrNames[attrNames.length - 1]).charAt(0) === '|') {
-      throw generateSyntaxError('Block parameters must be preceded by the `as` keyword, detected block parameters without `as`', element.loc);
-    }
-    if (asIndex !== -1 && l > asIndex && (0, _util.unwrap)(attrNames[asIndex + 1]).charAt(0) === '|') {
-      // Some basic validation, since we're doing the parsing ourselves
-      let paramsString = attrNames.slice(asIndex).join(' ');
-      if (paramsString.charAt(paramsString.length - 1) !== '|' || (0, _util.expect)(paramsString.match(/\|/gu), "block params must exist here").length !== 2) {
-        throw generateSyntaxError("Invalid block parameters syntax, '" + paramsString + "'", element.loc);
-      }
-      let params = [];
-      for (let i = asIndex + 1; i < l; i++) {
-        let param = (0, _util.unwrap)(attrNames[i]).replace(/\|/gu, '');
-        if (param !== '') {
-          if (ID_INVERSE_PATTERN.test(param)) {
-            throw generateSyntaxError("Invalid identifier for block parameters, '" + param + "'", element.loc);
-          }
-          params.push(param);
-        }
-      }
-      if (params.length === 0) {
-        throw generateSyntaxError('Cannot use zero block parameters', element.loc);
-      }
-      element.attributes = element.attributes.slice(0, asIndex);
-      return params;
-    }
-    return null;
   }
   function childrenFor(node) {
     switch (node.type) {
@@ -8090,109 +8179,94 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   // const SOURCE = new Source('', '(tests)');
 
   // Statements
-  function buildMustache(path, params, hash, raw, loc, strip) {
-    if (typeof path === 'string') {
-      path = buildPath(path);
+
+  function buildMustache(path, params, hash, trusting, loc, strip) {
+    if (params === void 0) {
+      params = [];
     }
-    return {
-      type: 'MustacheStatement',
-      path,
-      params: params || [],
-      hash: hash || buildHash([]),
-      escaped: !raw,
-      trusting: !!raw,
-      loc: buildLoc(loc || null),
-      strip: strip || {
-        open: false,
-        close: false
-      }
-    };
+    if (hash === void 0) {
+      hash = buildHash([]);
+    }
+    if (trusting === void 0) {
+      trusting = false;
+    }
+    return b.mustache({
+      path: buildPath(path),
+      params,
+      hash,
+      trusting,
+      strip,
+      loc: buildLoc(loc || null)
+    });
   }
   function buildBlock(path, params, hash, _defaultBlock, _elseBlock, loc, openStrip, inverseStrip, closeStrip) {
+    var _elseBlock2;
+    if (_elseBlock === void 0) {
+      _elseBlock = null;
+    }
     let defaultBlock;
-    let elseBlock;
+    let elseBlock = null;
     if (_defaultBlock.type === 'Template') {
-      defaultBlock = (0, _util.assign)({}, _defaultBlock, {
-        type: 'Block'
+      (0, _util.deprecate)("b.program is deprecated. Use b.blockItself instead.");
+      defaultBlock = b.blockItself({
+        params: buildBlockParams(_defaultBlock.blockParams),
+        body: _defaultBlock.body,
+        loc: _defaultBlock.loc
       });
     } else {
       defaultBlock = _defaultBlock;
     }
-    if (_elseBlock !== undefined && _elseBlock !== null && _elseBlock.type === 'Template') {
-      elseBlock = (0, _util.assign)({}, _elseBlock, {
-        type: 'Block'
+    if (((_elseBlock2 = _elseBlock) == null ? void 0 : _elseBlock2.type) === 'Template') {
+      (0, _util.deprecate)("b.program is deprecated. Use b.blockItself instead.");
+      (0, _util.assert)(_elseBlock.blockParams.length === 0, '{{else}} block cannot have block params');
+      elseBlock = b.blockItself({
+        params: [],
+        body: _elseBlock.body,
+        loc: _elseBlock.loc
       });
     } else {
       elseBlock = _elseBlock;
     }
-    return {
-      type: 'BlockStatement',
+    return b.block({
       path: buildPath(path),
       params: params || [],
       hash: hash || buildHash([]),
-      program: defaultBlock || null,
-      inverse: elseBlock || null,
+      defaultBlock,
+      elseBlock,
       loc: buildLoc(loc || null),
-      openStrip: openStrip || {
-        open: false,
-        close: false
-      },
-      inverseStrip: inverseStrip || {
-        open: false,
-        close: false
-      },
-      closeStrip: closeStrip || {
-        open: false,
-        close: false
-      }
-    };
+      openStrip,
+      inverseStrip,
+      closeStrip
+    });
   }
   function buildElementModifier(path, params, hash, loc) {
-    return {
-      type: 'ElementModifierStatement',
+    return b.elementModifier({
       path: buildPath(path),
       params: params || [],
       hash: hash || buildHash([]),
       loc: buildLoc(loc || null)
-    };
-  }
-  function buildPartial(name, params, hash, indent, loc) {
-    return {
-      type: 'PartialStatement',
-      name: name,
-      params: params || [],
-      hash: hash || buildHash([]),
-      indent: indent || '',
-      strip: {
-        open: false,
-        close: false
-      },
-      loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildComment(value, loc) {
-    return {
-      type: 'CommentStatement',
+    return b.comment({
       value: value,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildMustacheComment(value, loc) {
-    return {
-      type: 'MustacheCommentStatement',
+    return b.mustacheComment({
       value: value,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildConcat(parts, loc) {
     if (!(0, _util.isPresentArray)(parts)) {
       throw new Error("b.concat requires at least one part");
     }
-    return {
-      type: 'ConcatStatement',
-      parts: parts || [],
+    return b.concat({
+      parts,
       loc: buildLoc(loc || null)
-    };
+    });
   }
 
   // Nodes
@@ -8207,235 +8281,247 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       modifiers,
       comments,
       children,
+      openTag,
+      closeTag: _closeTag,
       loc
     } = options;
-    let tagName;
 
     // this is used for backwards compat, prior to `selfClosing` being part of the ElementNode AST
-    let selfClosing = false;
-    if (typeof tag === 'object') {
+    let path;
+    let selfClosing;
+    if (typeof tag === 'string') {
+      if (tag.endsWith('/')) {
+        path = buildPath(tag.slice(0, -1));
+        selfClosing = true;
+      } else {
+        path = buildPath(tag);
+      }
+    } else if ('type' in tag) {
+      (0, _util.assert)(tag.type === 'PathExpression', "Invalid tag type " + tag.type);
+      path = tag;
+    } else if ('path' in tag) {
+      (0, _util.assert)(tag.path.type === 'PathExpression', "Invalid tag type " + tag.path.type);
+      path = tag.path;
       selfClosing = tag.selfClosing;
-      tagName = tag.name;
-    } else if (tag.slice(-1) === '/') {
-      tagName = tag.slice(0, -1);
-      selfClosing = true;
     } else {
-      tagName = tag;
+      path = buildPath(tag.name);
+      selfClosing = tag.selfClosing;
     }
-    return {
-      type: 'ElementNode',
-      tag: tagName,
-      selfClosing: selfClosing,
+    if (selfClosing) {
+      (0, _util.assert)(_closeTag === null || _closeTag === undefined, 'Cannot build a self-closing tag with a closeTag source location');
+    }
+    let params = blockParams == null ? void 0 : blockParams.map(param => {
+      if (typeof param === 'string') {
+        return buildVar(param);
+      } else {
+        return param;
+      }
+    });
+    let closeTag = null;
+    if (_closeTag) {
+      closeTag = buildLoc(_closeTag || null);
+    } else if (_closeTag === undefined) {
+      closeTag = selfClosing || isVoidTag(path.original) ? null : buildLoc(null);
+    }
+    return b.element({
+      path,
+      selfClosing: selfClosing || false,
       attributes: attrs || [],
-      blockParams: blockParams || [],
+      params: params || [],
       modifiers: modifiers || [],
       comments: comments || [],
       children: children || [],
+      openTag: buildLoc(openTag || null),
+      closeTag,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildAttr(name, value, loc) {
-    return {
-      type: 'AttrNode',
+    return b.attr({
       name: name,
       value: value,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildText(chars, loc) {
-    return {
-      type: 'TextNode',
-      chars: chars || '',
+    if (chars === void 0) {
+      chars = '';
+    }
+    return b.text({
+      chars,
       loc: buildLoc(loc || null)
-    };
+    });
   }
 
   // Expressions
 
   function buildSexpr(path, params, hash, loc) {
-    return {
-      type: 'SubExpression',
-      path: buildPath(path),
-      params: params || [],
-      hash: hash || buildHash([]),
-      loc: buildLoc(loc || null)
-    };
-  }
-  function headToString$1(head) {
-    switch (head.type) {
-      case 'AtHead':
-        return {
-          original: head.name,
-          parts: [head.name]
-        };
-      case 'ThisHead':
-        return {
-          original: "this",
-          parts: []
-        };
-      case 'VarHead':
-        return {
-          original: head.name,
-          parts: [head.name]
-        };
+    if (params === void 0) {
+      params = [];
     }
+    if (hash === void 0) {
+      hash = buildHash([]);
+    }
+    return b.sexpr({
+      path: buildPath(path),
+      params,
+      hash,
+      loc: buildLoc(loc || null)
+    });
   }
   function buildHead(original, loc) {
     let [head, ...tail] = (0, _util.asPresentArray)(original.split('.'));
-    let headNode;
-    if (head === 'this') {
-      headNode = {
-        type: 'ThisHead',
-        loc: buildLoc(loc || null)
-      };
-    } else if (head[0] === '@') {
-      headNode = {
-        type: 'AtHead',
-        name: head,
-        loc: buildLoc(loc || null)
-      };
-    } else {
-      headNode = {
-        type: 'VarHead',
-        name: head,
-        loc: buildLoc(loc || null)
-      };
-    }
-    return {
+    let headNode = b.head({
+      original: head,
+      loc: buildLoc(loc || null)
+    });
+    return b.path({
       head: headNode,
-      tail
-    };
+      tail,
+      loc: buildLoc(loc || null)
+    });
   }
   function buildThis(loc) {
-    return {
-      type: 'ThisHead',
+    return b.this({
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildAtName(name, loc) {
-    // the `@` should be included so we have a complete source range
-    (0, _util.assert)(name[0] === '@', "call builders.at() with a string that starts with '@'");
-    return {
-      type: 'AtHead',
+    return b.atName({
       name,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildVar(name, loc) {
-    (0, _util.assert)(name !== 'this', "You called builders.var() with 'this'. Call builders.this instead");
-    (0, _util.assert)(name[0] !== '@', "You called builders.var() with '" + name + "'. Call builders.at('" + name + "') instead");
-    return {
-      type: 'VarHead',
+    return b.var({
       name,
       loc: buildLoc(loc || null)
-    };
+    });
   }
-  function buildHeadFromString(head, loc) {
-    if (head[0] === '@') {
-      return buildAtName(head, loc);
-    } else if (head === 'this') {
-      return buildThis(loc);
-    } else {
-      return buildVar(head, loc);
-    }
-  }
-  function buildNamedBlockName(name, loc) {
-    return {
-      type: 'NamedBlockName',
-      name,
+  function buildHeadFromString(original, loc) {
+    return b.head({
+      original,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildCleanPath(head, tail, loc) {
-    let {
-      original: originalHead,
-      parts: headParts
-    } = headToString$1(head);
-    let parts = [...headParts, ...tail];
-    let original = [...originalHead, ...parts].join('.');
-    return new PathExpressionImplV1(original, head, tail, buildLoc(loc || null));
+    if (tail === void 0) {
+      tail = [];
+    }
+    return b.path({
+      head,
+      tail,
+      loc: buildLoc(loc || null)
+    });
   }
   function buildPath(path, loc) {
+    let span = buildLoc(loc || null);
     if (typeof path !== 'string') {
       if ('type' in path) {
         return path;
       } else {
+        (0, _util.assert)(path.head.indexOf('.') === -1, "builder.path({ head, tail }) should not be called with a head with dots in it");
         let {
           head,
           tail
-        } = buildHead(path.head, SourceSpan.broken());
-        (0, _util.assert)(tail.length === 0, "builder.path({ head, tail }) should not be called with a head with dots in it");
-        let {
-          original: originalHead
-        } = headToString$1(head);
-        return new PathExpressionImplV1([originalHead, ...tail].join('.'), head, tail, buildLoc(loc || null));
+        } = path;
+        return b.path({
+          head: b.head({
+            original: head,
+            loc: span.sliceStartChars({
+              chars: head.length
+            })
+          }),
+          tail,
+          loc: buildLoc(loc || null)
+        });
       }
     }
     let {
       head,
       tail
-    } = buildHead(path, SourceSpan.broken());
-    return new PathExpressionImplV1(path, head, tail, buildLoc(loc || null));
+    } = buildHead(path, span);
+    return b.path({
+      head,
+      tail,
+      loc: span
+    });
   }
   function buildLiteral(type, value, loc) {
-    return {
+    return b.literal({
       type,
       value,
-      original: value,
       loc: buildLoc(loc || null)
-    };
+    });
   }
 
   // Miscellaneous
 
   function buildHash(pairs, loc) {
-    return {
-      type: 'Hash',
-      pairs: pairs || [],
+    if (pairs === void 0) {
+      pairs = [];
+    }
+    return b.hash({
+      pairs,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildPair(key, value, loc) {
-    return {
-      type: 'HashPair',
-      key: key,
+    return b.pair({
+      key,
       value,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildProgram(body, blockParams, loc) {
-    return {
-      type: 'Template',
-      body: body || [],
-      blockParams: blockParams || [],
-      loc: buildLoc(loc || null)
-    };
+    (0, _util.deprecate)("b.program is deprecated. Use b.template or b.blockItself instead.");
+    if (blockParams && blockParams.length) {
+      return buildBlockItself(body, blockParams, false, loc);
+    } else {
+      return buildTemplate(body, [], loc);
+    }
   }
-  function buildBlockItself(body, blockParams, chained, loc) {
+  function buildBlockParams(params) {
+    return params.map(p => typeof p === 'string' ? b.var({
+      name: p,
+      loc: SourceSpan.synthetic(p)
+    }) : p);
+  }
+  function buildBlockItself(body, params, chained, loc) {
+    if (body === void 0) {
+      body = [];
+    }
+    if (params === void 0) {
+      params = [];
+    }
     if (chained === void 0) {
       chained = false;
     }
-    return {
-      type: 'Block',
-      body: body || [],
-      blockParams: blockParams || [],
+    return b.blockItself({
+      body,
+      params: buildBlockParams(params),
       chained,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildTemplate(body, blockParams, loc) {
-    return {
-      type: 'Template',
-      body: body || [],
-      blockParams: blockParams || [],
+    if (body === void 0) {
+      body = [];
+    }
+    if (blockParams === void 0) {
+      blockParams = [];
+    }
+    return b.template({
+      body,
+      blockParams,
       loc: buildLoc(loc || null)
-    };
+    });
   }
   function buildPosition(line, column) {
-    return {
+    return b.pos({
       line,
       column
-    };
+    });
   }
   function buildLoc() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -8457,8 +8543,8 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
           column: startColumn
         },
         end: {
-          line: endLine,
-          column: endColumn
+          line: endLine || startLine,
+          column: endColumn || startColumn
         }
       });
     }
@@ -8466,7 +8552,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   var publicBuilder = _exports.builders = {
     mustache: buildMustache,
     block: buildBlock,
-    partial: buildPartial,
     comment: buildComment,
     mustacheComment: buildMustacheComment,
     element: buildElement,
@@ -8489,7 +8574,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     at: buildAtName,
     var: buildVar,
     this: buildThis,
-    blockName: buildNamedBlockName,
     string: literal('StringLiteral'),
     boolean: literal('BooleanLiteral'),
     number: literal('NumberLiteral'),
@@ -8505,48 +8589,127 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       return buildLiteral(type, value, loc);
     };
   }
-  class PathExpressionImplV1 {
-    constructor(original, head, tail, loc) {
-      this.type = 'PathExpression';
-      this.parts = void 0;
-      this.this = false;
-      this.data = false;
-      // Cache for the head value.
-      this._head = undefined;
-      this.original = original;
-      this.loc = loc;
-      let parts = tail.slice();
-      if (head.type === 'ThisHead') {
-        this.this = true;
-      } else if (head.type === 'AtHead') {
-        this.data = true;
-        parts.unshift(head.name.slice(1));
-      } else {
-        parts.unshift(head.name);
+  function buildLegacyMustache(_ref13) {
+    let {
+      path,
+      params,
+      hash,
+      trusting,
+      strip,
+      loc
+    } = _ref13;
+    const node = {
+      type: 'MustacheStatement',
+      path,
+      params,
+      hash,
+      trusting,
+      strip,
+      loc
+    };
+    Object.defineProperty(node, 'escaped', {
+      enumerable: false,
+      get() {
+        (0, _util.deprecate)("The escaped property on mustache nodes is deprecated, use trusting instead");
+        return !this.trusting;
+      },
+      set(value) {
+        (0, _util.deprecate)("The escaped property on mustache nodes is deprecated, use trusting instead");
+        this.trusting = !value;
       }
-      this.parts = parts;
-    }
-    get head() {
-      if (this._head) {
-        return this._head;
+    });
+    return node;
+  }
+  function buildLegacyPath(_ref14) {
+    let {
+      head,
+      tail,
+      loc
+    } = _ref14;
+    const node = {
+      type: 'PathExpression',
+      head,
+      tail,
+      get original() {
+        return [this.head.original, ...this.tail].join('.');
+      },
+      set original(value) {
+        let [head, ...tail] = (0, _util.asPresentArray)(value.split('.'));
+        this.head = publicBuilder.head(head, this.head.loc);
+        this.tail = tail;
+      },
+      loc
+    };
+    Object.defineProperty(node, 'parts', {
+      enumerable: false,
+      get() {
+        (0, _util.deprecate)("The parts property on path nodes is deprecated, use head and tail instead");
+        let parts = (0, _util.asPresentArray)(this.original.split('.'));
+        if (parts[0] === 'this') {
+          // parts does not include `this`
+          parts.shift();
+        } else if (parts[0].startsWith('@')) {
+          // parts does not include leading `@`
+          parts[0] = parts[0].slice(1);
+        }
+        return Object.freeze(parts);
+      },
+      set(values) {
+        var _parts$;
+        (0, _util.deprecate)("The parts property on mustache nodes is deprecated, use head and tail instead");
+        let parts = [...values];
+
+        // you are not supposed to already have `this` or `@` in the parts, but since this is
+        // deprecated anyway, we will infer what you meant and allow it
+        if (parts[0] !== 'this' && !((_parts$ = parts[0]) != null && _parts$.startsWith('@'))) {
+          if (this.head.type === 'ThisHead') {
+            parts.unshift('this');
+          } else if (this.head.type === 'AtHead') {
+            parts[0] = "@" + parts[0];
+          }
+        }
+        this.original = parts.join('.');
       }
-      let firstPart;
-      if (this.this) {
-        firstPart = 'this';
-      } else if (this.data) {
-        firstPart = "@" + (0, _util.getFirst)((0, _util.asPresentArray)(this.parts));
-      } else {
-        (0, _util.assertPresentArray)(this.parts);
-        firstPart = (0, _util.getFirst)(this.parts);
+    });
+    Object.defineProperty(node, 'this', {
+      enumerable: false,
+      get() {
+        (0, _util.deprecate)("The this property on path nodes is deprecated, use head.type instead");
+        return this.head.type === 'ThisHead';
       }
-      let firstPartLoc = this.loc.collapse('start').sliceStartChars({
-        chars: firstPart.length
-      }).loc;
-      return this._head = publicBuilder.head(firstPart, firstPartLoc);
-    }
-    get tail() {
-      return this.this ? this.parts : this.parts.slice(1);
-    }
+    });
+    Object.defineProperty(node, 'data', {
+      enumerable: false,
+      get() {
+        (0, _util.deprecate)("The data property on path nodes is deprecated, use head.type instead");
+        return this.head.type === 'AtHead';
+      }
+    });
+    return node;
+  }
+  function buildLegacyLiteral(_ref15) {
+    let {
+      type,
+      value,
+      loc
+    } = _ref15;
+    const node = {
+      type,
+      value,
+      loc
+    };
+    Object.defineProperty(node, 'original', {
+      enumerable: false,
+      get() {
+        (0, _util.deprecate)("The original property on literal nodes is deprecated, use value instead");
+        return this.value;
+      },
+      set(value) {
+        (0, _util.deprecate)("The original property on literal nodes is deprecated, use value instead");
+        this.value = value;
+      }
+    });
+    return node;
   }
   const DEFAULT_STRIP = {
     close: false,
@@ -8560,41 +8723,56 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    * 2. Mandating source locations
    */
   class Builders {
-    pos(line, column) {
+    pos(_ref16) {
+      let {
+        line,
+        column
+      } = _ref16;
       return {
         line,
         column
       };
     }
-    blockItself(_ref13) {
+    blockItself(_ref17) {
       let {
-        body = [],
-        blockParams = [],
+        body,
+        params,
         chained = false,
         loc
-      } = _ref13;
+      } = _ref17;
       return {
         type: 'Block',
-        body: body,
-        blockParams: blockParams,
+        body,
+        params,
+        get blockParams() {
+          return this.params.map(p => p.name);
+        },
+        set blockParams(params) {
+          this.params = params.map(name => {
+            return b.var({
+              name,
+              loc: SourceSpan.synthetic(name)
+            });
+          });
+        },
         chained,
         loc
       };
     }
-    template(_ref14) {
+    template(_ref18) {
       let {
         body,
         blockParams,
         loc
-      } = _ref14;
+      } = _ref18;
       return {
         type: 'Template',
-        body: body || [],
-        blockParams: blockParams || [],
+        body,
+        blockParams,
         loc
       };
     }
-    mustache(_ref15) {
+    mustache(_ref19) {
       let {
         path,
         params,
@@ -8602,22 +8780,17 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         trusting,
         loc,
         strip = DEFAULT_STRIP
-      } = _ref15;
-      return {
-        type: 'MustacheStatement',
+      } = _ref19;
+      return buildLegacyMustache({
         path,
         params,
         hash,
-        escaped: !trusting,
         trusting,
-        loc,
-        strip: strip || {
-          open: false,
-          close: false
-        }
-      };
+        strip,
+        loc
+      });
     }
-    block(_ref16) {
+    block(_ref20) {
       let {
         path,
         params,
@@ -8628,7 +8801,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         openStrip = DEFAULT_STRIP,
         inverseStrip = DEFAULT_STRIP,
         closeStrip = DEFAULT_STRIP
-      } = _ref16;
+      } = _ref20;
       return {
         type: 'BlockStatement',
         path: path,
@@ -8636,63 +8809,107 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         hash,
         program: defaultBlock,
         inverse: elseBlock,
-        loc: loc,
-        openStrip: openStrip,
-        inverseStrip: inverseStrip,
-        closeStrip: closeStrip
+        loc,
+        openStrip,
+        inverseStrip,
+        closeStrip
       };
     }
-    comment(value, loc) {
+    comment(_ref21) {
+      let {
+        value,
+        loc
+      } = _ref21;
       return {
         type: 'CommentStatement',
-        value: value,
+        value,
         loc
       };
     }
-    mustacheComment(value, loc) {
+    mustacheComment(_ref22) {
+      let {
+        value,
+        loc
+      } = _ref22;
       return {
         type: 'MustacheCommentStatement',
-        value: value,
+        value,
         loc
       };
     }
-    concat(parts, loc) {
+    concat(_ref23) {
+      let {
+        parts,
+        loc
+      } = _ref23;
       return {
         type: 'ConcatStatement',
         parts,
         loc
       };
     }
-    element(_ref17) {
+    element(_ref24) {
       let {
-        tag,
+        path,
         selfClosing,
-        attrs,
-        blockParams,
+        attributes,
         modifiers,
+        params,
         comments,
         children,
+        openTag,
+        closeTag,
         loc
-      } = _ref17;
+      } = _ref24;
+      let _selfClosing = selfClosing;
       return {
         type: 'ElementNode',
-        tag,
-        selfClosing: selfClosing,
-        attributes: attrs || [],
-        blockParams: blockParams || [],
-        modifiers: modifiers || [],
-        comments: comments || [],
-        children: children || [],
-        loc
+        path,
+        attributes,
+        modifiers,
+        params,
+        comments,
+        children,
+        openTag,
+        closeTag,
+        loc,
+        get tag() {
+          return this.path.original;
+        },
+        set tag(name) {
+          this.path.original = name;
+        },
+        get blockParams() {
+          return this.params.map(p => p.name);
+        },
+        set blockParams(params) {
+          this.params = params.map(name => {
+            return b.var({
+              name,
+              loc: SourceSpan.synthetic(name)
+            });
+          });
+        },
+        get selfClosing() {
+          return _selfClosing;
+        },
+        set selfClosing(selfClosing) {
+          _selfClosing = selfClosing;
+          if (selfClosing) {
+            this.closeTag = null;
+          } else {
+            this.closeTag = SourceSpan.synthetic("</" + this.tag + ">");
+          }
+        }
       };
     }
-    elementModifier(_ref18) {
+    elementModifier(_ref25) {
       let {
         path,
         params,
         hash,
         loc
-      } = _ref18;
+      } = _ref25;
       return {
         type: 'ElementModifierStatement',
         path,
@@ -8701,12 +8918,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc
       };
     }
-    attr(_ref19) {
+    attr(_ref26) {
       let {
         name,
         value,
         loc
-      } = _ref19;
+      } = _ref26;
       return {
         type: 'AttrNode',
         name: name,
@@ -8714,24 +8931,24 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc
       };
     }
-    text(_ref20) {
+    text(_ref27) {
       let {
         chars,
         loc
-      } = _ref20;
+      } = _ref27;
       return {
         type: 'TextNode',
         chars,
         loc
       };
     }
-    sexpr(_ref21) {
+    sexpr(_ref28) {
       let {
         path,
         params,
         hash,
         loc
-      } = _ref21;
+      } = _ref28;
       return {
         type: 'SubExpression',
         path,
@@ -8740,143 +8957,149 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc
       };
     }
-    path(_ref22) {
+    path(_ref29) {
       let {
         head,
         tail,
         loc
-      } = _ref22;
-      let {
-        original: originalHead
-      } = headToString(head);
-      let original = [...originalHead, ...tail].join('.');
-      return new PathExpressionImplV1(original, head, tail, loc);
+      } = _ref29;
+      return buildLegacyPath({
+        head,
+        tail,
+        loc
+      });
     }
-    head(head, loc) {
-      if (head[0] === '@') {
-        return this.atName(head, loc);
-      } else if (head === 'this') {
-        return this.this(loc);
+    head(_ref30) {
+      let {
+        original,
+        loc
+      } = _ref30;
+      if (original === 'this') {
+        return this.this({
+          loc
+        });
+      }
+      if (original[0] === '@') {
+        return this.atName({
+          name: original,
+          loc
+        });
       } else {
-        return this.var(head, loc);
+        return this.var({
+          name: original,
+          loc
+        });
       }
     }
-    this(loc) {
+    this(_ref31) {
+      let {
+        loc
+      } = _ref31;
       return {
         type: 'ThisHead',
+        get original() {
+          return 'this';
+        },
         loc
       };
     }
-    atName(name, loc) {
-      // the `@` should be included so we have a complete source range
-      (0, _util.assert)(name[0] === '@', "call builders.at() with a string that starts with '@'");
-      return {
+    atName(_ref32) {
+      let {
+        name,
+        loc
+      } = _ref32;
+      let _name = '';
+      const node = {
         type: 'AtHead',
-        name,
+        get name() {
+          return _name;
+        },
+        set name(value) {
+          (0, _util.assert)(value[0] === '@', "call builders.at() with a string that starts with '@'");
+          (0, _util.assert)(value.indexOf('.') === -1, "builder.at() should not be called with a name with dots in it");
+          _name = value;
+        },
+        get original() {
+          return this.name;
+        },
+        set original(value) {
+          this.name = value;
+        },
         loc
       };
+
+      // trigger the assertions
+      node.name = name;
+      return node;
     }
-    var(name, loc) {
-      (0, _util.assert)(name !== 'this', "You called builders.var() with 'this'. Call builders.this instead");
-      (0, _util.assert)(name[0] !== '@', "You called builders.var() with '" + name + "'. Call builders.at('" + name + "') instead");
-      return {
+    var(_ref33) {
+      let {
+        name,
+        loc
+      } = _ref33;
+      let _name = '';
+      const node = {
         type: 'VarHead',
-        name,
+        get name() {
+          return _name;
+        },
+        set name(value) {
+          (0, _util.assert)(value !== 'this', "You called builders.var() with 'this'. Call builders.this instead");
+          (0, _util.assert)(value[0] !== '@', "You called builders.var() with '" + name + "'. Call builders.at('" + name + "') instead");
+          (0, _util.assert)(value.indexOf('.') === -1, "builder.var() should not be called with a name with dots in it");
+          _name = value;
+        },
+        get original() {
+          return this.name;
+        },
+        set original(value) {
+          this.name = value;
+        },
         loc
       };
+
+      // trigger the assertions
+      node.name = name;
+      return node;
     }
-    hash(pairs, loc) {
+    hash(_ref34) {
+      let {
+        pairs,
+        loc
+      } = _ref34;
       return {
         type: 'Hash',
-        pairs: pairs || [],
+        pairs,
         loc
       };
     }
-    pair(_ref23) {
+    pair(_ref35) {
       let {
         key,
         value,
         loc
-      } = _ref23;
+      } = _ref35;
       return {
         type: 'HashPair',
-        key: key,
+        key,
         value,
         loc
       };
     }
-    literal(_ref24) {
+    literal(_ref36) {
       let {
         type,
         value,
         loc
-      } = _ref24;
-      return {
+      } = _ref36;
+      return buildLegacyLiteral({
         type,
         value,
-        original: value,
-        loc
-      };
-    }
-    undefined() {
-      return this.literal({
-        type: 'UndefinedLiteral',
-        value: undefined
-      });
-    }
-    null() {
-      return this.literal({
-        type: 'NullLiteral',
-        value: null
-      });
-    }
-    string(value, loc) {
-      return this.literal({
-        type: 'StringLiteral',
-        value,
-        loc
-      });
-    }
-    boolean(value, loc) {
-      return this.literal({
-        type: 'BooleanLiteral',
-        value,
-        loc
-      });
-    }
-    number(value, loc) {
-      return this.literal({
-        type: 'NumberLiteral',
-        value,
         loc
       });
     }
   }
-
-  // Nodes
-
-  // Expressions
-
-  function headToString(head) {
-    switch (head.type) {
-      case 'AtHead':
-        return {
-          original: head.name,
-          parts: [head.name]
-        };
-      case 'ThisHead':
-        return {
-          original: "this",
-          parts: []
-        };
-      case 'VarHead':
-        return {
-          original: head.name,
-          parts: [head.name]
-        };
-    }
-  }
-  var b = new Builders();
+  const b = new Builders();
   class Parser {
     constructor(source, entityParser, mode) {
       if (entityParser === void 0) {
@@ -8902,16 +9125,16 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       } = this.tokenizer;
       return this.source.offsetFor(line, column);
     }
-    pos(_ref25) {
+    pos(_ref37) {
       let {
         line,
         column
-      } = _ref25;
+      } = _ref37;
       return this.source.offsetFor(line, column);
     }
     finish(node) {
       return (0, _util.assign)({}, node, {
-        loc: node.loc.until(this.offset())
+        loc: node.start.until(this.offset())
       });
 
       // node.loc = node.loc.withEnd(end);
@@ -8944,9 +9167,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       let node = this.currentNode;
       (0, _util.assert)(node && node.type === 'TextNode', 'expected a text node');
       return node;
-    }
-    acceptTemplate(node) {
-      return this[node.type](node);
     }
     acceptNode(node) {
       return this[node.type](node);
@@ -8990,45 +9210,76 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   const BEFORE_ATTRIBUTE_NAME = 'beforeAttributeName';
   const ATTRIBUTE_VALUE_UNQUOTED = 'attributeValueUnquoted';
   class HandlebarsNodeVisitors extends Parser {
-    get isTopLevel() {
-      return this.elementStack.length === 0;
+    constructor() {
+      super(...arguments);
+      // Because we interleave the HTML and HBS parsing, sometimes the HTML
+      // tokenizer can run out of tokens when we switch into {{...}} or reached
+      // EOF. There are positions where neither of these are expected, and it would
+      // like to generate an error, but there is no span to attach the error to.
+      // This allows the HTML tokenization to stash an error message and the next
+      // mustache visitor will attach the message to the appropriate span and throw
+      // the error.
+      this.pendingError = null;
     }
-    Program(program) {
-      const body = [];
-      let node;
-      if (this.isTopLevel) {
-        node = b.template({
-          body,
-          blockParams: program.blockParams,
-          loc: this.source.spanFor(program.loc)
-        });
-      } else {
-        node = b.blockItself({
-          body,
-          blockParams: program.blockParams,
-          chained: program.chained,
-          loc: this.source.spanFor(program.loc)
-        });
+    parse(program, blockParams) {
+      var _this$pendingError;
+      let node = b.template({
+        body: [],
+        blockParams,
+        loc: this.source.spanFor(program.loc)
+      });
+      let template = this.parseProgram(node, program);
+
+      // TODO: we really need to verify that the tokenizer is in an acceptable
+      // state when we are "done" parsing. For example, right now, `<foo` parses
+      // into `Template { body: [] }` which is obviously incorrect
+
+      (_this$pendingError = this.pendingError) == null || _this$pendingError.eof(template.loc.getEnd());
+      return template;
+    }
+    Program(program, blockParams) {
+      // The abstract signature doesn't have the blockParams argument, but in
+      // practice we can only come from this.BlockStatement() which adds the
+      // extra argument for us
+      (0, _util.assert)(Array.isArray(blockParams), '[BUG] Program in parser unexpectedly called without block params');
+      let node = b.blockItself({
+        body: [],
+        params: blockParams,
+        chained: program.chained,
+        loc: this.source.spanFor(program.loc)
+      });
+      return this.parseProgram(node, program);
+    }
+    parseProgram(node, program) {
+      if (program.body.length === 0) {
+        return node;
       }
-      let i,
-        l = program.body.length;
-      this.elementStack.push(node);
-      if (l === 0) {
-        return this.elementStack.pop();
-      }
-      for (i = 0; i < l; i++) {
-        this.acceptNode((0, _util.unwrap)(program.body[i]));
+      let poppedNode;
+      try {
+        this.elementStack.push(node);
+        for (let child of program.body) {
+          this.acceptNode(child);
+        }
+      } finally {
+        poppedNode = this.elementStack.pop();
       }
 
       // Ensure that that the element stack is balanced properly.
-      const poppedNode = this.elementStack.pop();
-      if (poppedNode !== node) {
-        const elementNode = poppedNode;
-        throw generateSyntaxError("Unclosed element `" + elementNode.tag + "`", elementNode.loc);
+      if (node !== poppedNode) {
+        var _poppedNode;
+        if (((_poppedNode = poppedNode) == null ? void 0 : _poppedNode.type) === 'ElementNode') {
+          throw generateSyntaxError("Unclosed element `" + poppedNode.tag + "`", poppedNode.loc);
+        } else {
+          // If the stack is not balanced, then it is likely our own bug, because
+          // any unclosed Handlebars blocks should already been caught by now
+          (0, _util.assert)(poppedNode !== undefined, '[BUG] empty parser elementStack');
+          (0, _util.assert)(false, "[BUG] mismatched parser elementStack node: " + node.type);
+        }
       }
       return node;
     }
     BlockStatement(block) {
+      var _block$program$blockP;
       if (this.tokenizer.state === 'comment') {
         this.appendToCommentData(this.sourceForNode(block));
         return;
@@ -9041,6 +9292,66 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         params,
         hash
       } = acceptCallNodes(this, block);
+      const loc = this.source.spanFor(block.loc);
+
+      // Backfill block params loc for the default block
+      let blockParams = [];
+      if ((_block$program$blockP = block.program.blockParams) != null && _block$program$blockP.length) {
+        // Start from right after the hash
+        let span = hash.loc.collapse('end');
+
+        // Extend till the beginning of the block
+        if (block.program.loc) {
+          span = span.withEnd(this.source.spanFor(block.program.loc).getStart());
+        } else if (block.program.body[0]) {
+          span = span.withEnd(this.source.spanFor(block.program.body[0].loc).getStart());
+        } else {
+          // ...or if all else fail, use the end of the block statement
+          // this can only happen if the block statement is empty anyway
+          span = span.withEnd(loc.getEnd());
+        }
+
+        // Now we have a span for something like this:
+        //
+        //   {{#foo bar baz=bat as |wow wat|}}
+        //                     ~~~~~~~~~~~~~~~
+        //
+        // Or, if we are unlucky:
+        //
+        // {{#foo bar baz=bat as |wow wat|}}{{/foo}}
+        //                   ~~~~~~~~~~~~~~~~~~~~~~~
+        //
+        // Either way, within this span, there should be exactly two pipes
+        // fencing our block params, neatly whitespace separated and with
+        // legal identifiers only
+        const content = span.asString();
+        let skipStart = content.indexOf('|') + 1;
+        const limit = content.indexOf('|', skipStart);
+        for (const name of block.program.blockParams) {
+          let nameStart;
+          let loc;
+          if (skipStart >= limit) {
+            nameStart = -1;
+          } else {
+            nameStart = content.indexOf(name, skipStart);
+          }
+          if (nameStart === -1 || nameStart + name.length > limit) {
+            skipStart = limit;
+            loc = this.source.spanFor(NON_EXISTENT_LOCATION);
+          } else {
+            skipStart = nameStart;
+            loc = span.sliceStartChars({
+              skipStart,
+              chars: name.length
+            });
+            skipStart += name.length;
+          }
+          blockParams.push(b.var({
+            name,
+            loc
+          }));
+        }
+      }
 
       // These are bugs in Handlebars upstream
       if (!block.program.loc) {
@@ -9049,8 +9360,8 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       if (block.inverse && !block.inverse.loc) {
         block.inverse.loc = NON_EXISTENT_LOCATION;
       }
-      const program = this.Program(block.program);
-      const inverse = block.inverse ? this.Program(block.inverse) : null;
+      const program = this.Program(block.program, blockParams);
+      const inverse = block.inverse ? this.Program(block.inverse, []) : null;
       const node = b.block({
         path,
         params,
@@ -9066,6 +9377,8 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       appendChild(parentProgram, node);
     }
     MustacheStatement(rawMustache) {
+      var _this$pendingError2;
+      (_this$pendingError2 = this.pendingError) == null || _this$pendingError2.mustache(this.source.spanFor(rawMustache.loc));
       const {
         tokenizer
       } = this;
@@ -9079,11 +9392,17 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc,
         strip
       } = rawMustache;
+      if ('original' in rawMustache.path && rawMustache.path.original === '...attributes') {
+        throw generateSyntaxError('Illegal use of ...attributes', this.source.spanFor(rawMustache.loc));
+      }
       if (isHBSLiteral(rawMustache.path)) {
         mustache = b.mustache({
           path: this.acceptNode(rawMustache.path),
           params: [],
-          hash: b.hash([], this.source.spanFor(rawMustache.path.loc).collapse('end')),
+          hash: b.hash({
+            pairs: [],
+            loc: this.source.spanFor(rawMustache.path.loc).collapse('end')
+          }),
           trusting: !escaped,
           loc: this.source.spanFor(loc),
           strip
@@ -9176,7 +9495,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         value,
         loc
       } = rawComment;
-      const comment = b.mustacheComment(value, this.source.spanFor(loc));
+      const comment = b.mustacheComment({
+        value,
+        loc: this.source.spanFor(loc)
+      });
       switch (tokenizer.state) {
         case 'beforeAttributeName':
         case 'afterAttributeName':
@@ -9254,50 +9576,51 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       }
       let pathHead;
       if (thisHead) {
-        pathHead = {
-          type: 'ThisHead',
-          loc: {
+        pathHead = b.this({
+          loc: this.source.spanFor({
             start: path.loc.start,
             end: {
               line: path.loc.start.line,
               column: path.loc.start.column + 4
             }
-          }
-        };
+          })
+        });
       } else if (path.data) {
         const head = parts.shift();
         if (head === undefined) {
           throw generateSyntaxError("Attempted to parse a path expression, but it was not valid. Paths beginning with @ must start with a-z.", this.source.spanFor(path.loc));
         }
-        pathHead = {
-          type: 'AtHead',
+        pathHead = b.atName({
           name: "@" + head,
-          loc: {
+          loc: this.source.spanFor({
             start: path.loc.start,
             end: {
               line: path.loc.start.line,
               column: path.loc.start.column + head.length + 1
             }
-          }
-        };
+          })
+        });
       } else {
         const head = parts.shift();
         if (head === undefined) {
           throw generateSyntaxError("Attempted to parse a path expression, but it was not valid. Paths must start with a-z or A-Z.", this.source.spanFor(path.loc));
         }
-        pathHead = {
-          type: 'VarHead',
+        pathHead = b.var({
           name: head,
-          loc: {
+          loc: this.source.spanFor({
             start: path.loc.start,
             end: {
               line: path.loc.start.line,
               column: path.loc.start.column + head.length
             }
-          }
-        };
+          })
+        });
       }
-      return new PathExpressionImplV1(path.original, pathHead, parts, this.source.spanFor(path.loc));
+      return b.path({
+        head: pathHead,
+        tail: parts,
+        loc: this.source.spanFor(path.loc)
+      });
     }
     Hash(hash) {
       const pairs = hash.pairs.map(pair => b.pair({
@@ -9305,41 +9628,44 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         value: this.acceptNode(pair.value),
         loc: this.source.spanFor(pair.loc)
       }));
-      return b.hash(pairs, this.source.spanFor(hash.loc));
+      return b.hash({
+        pairs,
+        loc: this.source.spanFor(hash.loc)
+      });
     }
     StringLiteral(string) {
       return b.literal({
         type: 'StringLiteral',
         value: string.value,
-        loc: string.loc
+        loc: this.source.spanFor(string.loc)
       });
     }
     BooleanLiteral(boolean) {
       return b.literal({
         type: 'BooleanLiteral',
         value: boolean.value,
-        loc: boolean.loc
+        loc: this.source.spanFor(boolean.loc)
       });
     }
     NumberLiteral(number) {
       return b.literal({
         type: 'NumberLiteral',
         value: number.value,
-        loc: number.loc
+        loc: this.source.spanFor(number.loc)
       });
     }
     UndefinedLiteral(undef) {
       return b.literal({
         type: 'UndefinedLiteral',
         value: undefined,
-        loc: undef.loc
+        loc: this.source.spanFor(undef.loc)
       });
     }
     NullLiteral(nul) {
       return b.literal({
         type: 'NullLiteral',
         value: null,
-        loc: nul.loc
+        loc: this.source.spanFor(nul.loc)
       });
     }
   }
@@ -9377,33 +9703,44 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     tokenizer.column = column;
   }
   function acceptCallNodes(compiler, node) {
-    if (node.path.type.endsWith('Literal')) {
-      const path = node.path;
-      let value = '';
-      if (path.type === 'BooleanLiteral') {
-        value = path.original.toString();
-      } else if (path.type === 'StringLiteral') {
-        value = "\"" + path.original + "\"";
-      } else if (path.type === 'NullLiteral') {
-        value = 'null';
-      } else if (path.type === 'NumberLiteral') {
-        value = path.value.toString();
-      } else {
-        value = 'undefined';
-      }
-      throw generateSyntaxError(path.type + " \"" + (path.type === 'StringLiteral' ? path.original : value) + "\" cannot be called as a sub-expression, replace (" + value + ") with " + value, compiler.source.spanFor(path.loc));
+    let path;
+    switch (node.path.type) {
+      case 'PathExpression':
+        path = compiler.PathExpression(node.path);
+        break;
+      case 'SubExpression':
+        path = compiler.SubExpression(node.path);
+        break;
+      case 'StringLiteral':
+      case 'UndefinedLiteral':
+      case 'NullLiteral':
+      case 'NumberLiteral':
+      case 'BooleanLiteral':
+        {
+          let value;
+          if (node.path.type === 'BooleanLiteral') {
+            value = node.path.original.toString();
+          } else if (node.path.type === 'StringLiteral') {
+            value = "\"" + node.path.original + "\"";
+          } else if (node.path.type === 'NullLiteral') {
+            value = 'null';
+          } else if (node.path.type === 'NumberLiteral') {
+            value = node.path.value.toString();
+          } else {
+            value = 'undefined';
+          }
+          throw generateSyntaxError(node.path.type + " \"" + (node.path.type === 'StringLiteral' ? node.path.original : value) + "\" cannot be called as a sub-expression, replace (" + value + ") with " + value, compiler.source.spanFor(node.path.loc));
+        }
     }
-    const path = node.path.type === 'PathExpression' ? compiler.PathExpression(node.path) : compiler.SubExpression(node.path);
     const params = node.params ? node.params.map(e => compiler.acceptNode(e)) : [];
 
     // if there is no hash, position it as a collapsed node immediately after the last param (or the
     // path, if there are also no params)
     const end = (0, _util.isPresentArray)(params) ? (0, _util.getLast)(params).loc : path.loc;
-    const hash = node.hash ? compiler.Hash(node.hash) : {
-      type: 'Hash',
+    const hash = node.hash ? compiler.Hash(node.hash) : b.hash({
       pairs: [],
       loc: compiler.source.spanFor(end).collapse('end')
-    };
+    });
     return {
       path,
       params,
@@ -9430,6 +9767,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     });
     element.modifiers.push(modifier);
   }
+
+  // vendored from simple-html-tokenizer because it's unexported
+  function isSpace(char) {
+    return /[\t\n\f ]/u.test(char);
+  }
   class TokenizerEventHandlers extends HandlebarsNodeVisitors {
     constructor() {
       super(...arguments);
@@ -9443,29 +9785,33 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     // Comment
 
     beginComment() {
-      this.currentNode = b.comment('', this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn));
+      this.currentNode = {
+        type: 'CommentStatement',
+        value: '',
+        start: this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn)
+      };
     }
     appendToCommentData(char) {
       this.currentComment.value += char;
     }
     finishComment() {
-      appendChild(this.currentElement(), this.finish(this.currentComment));
+      appendChild(this.currentElement(), b.comment(this.finish(this.currentComment)));
     }
 
     // Data
 
     beginData() {
-      this.currentNode = b.text({
+      this.currentNode = {
+        type: 'TextNode',
         chars: '',
-        loc: this.offset().collapsed()
-      });
+        start: this.offset()
+      };
     }
     appendToData(char) {
       this.currentData.chars += char;
     }
     finishData() {
-      this.currentData.loc = this.currentData.loc.withEnd(this.offset());
-      appendChild(this.currentElement(), this.currentData);
+      appendChild(this.currentElement(), b.text(this.finish(this.currentData)));
     }
 
     // Tags - basic
@@ -9478,22 +9824,21 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       this.currentNode = {
         type: 'StartTag',
         name: '',
+        nameStart: null,
+        nameEnd: null,
         attributes: [],
         modifiers: [],
         comments: [],
+        params: [],
         selfClosing: false,
-        loc: this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn)
+        start: this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn)
       };
     }
     beginEndTag() {
       this.currentNode = {
         type: 'EndTag',
         name: '',
-        attributes: [],
-        modifiers: [],
-        comments: [],
-        selfClosing: false,
-        loc: this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn)
+        start: this.source.offsetFor(this.tagOpenLine, this.tagOpenColumn)
       };
     }
     finishTag() {
@@ -9502,7 +9847,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         this.finishStartTag();
         if (tag.name === ':') {
           throw generateSyntaxError('Invalid named block named detected, you may have created a named block without a name, or you may have began your name with a number. Named blocks must have names that are at least one character long, and begin with a lower case letter', this.source.spanFor({
-            start: this.currentTag.loc.toJSON(),
+            start: this.currentTag.start.toJSON(),
             end: this.offset().toJSON()
           }));
         }
@@ -9516,41 +9861,93 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     finishStartTag() {
       let {
         name,
-        attributes: attrs,
+        nameStart,
+        nameEnd
+      } = this.currentStartTag;
+
+      // <> should probably be a syntax error, but s-h-t is currently broken for that case
+      (0, _util.assert)(name !== '', 'tag name cannot be empty');
+      (0, _util.assert)(nameStart !== null, 'nameStart unexpectedly null');
+      (0, _util.assert)(nameEnd !== null, 'nameEnd unexpectedly null');
+      let nameLoc = nameStart.until(nameEnd);
+      let [head, ...tail] = (0, _util.asPresentArray)(name.split('.'));
+      let path = b.path({
+        head: b.head({
+          original: head,
+          loc: nameLoc.sliceStartChars({
+            chars: head.length
+          })
+        }),
+        tail,
+        loc: nameLoc
+      });
+      let {
+        attributes,
         modifiers,
         comments,
+        params,
         selfClosing,
         loc
       } = this.finish(this.currentStartTag);
       let element = b.element({
-        tag: name,
+        path,
         selfClosing,
-        attrs,
+        attributes,
         modifiers,
         comments,
+        params,
         children: [],
-        blockParams: [],
+        openTag: loc,
+        closeTag: selfClosing ? null : SourceSpan.broken(),
         loc
       });
       this.elementStack.push(element);
     }
     finishEndTag(isVoid) {
+      let {
+        start: closeTagStart
+      } = this.currentTag;
       let tag = this.finish(this.currentTag);
       let element = this.elementStack.pop();
       this.validateEndTag(tag, element, isVoid);
       let parent = this.currentElement();
+      if (isVoid) {
+        element.closeTag = null;
+      } else if (element.selfClosing) {
+        (0, _util.assert)(element.closeTag === null, 'element.closeTag unexpectedly present');
+      } else {
+        element.closeTag = closeTagStart.until(this.offset());
+      }
       element.loc = element.loc.withEnd(this.offset());
-      parseElementBlockParams(element);
-      appendChild(parent, element);
+      appendChild(parent, b.element(element));
     }
     markTagAsSelfClosing() {
-      this.currentTag.selfClosing = true;
+      let tag = this.currentTag;
+      if (tag.type === 'StartTag') {
+        tag.selfClosing = true;
+      } else {
+        throw generateSyntaxError("Invalid end tag: closing tag must not be self-closing", this.source.spanFor({
+          start: tag.start.toJSON(),
+          end: this.offset().toJSON()
+        }));
+      }
     }
 
     // Tags - name
 
     appendToTagName(char) {
-      this.currentTag.name += char;
+      let tag = this.currentTag;
+      tag.name += char;
+      if (tag.type === 'StartTag') {
+        let offset = this.offset();
+        if (tag.nameStart === null) {
+          (0, _util.assert)(tag.nameEnd === null, 'nameStart and nameEnd must both be null');
+
+          // Note that the tokenizer already consumed the token here
+          tag.nameStart = offset.move(-1);
+        }
+        tag.nameEnd = offset;
+      }
     }
 
     // Tags - attributes
@@ -9569,6 +9966,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     }
     appendToAttributeName(char) {
       this.currentAttr.name += char;
+
+      // The block params parsing code can actually handle peek=non-space just
+      // fine, but this check was added as an optimization, as there is a little
+      // bit of setup overhead for the parsing logic just to immediately bail
+      if (this.currentAttr.name === 'as') {
+        this.parsePossibleBlockParams();
+      }
     }
     beginAttributeValue(isQuoted) {
       this.currentAttr.isQuoted = isQuoted;
@@ -9606,7 +10010,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       let tokenizerPos = this.offset();
       if (tag.type === 'EndTag') {
         throw generateSyntaxError("Invalid end tag: closing tag must not have attributes", this.source.spanFor({
-          start: tag.loc.toJSON(),
+          start: tag.start.toJSON(),
           end: tokenizerPos.toJSON()
         }));
       }
@@ -9618,6 +10022,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         isDynamic,
         valueSpan
       } = this.currentAttr;
+
+      // Just trying to be helpful with `<Hello |foo|>` rather than letting it through as an attribute
+      if (name.startsWith('|') && parts.length === 0 && !isQuoted && !isDynamic) {
+        throw generateSyntaxError('Invalid block parameters syntax: block parameters must be preceded by the `as` keyword', start.until(start.move(name.length)));
+      }
       let value = this.assembleAttributeValue(parts, isQuoted, isDynamic, start.until(tokenizerPos));
       value.loc = valueSpan.withEnd(tokenizerPos);
       let attribute = b.attr({
@@ -9626,6 +10035,195 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc: start.until(tokenizerPos)
       });
       this.currentStartTag.attributes.push(attribute);
+    }
+    parsePossibleBlockParams() {
+      // const enums that we can't use directly
+      const BEFORE_ATTRIBUTE_NAME = 'beforeAttributeName';
+      const ATTRIBUTE_NAME = 'attributeName';
+      const AFTER_ATTRIBUTE_NAME = 'afterAttributeName';
+
+      // Regex to validate the identifier for block parameters.
+      // Based on the ID validation regex in Handlebars.
+      const ID_INVERSE_PATTERN = /[!"#%&'()*+./;<=>@[\\\]^`{|}~]/u;
+      (0, _util.assert)(this.tokenizer.state === ATTRIBUTE_NAME, 'must be in TokenizerState.attributeName');
+      const element = this.currentStartTag;
+      const as = this.currentAttr;
+      let state = {
+        state: 'PossibleAs'
+      };
+      const handlers = {
+        PossibleAs: next => {
+          (0, _util.assert)(state.state === 'PossibleAs', 'bug in block params parser');
+          if (isSpace(next)) {
+            // " as ..."
+            state = {
+              state: 'BeforeStartPipe'
+            };
+            this.tokenizer.transitionTo(AFTER_ATTRIBUTE_NAME);
+            this.tokenizer.consume();
+          } else if (next === '|') {
+            // " as|..."
+            // Following Handlebars and require a space between "as" and the pipe
+            throw generateSyntaxError("Invalid block parameters syntax: expecting at least one space character between \"as\" and \"|\"", as.start.until(this.offset().move(1)));
+          } else {
+            // " as{{...", " async...", " as=...", " as>...", " as/>..."
+            // Don't consume, let the normal tokenizer code handle the next steps
+            state = {
+              state: 'Done'
+            };
+          }
+        },
+        BeforeStartPipe: next => {
+          (0, _util.assert)(state.state === 'BeforeStartPipe', 'bug in block params parser');
+          if (isSpace(next)) {
+            this.tokenizer.consume();
+          } else if (next === '|') {
+            state = {
+              state: 'BeforeBlockParamName'
+            };
+            this.tokenizer.transitionTo(BEFORE_ATTRIBUTE_NAME);
+            this.tokenizer.consume();
+          } else {
+            // " as {{...", " as bs...", " as =...", " as ...", " as/>..."
+            // Don't consume, let the normal tokenizer code handle the next steps
+            state = {
+              state: 'Done'
+            };
+          }
+        },
+        BeforeBlockParamName: next => {
+          (0, _util.assert)(state.state === 'BeforeBlockParamName', 'bug in block params parser');
+          if (isSpace(next)) {
+            this.tokenizer.consume();
+          } else if (next === '') {
+            // The HTML tokenizer ran out of characters, so we are either
+            // encountering mustache or <EOF>
+            state = {
+              state: 'Done'
+            };
+            this.pendingError = {
+              mustache(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: mustaches cannot be used inside parameters list", loc);
+              },
+              eof(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: expecting the tag to be closed with \">\" or \"/>\" after parameters list", as.start.until(loc));
+              }
+            };
+          } else if (next === '|') {
+            if (element.params.length === 0) {
+              // Following Handlebars and treat empty block params a syntax error
+              throw generateSyntaxError("Invalid block parameters syntax: empty parameters list, expecting at least one identifier", as.start.until(this.offset().move(1)));
+            } else {
+              state = {
+                state: 'AfterEndPipe'
+              };
+              this.tokenizer.consume();
+            }
+          } else if (next === '>' || next === '/') {
+            throw generateSyntaxError("Invalid block parameters syntax: incomplete parameters list, expecting \"|\" but the tag was closed prematurely", as.start.until(this.offset().move(1)));
+          } else {
+            // slurp up anything else into the name, validate later
+            state = {
+              state: 'BlockParamName',
+              name: next,
+              start: this.offset()
+            };
+            this.tokenizer.consume();
+          }
+        },
+        BlockParamName: next => {
+          (0, _util.assert)(state.state === 'BlockParamName', 'bug in block params parser');
+          if (next === '') {
+            // The HTML tokenizer ran out of characters, so we are either
+            // encountering mustache or <EOF>, HBS side will attach the error
+            // to the next span
+            state = {
+              state: 'Done'
+            };
+            this.pendingError = {
+              mustache(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: mustaches cannot be used inside parameters list", loc);
+              },
+              eof(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: expecting the tag to be closed with \">\" or \"/>\" after parameters list", as.start.until(loc));
+              }
+            };
+          } else if (next === '|' || isSpace(next)) {
+            let loc = state.start.until(this.offset());
+            if (state.name === 'this' || ID_INVERSE_PATTERN.test(state.name)) {
+              throw generateSyntaxError("Invalid block parameters syntax: invalid identifier name `" + state.name + "`", loc);
+            }
+            element.params.push(b.var({
+              name: state.name,
+              loc
+            }));
+            state = next === '|' ? {
+              state: 'AfterEndPipe'
+            } : {
+              state: 'BeforeBlockParamName'
+            };
+            this.tokenizer.consume();
+          } else if (next === '>' || next === '/') {
+            throw generateSyntaxError("Invalid block parameters syntax: expecting \"|\" but the tag was closed prematurely", as.start.until(this.offset().move(1)));
+          } else {
+            // slurp up anything else into the name, validate later
+            state.name += next;
+            this.tokenizer.consume();
+          }
+        },
+        AfterEndPipe: next => {
+          (0, _util.assert)(state.state === 'AfterEndPipe', 'bug in block params parser');
+          if (isSpace(next)) {
+            this.tokenizer.consume();
+          } else if (next === '') {
+            // The HTML tokenizer ran out of characters, so we are either
+            // encountering mustache or <EOF>, HBS side will attach the error
+            // to the next span
+            state = {
+              state: 'Done'
+            };
+            this.pendingError = {
+              mustache(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: modifiers cannot follow parameters list", loc);
+              },
+              eof(loc) {
+                throw generateSyntaxError("Invalid block parameters syntax: expecting the tag to be closed with \">\" or \"/>\" after parameters list", as.start.until(loc));
+              }
+            };
+          } else if (next === '>' || next === '/') {
+            // Don't consume, let the normal tokenizer code handle the next steps
+            state = {
+              state: 'Done'
+            };
+          } else {
+            // Slurp up the next "token" for the error span
+            state = {
+              state: 'Error',
+              message: 'Invalid block parameters syntax: expecting the tag to be closed with ">" or "/>" after parameters list',
+              start: this.offset()
+            };
+            this.tokenizer.consume();
+          }
+        },
+        Error: next => {
+          (0, _util.assert)(state.state === 'Error', 'bug in block params parser');
+          if (next === '' || next === '/' || next === '>' || isSpace(next)) {
+            throw generateSyntaxError(state.message, state.start.until(this.offset()));
+          } else {
+            // Slurp up the next "token" for the error span
+            this.tokenizer.consume();
+          }
+        },
+        Done: () => {
+          (0, _util.assert)(false, 'This should never be called');
+        }
+      };
+      let next;
+      do {
+        next = this.tokenizer.peek();
+        handlers[state.state](next);
+      } while (state.state !== 'Done' && next !== '');
+      (0, _util.assert)(state.state === 'Done', 'bug in block params parser');
     }
     reportSyntaxError(message) {
       throw generateSyntaxError(message, this.offset().collapsed());
@@ -9639,7 +10237,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       (0, _util.assertPresentArray)(parts, "the concatenation parts of an element should not be empty");
       let first = (0, _util.getFirst)(parts);
       let last = (0, _util.getLast)(parts);
-      return b.concat(parts, this.source.spanFor(first.loc).extend(this.source.spanFor(last.loc)));
+      return b.concat({
+        parts,
+        loc: this.source.spanFor(first.loc).extend(this.source.spanFor(last.loc))
+      });
     }
     validateEndTag(tag, element, selfClosing) {
       if (voidMap.has(tag.name) && !selfClosing) {
@@ -9699,6 +10300,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     }
   }
   function preprocess(input, options) {
+    var _options$locals, _options;
     if (options === void 0) {
       options = {};
     }
@@ -9735,12 +10337,8 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       start: offsets.startPosition,
       end: offsets.endPosition
     };
-    let program = new TokenizerEventHandlers(source, entityParser, mode).acceptTemplate(ast);
-    if (options.strictMode) {
-      var _options$locals;
-      program.blockParams = (_options$locals = options.locals) != null ? _options$locals : [];
-    }
-    if (options && options.plugins && options.plugins.ast) {
+    let template = new TokenizerEventHandlers(source, entityParser, mode).parse(ast, (_options$locals = options.locals) != null ? _options$locals : []);
+    if ((_options = options) != null && (_options = _options.plugins) != null && _options.ast) {
       for (const transform of options.plugins.ast) {
         let env = (0, _util.assign)({}, options, {
           syntax
@@ -9748,10 +10346,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
           plugins: undefined
         });
         let pluginResult = transform(env);
-        traverse(program, pluginResult.visitor);
+        traverse(template, pluginResult.visitor);
       }
     }
-    return program;
+    return template;
   }
 
   /**
@@ -9816,7 +10414,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    * optionally.
    */
   function getTemplateLocals(html, options) {
-    var _options;
+    var _options2;
     if (options === void 0) {
       options = {
         includeHtmlElements: false,
@@ -9828,18 +10426,18 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     const scopedTokens = [];
     traverse(ast, {
       Block: {
-        enter(_ref26) {
+        enter(_ref38) {
           let {
             blockParams
-          } = _ref26;
+          } = _ref38;
           blockParams.forEach(param => {
             scopedTokens.push(param);
           });
         },
-        exit(_ref27) {
+        exit(_ref39) {
           let {
             blockParams
-          } = _ref27;
+          } = _ref39;
           blockParams.forEach(() => {
             scopedTokens.pop();
           });
@@ -9852,10 +10450,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
           });
           addTokens(tokensSet, node, scopedTokens, options);
         },
-        exit(_ref28) {
+        exit(_ref40) {
           let {
             blockParams
-          } = _ref28;
+          } = _ref40;
           blockParams.forEach(() => {
             scopedTokens.pop();
           });
@@ -9867,7 +10465,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     });
     let tokens = [];
     tokensSet.forEach(s => tokens.push(s));
-    if (!((_options = options) != null && _options.includeKeywords)) {
+    if (!((_options2 = options) != null && _options2.includeKeywords)) {
       tokens = tokens.filter(token => !isKeyword(token));
     }
     return tokens;
@@ -10165,7 +10763,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   /**
    * Returns true if an input {@see ExpressionNode} is a literal.
    */
-  function isLiteral(node, kind) {
+  function isLiteral$1(node, kind) {
     if (node.type === 'Literal') {
       if (kind === undefined) {
         return true;
@@ -10194,6 +10792,14 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   class PathExpression extends node('Path').fields() {}
 
   /**
+   * Corresponds to a known strict-mode keyword. It behaves similarly to a
+   * PathExpression with a FreeVarReference, but implies StrictResolution and
+   * is guaranteed to not have a tail, since `{{outlet.foo}}` would have been
+   * illegal.
+   */
+  class KeywordExpression extends node('Keyword').fields() {}
+
+  /**
    * Corresponds to a parenthesized call expression.
    *
    * ```hbs
@@ -10204,21 +10810,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    * ```
    */
   class CallExpression extends node('Call').fields() {}
-
-  /**
-   * Corresponds to a possible deprecated helper call. Must be:
-   *
-   * 1. A free variable (not this.foo, not @foo, not local).
-   * 2. Argument-less.
-   * 3. In a component invocation's named argument position.
-   * 4. Not parenthesized (not @bar={{(helper)}}).
-   * 5. Not interpolated (not @bar="{{helper}}").
-   *
-   * ```hbs
-   * <Foo @bar={{helper}} />
-   * ```
-   */
-  class DeprecatedCallExpression extends node('DeprecatedCall').fields() {}
 
   /**
    * Corresponds to an interpolation in attribute value position.
@@ -10298,14 +10889,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    *
    * 1. Strict resolution
    * 2. Namespaced resolution
-   * 3. Fallback resolution
    */
 
   /**
    * Strict resolution is used:
    *
    * 1. in a strict mode template
-   * 2. in an unambiguous invocation with dot paths
+   * 2. in an local variable invocation with dot paths
    */
   const STRICT_RESOLUTION = {
     resolution: () => _wireFormat.SexpOpcodes.GetStrictKeyword,
@@ -10321,13 +10911,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   }
 
   /**
-   * A `LooseModeResolution` includes:
-   *
-   * - 0 or more namespaces to resolve the variable in
-   * - optional fallback behavior
+   * A `LooseModeResolution` includes one or more namespaces to resolve the variable in
    *
    * In practice, there are a limited number of possible combinations of these degrees of freedom,
-   * and they are captured by the `Ambiguity` union below.
+   * and they are captured by the `Namespaces` union below.
    */
   class LooseModeResolution {
     /**
@@ -10337,166 +10924,78 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
      * 2. `{{#block}}` (namespace: `Component`)
      * 3. `<a {{modifier}}>` (namespace: `Modifier`)
      * 4. `<Component />` (namespace: `Component`)
-     *
-     * @see {NamespacedAmbiguity}
      */
     static namespaced(namespace, isAngleBracket) {
       if (isAngleBracket === void 0) {
         isAngleBracket = false;
       }
-      return new LooseModeResolution({
-        namespaces: [namespace],
-        fallback: false
-      }, isAngleBracket);
-    }
-
-    /**
-     * Fallback resolution is used when no namespaced resolutions are possible, but fallback
-     * resolution is still allowed.
-     *
-     * ```hbs
-     * {{x.y}}
-     * ```
-     *
-     * @see {FallbackAmbiguity}
-     */
-    static fallback() {
-      return new LooseModeResolution({
-        namespaces: [],
-        fallback: true
-      });
+      return new LooseModeResolution([namespace], isAngleBracket);
     }
 
     /**
      * Append resolution is used when the variable should be resolved in both the `component` and
-     * `helper` namespaces. Fallback resolution is optional.
+     * `helper` namespaces.
      *
      * ```hbs
      * {{x}}
      * ```
      *
-     * ^ `x` should be resolved in the `component` and `helper` namespaces with fallback resolution.
-     *
      * ```hbs
      * {{x y}}
      * ```
      *
-     * ^ `x` should be resolved in the `component` and `helper` namespaces without fallback
-     * resolution.
-     *
-     * @see {ComponentOrHelperAmbiguity}
+     * ^ In either case, `x` should be resolved in the `component` and `helper` namespaces.
      */
-    static append(_ref29) {
-      let {
-        invoke
-      } = _ref29;
-      return new LooseModeResolution({
-        namespaces: [FreeVarNamespace.Component, FreeVarNamespace.Helper],
-        fallback: !invoke
-      });
+    static append() {
+      return new LooseModeResolution([FreeVarNamespace.Component, FreeVarNamespace.Helper]);
     }
 
     /**
-     * Trusting append resolution is used when the variable should be resolved in both the `component` and
-     * `helper` namespaces. Fallback resolution is optional.
+     * Trusting append resolution is used when the variable should be resolved only in the
+     * `helper` namespaces.
      *
      * ```hbs
      * {{{x}}}
      * ```
      *
-     * ^ `x` should be resolved in the `component` and `helper` namespaces with fallback resolution.
-     *
      * ```hbs
      * {{{x y}}}
      * ```
      *
-     * ^ `x` should be resolved in the `component` and `helper` namespaces without fallback
-     * resolution.
-     *
-     * @see {HelperAmbiguity}
+     * ^ In either case, `x` should be resolved in the `helper` namespace.
      */
-    static trustingAppend(_ref30) {
-      let {
-        invoke
-      } = _ref30;
-      return new LooseModeResolution({
-        namespaces: [FreeVarNamespace.Helper],
-        fallback: !invoke
-      });
+    static trustingAppend() {
+      return this.namespaced(FreeVarNamespace.Helper);
     }
-
-    /**
-     * Attribute resolution is used when the variable should be resolved as a `helper` with fallback
-     * resolution.
-     *
-     * ```hbs
-     * <a href={{x}} />
-     * <a href="{{x}}.html" />
-     * ```
-     *
-     * ^ resolved in the `helper` namespace with fallback
-     *
-     * @see {HelperAmbiguity}
-     */
-    static attr() {
-      return new LooseModeResolution({
-        namespaces: [FreeVarNamespace.Helper],
-        fallback: true
-      });
-    }
-    constructor(ambiguity, isAngleBracket) {
+    constructor(namespaces, isAngleBracket) {
       if (isAngleBracket === void 0) {
         isAngleBracket = false;
       }
-      this.ambiguity = ambiguity;
+      this.namespaces = namespaces;
       this.isAngleBracket = isAngleBracket;
     }
     resolution() {
-      if (this.ambiguity.namespaces.length === 0) {
-        return _wireFormat.SexpOpcodes.GetStrictKeyword;
-      } else if (this.ambiguity.namespaces.length === 1) {
-        if (this.ambiguity.fallback) {
-          // simple namespaced resolution with fallback must be attr={{x}}
-          return _wireFormat.SexpOpcodes.GetFreeAsHelperHeadOrThisFallback;
-        } else {
-          // simple namespaced resolution without fallback
-          switch (this.ambiguity.namespaces[0]) {
-            case FreeVarNamespace.Helper:
-              return _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
-            case FreeVarNamespace.Modifier:
-              return _wireFormat.SexpOpcodes.GetFreeAsModifierHead;
-            case FreeVarNamespace.Component:
-              return _wireFormat.SexpOpcodes.GetFreeAsComponentHead;
-          }
+      if (this.namespaces.length === 1) {
+        switch (this.namespaces[0]) {
+          case FreeVarNamespace.Helper:
+            return _wireFormat.SexpOpcodes.GetFreeAsHelperHead;
+          case FreeVarNamespace.Modifier:
+            return _wireFormat.SexpOpcodes.GetFreeAsModifierHead;
+          case FreeVarNamespace.Component:
+            return _wireFormat.SexpOpcodes.GetFreeAsComponentHead;
         }
-      } else if (this.ambiguity.fallback) {
-        // component or helper + fallback ({{something}})
-        return _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHeadOrThisFallback;
       } else {
-        // component or helper without fallback ({{something something}})
         return _wireFormat.SexpOpcodes.GetFreeAsComponentOrHelperHead;
       }
     }
     serialize() {
-      if (this.ambiguity.namespaces.length === 0) {
-        return 'Loose';
-      } else if (this.ambiguity.namespaces.length === 1) {
-        if (this.ambiguity.fallback) {
-          // simple namespaced resolution with fallback must be attr={{x}}
-          return ['ambiguous', SerializedAmbiguity.Attr];
-        } else {
-          return ['ns', this.ambiguity.namespaces[0]];
-        }
-      } else if (this.ambiguity.fallback) {
-        // component or helper + fallback ({{something}})
-        return ['ambiguous', SerializedAmbiguity.Append];
+      if (this.namespaces.length === 1) {
+        return this.namespaces[0];
       } else {
-        // component or helper without fallback ({{something something}})
-        return ['ambiguous', SerializedAmbiguity.Invoke];
+        return 'ComponentOrHelper';
       }
     }
   }
-  const ARGUMENT_RESOLUTION = LooseModeResolution.fallback();
   let FreeVarNamespace = /*#__PURE__*/function (FreeVarNamespace) {
     FreeVarNamespace["Helper"] = "Helper";
     FreeVarNamespace["Modifier"] = "Modifier";
@@ -10508,91 +11007,40 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   const COMPONENT_NAMESPACE = FreeVarNamespace.Component;
 
   /**
-   * A `ComponentOrHelperAmbiguity` might be a component or a helper, with an optional fallback
-   *
-   * ```hbs
-   * {{x}}
-   * ```
-   *
-   * ^ `x` is resolved in the `component` and `helper` namespaces, with fallback
-   *
-   * ```hbs
-   * {{x y}}
-   * ```
-   *
-   * ^ `x` is resolved in the `component` and `helper` namespaces, without fallback
-   */
-
-  /**
-   * A `HelperAmbiguity` must be a helper, but it has fallback. If it didn't have fallback, it would
-   * be a `NamespacedAmbiguity`.
-   *
-   * ```hbs
-   * <a href={{x}} />
-   * <a href="{{x}}.html" />
-   * ```
-   *
-   * ^ `x` is resolved in the `helper` namespace with fallback
-   */
-
-  /**
-   * A `NamespacedAmbiguity` must be resolved in a particular namespace, without fallback.
+   * A `Namespaced` must be resolved in one or more namespaces.
    *
    * ```hbs
    * <X />
    * ```
    *
-   * ^ `X` is resolved in the `component` namespace without fallback
+   * ^ `X` is resolved in the `component` namespace
    *
    * ```hbs
    * (x)
    * ```
    *
-   * ^ `x` is resolved in the `helper` namespace without fallback
+   * ^ `x` is resolved in the `helper` namespace
    *
    * ```hbs
    * <a {{x}} />
    * ```
    *
-   * ^ `x` is resolved in the `modifier` namespace without fallback
+   * ^ `x` is resolved in the `modifier` namespace
    */
+
   // Serialization
-  var SerializedAmbiguity = /*#__PURE__*/function (SerializedAmbiguity) {
-    SerializedAmbiguity["Append"] = "Append";
-    SerializedAmbiguity["Attr"] = "Attr";
-    SerializedAmbiguity["Invoke"] = "Invoke";
-    return SerializedAmbiguity;
-  }(SerializedAmbiguity || {});
+
   function loadResolution(resolution) {
-    if (typeof resolution === 'string') {
-      switch (resolution) {
-        case 'Loose':
-          return LooseModeResolution.fallback();
-        case 'Strict':
-          return STRICT_RESOLUTION;
-      }
-    }
-    switch (resolution[0]) {
-      case 'ambiguous':
-        switch (resolution[1]) {
-          case SerializedAmbiguity.Append:
-            return LooseModeResolution.append({
-              invoke: false
-            });
-          case SerializedAmbiguity.Attr:
-            return LooseModeResolution.attr();
-          case SerializedAmbiguity.Invoke:
-            return LooseModeResolution.append({
-              invoke: true
-            });
-        }
-      case 'ns':
-        return LooseModeResolution.namespaced(resolution[1]);
+    if (resolution === 'Strict') {
+      return STRICT_RESOLUTION;
+    } else if (resolution === 'ComponentOrHelper') {
+      return LooseModeResolution.append();
+    } else {
+      return LooseModeResolution.namespaced(resolution);
     }
   }
   var api$1 = _exports.ASTv2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    ARGUMENT_RESOLUTION: ARGUMENT_RESOLUTION,
     AppendContent: AppendContent,
     ArgReference: ArgReference,
     Args: Args,
@@ -10600,7 +11048,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     COMPONENT_NAMESPACE: COMPONENT_NAMESPACE,
     CallExpression: CallExpression,
     ComponentArg: ComponentArg,
-    DeprecatedCallExpression: DeprecatedCallExpression,
     ElementModifier: ElementModifier,
     FreeVarNamespace: FreeVarNamespace,
     FreeVarReference: FreeVarReference,
@@ -10613,6 +11060,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     InterpolateExpression: InterpolateExpression,
     InvokeBlock: InvokeBlock,
     InvokeComponent: InvokeComponent,
+    KeywordExpression: KeywordExpression,
     LiteralExpression: LiteralExpression,
     LocalVarReference: LocalVarReference,
     LooseModeResolution: LooseModeResolution,
@@ -10628,14 +11076,14 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     SplatAttr: SplatAttr,
     Template: Template,
     ThisReference: ThisReference,
-    isLiteral: isLiteral,
+    isLiteral: isLiteral$1,
     isStrictResolution: isStrictResolution,
     loadResolution: loadResolution,
     node: node
   });
   class SymbolTable {
-    static top(locals, options) {
-      return new ProgramSymbolTable(locals, options);
+    static top(locals, keywords, options) {
+      return new ProgramSymbolTable(locals, keywords, options);
     }
     child(locals) {
       let symbols = locals.map(name => this.allocate(name));
@@ -10645,7 +11093,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   _exports.SymbolTable = SymbolTable;
   var _hasDebugger = /*#__PURE__*/(0, _emberBabel.classPrivateFieldLooseKey)("hasDebugger");
   class ProgramSymbolTable extends SymbolTable {
-    constructor(templateLocals, options) {
+    constructor(templateLocals, keywords, options) {
       super();
       this.symbols = [];
       this.upvars = [];
@@ -10658,13 +11106,17 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         value: false
       });
       this.templateLocals = templateLocals;
+      this.keywords = keywords;
       this.options = options;
     }
     hasLexical(name) {
       return this.options.lexicalScope(name);
     }
-    getLexical(name) {
-      return this.allocateFree(name, HTML_RESOLUTION);
+    hasKeyword(name) {
+      return this.keywords.includes(name);
+    }
+    getKeyword(name) {
+      return this.allocateFree(name, STRICT_RESOLUTION);
     }
     getUsedTemplateLocals() {
       return this.usedTemplateLocals;
@@ -10744,11 +11196,14 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     get locals() {
       return this.symbols;
     }
-    getLexical(name) {
-      return this.parent.getLexical(name);
-    }
     hasLexical(name) {
       return this.parent.hasLexical(name);
+    }
+    getKeyword(name) {
+      return this.parent.getKeyword(name);
+    }
+    hasKeyword(name) {
+      return this.parent.hasKeyword(name);
     }
     has(name) {
       return this.symbols.indexOf(name) !== -1 || this.parent.has(name);
@@ -10859,12 +11314,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         entries
       });
     }
-    attr(_ref31, loc) {
+    attr(_ref41, loc) {
       let {
         name,
         value,
         trusting
-      } = _ref31;
+      } = _ref41;
       return new HtmlAttr({
         loc,
         name,
@@ -10878,12 +11333,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc
       });
     }
-    arg(_ref32, loc) {
+    arg(_ref42, loc) {
       let {
         name,
         value,
         trusting
-      } = _ref32;
+      } = _ref42;
       return new ComponentArg({
         name,
         value,
@@ -10899,6 +11354,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc,
         ref: head,
         tail
+      });
+    }
+    keyword(name, symbol, loc) {
+      return new KeywordExpression({
+        loc,
+        name,
+        symbol
       });
     }
     self(loc) {
@@ -10918,13 +11380,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         symbol
       });
     }
-    freeVar(_ref33) {
+    freeVar(_ref43) {
       let {
         name,
         context,
         symbol,
         loc
-      } = _ref33;
+      } = _ref43;
       (0, _util.assert)(name !== 'this', "You called builders.freeVar() with 'this'. Call builders.this instead");
       (0, _util.assert)(name[0] !== '@', "You called builders.freeVar() with '" + name + "'. Call builders.at('" + name + "') instead");
       return new FreeVarReference({
@@ -10951,13 +11413,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         args: parts.args
       });
     }
-    deprecatedCall(arg, callee, loc) {
-      return new DeprecatedCallExpression({
-        loc,
-        arg,
-        callee
-      });
-    }
     interpolate(parts, loc) {
       (0, _util.assertPresentArray)(parts);
       return new InterpolateExpression({
@@ -10974,12 +11429,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
 
     // STATEMENTS //
 
-    append(_ref34, loc) {
+    append(_ref44, loc) {
       let {
         table,
         trusting,
         value
-      } = _ref34;
+      } = _ref44;
       return new AppendContent({
         table,
         trusting,
@@ -10987,11 +11442,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         loc
       });
     }
-    modifier(_ref35, loc) {
+    modifier(_ref45, loc) {
       let {
         callee,
         args
-      } = _ref35;
+      } = _ref45;
       return new ElementModifier({
         loc,
         callee,
@@ -11004,12 +11459,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         blocks
       });
     }
-    blockStatement(_ref36, loc) {
+    blockStatement(_ref46, loc) {
       let {
         program,
         inverse = null,
         ...call
-      } = _ref36;
+      } = _ref46;
       let blocksLoc = program.loc;
       let blocks = [this.namedBlock(SourceSlice.synthetic('default'), program, program.loc)];
       if (inverse) {
@@ -11099,50 +11554,43 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     if (isSimpleCallee(node)) {
       return LooseModeResolution.namespaced(COMPONENT_NAMESPACE);
     } else {
-      return LooseModeResolution.fallback();
+      return null;
     }
   }
   function ComponentSyntaxContext(node) {
     if (isSimplePath(node)) {
-      return LooseModeResolution.namespaced(FreeVarNamespace.Component, true);
+      return LooseModeResolution.namespaced(COMPONENT_NAMESPACE, true);
     } else {
       return null;
     }
   }
 
   /**
-   * This corresponds to append positions (text curlies or attribute
-   * curlies). In strict mode, this also corresponds to arg curlies.
+   * This corresponds to attribute curlies (<Foo bar={{...}}>).
+   * In strict mode, this also corresponds to arg curlies.
    */
   function AttrValueSyntaxContext(node) {
-    let isSimple = isSimpleCallee(node);
-    let isInvoke = isInvokeNode(node);
-    if (isSimple) {
-      return isInvoke ? LooseModeResolution.namespaced(FreeVarNamespace.Helper) : LooseModeResolution.attr();
+    if (isSimpleCallee(node)) {
+      return LooseModeResolution.namespaced(HELPER_NAMESPACE);
     } else {
-      return isInvoke ? STRICT_RESOLUTION : LooseModeResolution.fallback();
+      return null;
     }
   }
 
   /**
-   * This corresponds to append positions (text curlies or attribute
-   * curlies). In strict mode, this also corresponds to arg curlies.
+   * This corresponds to append positions text curlies.
    */
   function AppendSyntaxContext(node) {
     let isSimple = isSimpleCallee(node);
-    let isInvoke = isInvokeNode(node);
     let trusting = node.trusting;
     if (isSimple) {
-      return trusting ? LooseModeResolution.trustingAppend({
-        invoke: isInvoke
-      }) : LooseModeResolution.append({
-        invoke: isInvoke
-      });
+      return trusting ? LooseModeResolution.trustingAppend() : LooseModeResolution.append();
     } else {
-      return LooseModeResolution.fallback();
+      return null;
     }
   }
   // UTILITIES
+
   /**
    * A call node has a simple callee if its head is:
    *
@@ -11169,8 +11617,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
    * ```
    */
   function isSimpleCallee(node) {
-    let path = node.path;
-    return isSimplePath(path);
+    return isSimplePath(node.path);
   }
   function isSimplePath(node) {
     if (node.type === 'PathExpression' && node.head.type === 'VarHead') {
@@ -11179,15 +11626,8 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       return false;
     }
   }
-
-  /**
-   * The call expression has at least one argument.
-   */
-  function isInvokeNode(node) {
-    return node.params.length > 0 || node.hash.pairs.length > 0;
-  }
   function normalize(source, options) {
-    var _options$customizeCom;
+    var _options$keywords, _options$customizeCom;
     if (options === void 0) {
       options = {
         lexicalScope: () => false
@@ -11196,10 +11636,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     let ast = preprocess(source, options);
     let normalizeOptions = {
       strictMode: false,
-      locals: [],
-      ...options
+      ...options,
+      locals: ast.blockParams,
+      keywords: (_options$keywords = options.keywords) != null ? _options$keywords : []
     };
-    let top = SymbolTable.top(normalizeOptions.locals, {
+    let top = SymbolTable.top(normalizeOptions.locals, normalizeOptions.keywords, {
       customizeComponentName: (_options$customizeCom = options.customizeComponentName) != null ? _options$customizeCom : name => name,
       lexicalScope: options.lexicalScope
     });
@@ -11262,6 +11703,9 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     isLexicalVar(variable) {
       return this.table.hasLexical(variable);
     }
+    isKeyword(name) {
+      return this.strict && !this.table.hasLexical(name) && this.table.hasKeyword(name);
+    }
     isFreeVar(callee) {
       if (callee.type === 'PathExpression') {
         if (callee.head.type !== 'VarHead') {
@@ -11315,9 +11759,14 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         case 'UndefinedLiteral':
           return this.block.builder.literal(expr.value, this.block.loc(expr.loc));
         case 'PathExpression':
+          (0, _util.assert)(resolution, '[BUG] resolution is required');
           return this.path(expr, resolution);
         case 'SubExpression':
           {
+            // expr.path used to incorrectly have the type ASTv1.Expression
+            if (isLiteral(expr.path)) {
+              assertIllegalLiteral(expr.path, expr.loc);
+            }
             let resolution = this.block.resolutionFor(expr, SexpSyntaxContext);
             if (resolution.result === 'error') {
               throw generateSyntaxError("You attempted to invoke a path (`" + resolution.path + "`) but " + resolution.head + " was not in scope", expr.loc);
@@ -11327,6 +11776,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       }
     }
     path(expr, resolution) {
+      let loc = this.block.loc(expr.loc);
+      if (expr.head.type === 'VarHead' && expr.tail.length === 0 && this.block.isKeyword(expr.head.name)) {
+        return this.block.builder.keyword(expr.head.name, this.block.table.getKeyword(expr.head.name), loc);
+      }
       let headOffsets = this.block.loc(expr.head.loc);
       let tail = [];
 
@@ -11342,7 +11795,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
           chars: part
         }));
       }
-      return this.block.builder.path(this.ref(expr.head, resolution), tail, this.block.loc(expr.loc));
+      return this.block.builder.path(this.ref(expr.head, resolution), tail, loc);
     }
 
     /**
@@ -11353,15 +11806,24 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       let {
         path,
         params,
-        hash
+        hash,
+        loc
       } = parts;
       let callee = this.normalize(path, context);
-      let paramList = params.map(p => this.normalize(p, ARGUMENT_RESOLUTION));
+      let paramList = params.map(p => this.normalize(p, STRICT_RESOLUTION));
       let paramLoc = SpanList.range(paramList, callee.loc.collapse('end'));
       let namedLoc = this.block.loc(hash.loc);
       let argsLoc = SpanList.range([paramLoc, namedLoc]);
-      let positional = this.block.builder.positional(params.map(p => this.normalize(p, ARGUMENT_RESOLUTION)), paramLoc);
+      let positional = this.block.builder.positional(params.map(p => this.normalize(p, STRICT_RESOLUTION)), paramLoc);
       let named = this.block.builder.named(hash.pairs.map(p => this.namedArgument(p)), this.block.loc(hash.loc));
+      switch (callee.type) {
+        case 'Literal':
+          throw generateSyntaxError("Invalid invocation of a literal value (`" + callee.value + "`)", loc);
+
+        // This really shouldn't be possible, something has gone pretty wrong
+        case 'Interpolate':
+          throw generateSyntaxError("Invalid invocation of a interpolated string", loc);
+      }
       return {
         callee,
         args: this.block.builder.args(positional, named, argsLoc)
@@ -11375,7 +11837,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       return this.block.builder.namedArgument(new SourceSlice({
         chars: pair.key,
         loc: keyOffsets
-      }), this.normalize(pair.value, ARGUMENT_RESOLUTION));
+      }), this.normalize(pair.value, STRICT_RESOLUTION));
     }
 
     /**
@@ -11434,8 +11896,6 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     }
     normalize(node) {
       switch (node.type) {
-        case 'PartialStatement':
-          throw new Error("Handlebars partial syntax ({{> ...}}) is not allowed in Glimmer");
         case 'BlockStatement':
           return this.BlockStatement(node);
         case 'ElementNode':
@@ -11489,20 +11949,37 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
      */
     MustacheStatement(mustache) {
       let {
-        escaped
+        path,
+        params,
+        hash,
+        trusting
       } = mustache;
       let loc = this.block.loc(mustache.loc);
+      let value;
+      if (isLiteral(path)) {
+        if (params.length === 0 && hash.pairs.length === 0) {
+          value = this.expr.normalize(path);
+        } else {
+          assertIllegalLiteral(path, loc);
+        }
+      } else {
+        let resolution = this.block.resolutionFor(mustache, AppendSyntaxContext);
+        if (resolution.result === 'error') {
+          throw generateSyntaxError("You attempted to render a path (`{{" + resolution.path + "}}`), but " + resolution.head + " was not in scope", loc);
+        }
 
-      // Normalize the call parts in AppendSyntaxContext
-      let callParts = this.expr.callParts({
-        path: mustache.path,
-        params: mustache.params,
-        hash: mustache.hash
-      }, AppendSyntaxContext(mustache));
-      let value = callParts.args.isEmpty() ? callParts.callee : this.block.builder.sexp(callParts, loc);
+        // Normalize the call parts in AppendSyntaxContext
+        let callParts = this.expr.callParts({
+          path,
+          params,
+          hash,
+          loc
+        }, resolution.result);
+        value = callParts.args.isEmpty() ? callParts.callee : this.block.builder.sexp(callParts, loc);
+      }
       return this.block.builder.append({
         table: this.block.table,
-        trusting: !escaped,
+        trusting,
         value
       }, loc);
     }
@@ -11516,6 +11993,11 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         inverse
       } = block;
       let loc = this.block.loc(block.loc);
+
+      // block.path used to incorrectly have the type ASTv1.Expression
+      if (isLiteral(block.path)) {
+        assertIllegalLiteral(block.path, loc);
+      }
       let resolution = this.block.resolutionFor(block, BlockSyntaxContext);
       if (resolution.result === 'error') {
         throw generateSyntaxError("You attempted to invoke a path (`{{#" + resolution.path + "}}`) but " + resolution.head + " was not in scope", loc);
@@ -11527,12 +12009,12 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         inverse: inverse ? this.Block(inverse) : null
       }, callParts), loc);
     }
-    Block(_ref37) {
+    Block(_ref47) {
       let {
         body,
         loc,
         blockParams
-      } = _ref37;
+      } = _ref47;
       let child = this.block.child(blockParams);
       let normalizer = new StatementNormalizer(child);
       return new BlockChildren(this.block.loc(loc), body.map(b => normalizer.normalize(b)), this.block).assertBlock(child.table);
@@ -11609,9 +12091,13 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       }
     }
     modifier(m) {
+      // modifier.path used to incorrectly have the type ASTv1.Expression
+      if (isLiteral(m.path)) {
+        assertIllegalLiteral(m.path, m.loc);
+      }
       let resolution = this.ctx.resolutionFor(m, ModifierSyntaxContext);
       if (resolution.result === 'error') {
-        throw generateSyntaxError("You attempted to invoke a path (`{{#" + resolution.path + "}}`) as a modifier, but " + resolution.head + " was not in scope. Try adding `this` to the beginning of the path", m.loc);
+        throw generateSyntaxError("You attempted to invoke a path (`{{" + resolution.path + "}}`) as a modifier, but " + resolution.head + " was not in scope", m.loc);
       }
       let callParts = this.expr.callParts(m, resolution.result);
       return this.ctx.builder.modifier(callParts, this.ctx.loc(m.loc));
@@ -11627,8 +12113,26 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
      * ```
      */
     mustacheAttr(mustache) {
+      let {
+        path,
+        params,
+        hash,
+        loc
+      } = mustache;
+      if (isLiteral(path)) {
+        if (params.length === 0 && hash.pairs.length === 0) {
+          return this.expr.normalize(path);
+        } else {
+          assertIllegalLiteral(path, loc);
+        }
+      }
+
       // Normalize the call parts in AttrValueSyntaxContext
-      let sexp = this.ctx.builder.sexp(this.expr.callParts(mustache, AttrValueSyntaxContext(mustache)), this.ctx.loc(mustache.loc));
+      let resolution = this.ctx.resolutionFor(mustache, AttrValueSyntaxContext);
+      if (resolution.result === 'error') {
+        throw generateSyntaxError("You attempted to render a path (`{{" + resolution.path + "}}`), but " + resolution.head + " was not in scope", mustache.loc);
+      }
+      let sexp = this.ctx.builder.sexp(this.expr.callParts(mustache, resolution.result), this.ctx.loc(mustache.loc));
 
       // If there are no params or hash, just return the function part as its own expression
       if (sexp.args.isEmpty()) {
@@ -11647,7 +12151,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         case 'MustacheStatement':
           return {
             expr: this.mustacheAttr(part),
-            trusting: !part.escaped
+            trusting: part.trusting
           };
         case 'TextNode':
           return {
@@ -11686,56 +12190,46 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
         trusting: value.trusting
       }, offsets);
     }
-    maybeDeprecatedCall(arg, part) {
-      if (this.ctx.strict) {
-        return null;
+
+    // An arg curly <Foo @bar={{...}} /> is the same as an attribute curly for
+    // our purposes, except that in loose mode <Foo @bar={{baz}} /> is an error:
+    checkArgCall(arg) {
+      let {
+        value
+      } = arg;
+      if (value.type !== 'MustacheStatement') {
+        return;
       }
-      if (part.type !== 'MustacheStatement') {
-        return null;
+      if (value.params.length !== 0 || value.hash.pairs.length !== 0) {
+        return;
       }
       let {
         path
-      } = part;
+      } = value;
       if (path.type !== 'PathExpression') {
-        return null;
+        return;
       }
-      if (path.head.type !== 'VarHead') {
-        return null;
+      if (path.tail.length > 0) {
+        return;
       }
-      let {
-        name
-      } = path.head;
-      if (name === 'has-block' || name === 'has-block-params') {
+      let resolution = this.ctx.resolutionFor(path, () => {
+        // We deliberately don't want this to resolve anything. The purpose of
+        // calling `resolutionFor` here is to check for strict mode, in-scope
+        // local variables, etc.
         return null;
-      }
-      if (this.ctx.hasBinding(name)) {
-        return null;
-      }
-      if (path.tail.length !== 0) {
-        return null;
-      }
-      if (part.params.length !== 0 || part.hash.pairs.length !== 0) {
-        return null;
-      }
-      let context = LooseModeResolution.attr();
-      let callee = this.ctx.builder.freeVar({
-        name,
-        context,
-        symbol: this.ctx.table.allocateFree(name, context),
-        loc: path.loc
       });
-      return {
-        expr: this.ctx.builder.deprecatedCall(arg, callee, part.loc),
-        trusting: false
-      };
+      if (resolution.result === 'error' && resolution.path !== 'has-block') {
+        throw generateSyntaxError("You attempted to pass a path as argument (`" + arg.name + "={{" + resolution.path + "}}`) but " + resolution.head + " was not in scope. Try:\n" + ("* `" + arg.name + "={{this." + resolution.path + "}}` if this is meant to be a property lookup, or\n") + ("* `" + arg.name + "={{(" + resolution.path + ")}}` if this is meant to invoke the resolved helper, or\n") + ("* `" + arg.name + "={{helper \"" + resolution.path + "\"}}` if this is meant to pass the resolved helper by value"), arg.loc);
+      }
     }
     arg(arg) {
       (0, _util.assert)(arg.name[0] === '@', 'An arg name must start with `@`');
+      this.checkArgCall(arg);
       let offsets = this.ctx.loc(arg.loc);
       let nameSlice = offsets.sliceStartChars({
         chars: arg.name.length
       }).toSlice(arg.name);
-      let value = this.maybeDeprecatedCall(nameSlice, arg.value) || this.attrValue(arg.value);
+      let value = this.attrValue(arg.value);
       return this.ctx.builder.arg({
         name: nameSlice,
         value: value.expr,
@@ -11783,7 +12277,10 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       let pathLoc = variableLoc.withEnd(pathEnd);
       if (isComponent) {
         let path = b.path({
-          head: b.head(variable, variableLoc),
+          head: b.head({
+            original: variable,
+            loc: variableLoc
+          }),
           tail,
           loc: pathLoc
         });
@@ -11874,7 +12371,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
     }
     assertElement(name, hasBlockParams) {
       if (hasBlockParams) {
-        throw generateSyntaxError("Unexpected block params in <" + name + ">: simple elements cannot have block params", this.loc);
+        throw generateSyntaxError("Unexpected block params in <" + name.chars + ">: simple elements cannot have block params", this.loc);
       }
       if ((0, _util.isPresentArray)(this.namedBlocks)) {
         let names = this.namedBlocks.map(b => b.name);
@@ -11912,6 +12409,22 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
       }
     }
   }
+  function isLiteral(node) {
+    switch (node.type) {
+      case 'StringLiteral':
+      case 'BooleanLiteral':
+      case 'NumberLiteral':
+      case 'UndefinedLiteral':
+      case 'NullLiteral':
+        return true;
+      default:
+        return false;
+    }
+  }
+  function assertIllegalLiteral(node, loc) {
+    let value = node.type === 'StringLiteral' ? JSON.stringify(node.value) : String(node.value);
+    throw generateSyntaxError("Unexpected literal `" + value + "`", loc);
+  }
   function printPath(node) {
     if (node.type !== 'PathExpression' && node.path.type === 'PathExpression') {
       return printPath(node.path);
@@ -11923,13 +12436,7 @@ define("@glimmer/syntax", ["exports", "ember-babel", "@glimmer/util", "@handleba
   }
   function printHead(node) {
     if (node.type === 'PathExpression') {
-      switch (node.head.type) {
-        case 'AtHead':
-        case 'VarHead':
-          return node.head.name;
-        case 'ThisHead':
-          return 'this';
-      }
+      return node.head.original;
     } else if (node.path.type === 'PathExpression') {
       return printHead(node.path);
     } else {
@@ -12419,8 +12926,10 @@ define("@glimmer/util", ["exports"], function (_exports) {
 
   // If we don't know what this is, but the check requires it to be an element,
   // the cast will mandate that it's a browser element
+
   // Finally, if it's a more generic check, the cast will mandate that it's a
   // browser node and return a BrowserNodeUtils corresponding to the check
+
   function castToBrowser(node, sugaryCheck) {
     if (node === null || node === undefined) {
       return null;
@@ -12837,17 +13346,13 @@ define("@glimmer/wire-format", ["exports"], function (_exports) {
     GetSymbol: 30,
     GetLexicalSymbol: 32,
     GetStrictKeyword: 31,
-    GetFreeAsComponentOrHelperHeadOrThisFallback: 34,
     GetFreeAsComponentOrHelperHead: 35,
-    GetFreeAsHelperHeadOrThisFallback: 36,
-    GetFreeAsDeprecatedHelperHeadOrThisFallback: 99,
     GetFreeAsHelperHead: 37,
     GetFreeAsModifierHead: 38,
     GetFreeAsComponentHead: 39,
     InElement: 40,
     If: 41,
     Each: 42,
-    With: 43,
     Let: 44,
     WithDynamicVars: 45,
     InvokeComponent: 46,
@@ -12864,10 +13369,8 @@ define("@glimmer/wire-format", ["exports"], function (_exports) {
 
   const resolution = _exports.VariableResolutionContext = {
     Strict: 0,
-    AmbiguousAppend: 1,
-    AmbiguousAppendInvoke: 2,
-    AmbiguousInvoke: 3,
-    ResolveAsCallHead: 5,
+    ResolveAsComponentOrHelperHead: 1,
+    ResolveAsHelperHead: 5,
     ResolveAsModifierHead: 6,
     ResolveAsComponentHead: 7
   };
@@ -15489,7 +15992,15 @@ define("ember-template-compiler/lib/plugins/assert-against-attrs", ["exports", "
     return {
       name: 'assert-against-attrs',
       visitor: {
-        Program: {
+        Template: {
+          enter(node) {
+            updateBlockParamsStack(node.blockParams);
+          },
+          exit() {
+            stack.pop();
+          }
+        },
+        Block: {
           enter(node) {
             updateBlockParamsStack(node.blockParams);
           },
@@ -15507,26 +16018,34 @@ define("ember-template-compiler/lib/plugins/assert-against-attrs", ["exports", "
         },
         PathExpression(node) {
           if (isAttrs(node, stack[stack.length - 1])) {
-            let path = b.path(node.original.substring(6));
-            (true && !(node.this !== false) && (0, _debug.assert)("Using {{attrs}} to reference named arguments is not supported. {{attrs." + path.original + "}} should be updated to {{@" + path.original + "}}. " + (0, _calculateLocationDisplay.default)(moduleName, node.loc), node.this !== false));
+            (true && !(false) && (0, _debug.assert)("Using {{attrs}} to reference named arguments is not supported. {{" + node.original + "}} should be updated to {{@" + node.original.slice(6) + "}}. " + (0, _calculateLocationDisplay.default)(moduleName, node.loc)));
+          } else if (isThisDotAttrs(node)) {
+            // When removing this, ensure `{{this.attrs.foo}}` is left as-is, without triggering
+            // any assertions/deprecations. It's perfectly legal to reference `{{this.attrs.foo}}`
+            // in the template since it is a real property on the backing class – it will give you
+            // a `MutableCell` wrapper object, but maybe that's what you want. And in any case,
+            // there is no compelling to special case that property access.
+            (true && !(false) && (0, _debug.deprecate)("Using {{this.attrs}} to reference named arguments has been deprecated. {{" + node.original + "}} should be updated to {{@" + node.original.slice(11) + "}}. " + (0, _calculateLocationDisplay.default)(moduleName, node.loc), false, {
+              id: 'attrs-arg-access',
+              url: 'https://deprecations.emberjs.com/v3.x/#toc_attrs-arg-access',
+              until: '6.0.0',
+              for: 'ember-source',
+              since: {
+                available: '3.26.0',
+                enabled: '3.26.0'
+              }
+            }));
+            return b.path("@" + node.original.slice(11), node.loc);
           }
         }
       }
     };
   }
   function isAttrs(node, symbols) {
-    let name = node.parts[0];
-    if (name && symbols.indexOf(name) !== -1) {
-      return false;
-    }
-    if (name === 'attrs') {
-      if (node.this === true) {
-        node.parts.shift();
-        node.original = node.original.slice(5);
-      }
-      return true;
-    }
-    return false;
+    return node.head.type === 'VarHead' && node.head.name === 'attrs' && symbols.indexOf(node.head.name) === -1;
+  }
+  function isThisDotAttrs(node) {
+    return node.head.type === 'ThisHead' && node.tail[0] === 'attrs';
   }
 });
 define("ember-template-compiler/lib/plugins/assert-against-named-outlets", ["exports", "@ember/debug", "ember-template-compiler/lib/system/calculate-location-display"], function (_exports, _debug, _calculateLocationDisplay) {
@@ -15642,48 +16161,25 @@ define("ember-template-compiler/lib/plugins/assert-reserved-named-arguments", ["
     return "'" + name + "' is reserved.";
   }
 });
-define("ember-template-compiler/lib/plugins/assert-splattribute-expression", ["exports", "@ember/debug", "ember-template-compiler/lib/system/calculate-location-display"], function (_exports, _debug, _calculateLocationDisplay) {
+define("ember-template-compiler/lib/plugins/index", ["exports", "ember-template-compiler/lib/plugins/assert-against-attrs", "ember-template-compiler/lib/plugins/assert-against-named-outlets", "ember-template-compiler/lib/plugins/assert-input-helper-without-block", "ember-template-compiler/lib/plugins/assert-reserved-named-arguments", "ember-template-compiler/lib/plugins/transform-action-syntax", "ember-template-compiler/lib/plugins/transform-each-in-into-each", "ember-template-compiler/lib/plugins/transform-each-track-array", "ember-template-compiler/lib/plugins/transform-in-element", "ember-template-compiler/lib/plugins/transform-quoted-bindings-into-just-bindings", "ember-template-compiler/lib/plugins/transform-resolutions", "ember-template-compiler/lib/plugins/transform-wrap-mount-and-outlet"], function (_exports, _assertAgainstAttrs, _assertAgainstNamedOutlets, _assertInputHelperWithoutBlock, _assertReservedNamedArguments, _transformActionSyntax, _transformEachInIntoEach, _transformEachTrackArray, _transformInElement, _transformQuotedBindingsIntoJustBindings, _transformResolutions, _transformWrapMountAndOutlet) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
-  _exports.default = assertSplattributeExpressions;
-  function assertSplattributeExpressions(env) {
-    var _env$meta;
-    let moduleName = (_env$meta = env.meta) == null ? void 0 : _env$meta.moduleName;
-    return {
-      name: 'assert-splattribute-expressions',
-      visitor: {
-        PathExpression(_ref) {
-          let {
-            original,
-            loc
-          } = _ref;
-          if (original === '...attributes') {
-            (true && !(false) && (0, _debug.assert)(errorMessage() + " " + (0, _calculateLocationDisplay.default)(moduleName, loc)));
-          }
-        }
-      }
-    };
-  }
-  function errorMessage() {
-    return '`...attributes` can only be used in the element position e.g. `<div ...attributes />`. It cannot be used as a path.';
-  }
-});
-define("ember-template-compiler/lib/plugins/index", ["exports", "ember-template-compiler/lib/plugins/assert-against-attrs", "ember-template-compiler/lib/plugins/assert-against-named-outlets", "ember-template-compiler/lib/plugins/assert-input-helper-without-block", "ember-template-compiler/lib/plugins/assert-reserved-named-arguments", "ember-template-compiler/lib/plugins/assert-splattribute-expression", "ember-template-compiler/lib/plugins/transform-action-syntax", "ember-template-compiler/lib/plugins/transform-each-in-into-each", "ember-template-compiler/lib/plugins/transform-each-track-array", "ember-template-compiler/lib/plugins/transform-in-element", "ember-template-compiler/lib/plugins/transform-quoted-bindings-into-just-bindings", "ember-template-compiler/lib/plugins/transform-resolutions", "ember-template-compiler/lib/plugins/transform-wrap-mount-and-outlet"], function (_exports, _assertAgainstAttrs, _assertAgainstNamedOutlets, _assertInputHelperWithoutBlock, _assertReservedNamedArguments, _assertSplattributeExpression, _transformActionSyntax, _transformEachInIntoEach, _transformEachTrackArray, _transformInElement, _transformQuotedBindingsIntoJustBindings, _transformResolutions, _transformWrapMountAndOutlet) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.STRICT_MODE_TRANSFORMS = _exports.RESOLUTION_MODE_TRANSFORMS = void 0;
+  _exports.STRICT_MODE_TRANSFORMS = _exports.STRICT_MODE_KEYWORDS = _exports.RESOLUTION_MODE_TRANSFORMS = void 0;
   // order of plugins is important
-  const RESOLUTION_MODE_TRANSFORMS = _exports.RESOLUTION_MODE_TRANSFORMS = Object.freeze([_transformQuotedBindingsIntoJustBindings.default, _assertReservedNamedArguments.default, _transformActionSyntax.default, _assertAgainstAttrs.default, _transformEachInIntoEach.default, _assertInputHelperWithoutBlock.default, _transformInElement.default, _assertSplattributeExpression.default, _transformEachTrackArray.default, _assertAgainstNamedOutlets.default, _transformWrapMountAndOutlet.default, _transformResolutions.default].filter(notNull));
-  const STRICT_MODE_TRANSFORMS = _exports.STRICT_MODE_TRANSFORMS = Object.freeze([_transformQuotedBindingsIntoJustBindings.default, _assertReservedNamedArguments.default, _transformActionSyntax.default, _transformEachInIntoEach.default, _transformInElement.default, _assertSplattributeExpression.default, _transformEachTrackArray.default, _assertAgainstNamedOutlets.default, _transformWrapMountAndOutlet.default].filter(notNull));
-  function notNull(value) {
-    return value !== null;
-  }
+  const RESOLUTION_MODE_TRANSFORMS = _exports.RESOLUTION_MODE_TRANSFORMS = Object.freeze([_transformQuotedBindingsIntoJustBindings.default, _assertReservedNamedArguments.default, _transformActionSyntax.default, _assertAgainstAttrs.default, _transformEachInIntoEach.default, _assertInputHelperWithoutBlock.default, _transformInElement.default, _transformEachTrackArray.default, _assertAgainstNamedOutlets.default, _transformWrapMountAndOutlet.default, _transformResolutions.default]);
+  const STRICT_MODE_TRANSFORMS = _exports.STRICT_MODE_TRANSFORMS = Object.freeze([_transformQuotedBindingsIntoJustBindings.default, _assertReservedNamedArguments.default, _transformActionSyntax.default, _transformEachInIntoEach.default, _transformInElement.default, _transformEachTrackArray.default, _assertAgainstNamedOutlets.default, _transformWrapMountAndOutlet.default]);
+  const STRICT_MODE_KEYWORDS = _exports.STRICT_MODE_KEYWORDS = Object.freeze(['action', 'mut', 'readonly', 'unbound',
+  // TransformEachInIntoEach
+  '-each-in',
+  // TransformInElement
+  '-in-el-null',
+  // TransformEachTrackArray
+  '-track-array',
+  // TransformWrapMountAndOutlet
+  '-mount', '-outlet']);
 });
 define("ember-template-compiler/lib/plugins/transform-action-syntax", ["exports", "ember-template-compiler/lib/plugins/utils"], function (_exports, _utils) {
   "use strict";
@@ -16066,7 +16562,7 @@ define("ember-template-compiler/lib/plugins/transform-resolutions", ["exports", 
     };
   }
   function isLocalVariable(node, hasLocal) {
-    return !node.this && node.parts.length === 1 && hasLocal(node.parts[0]);
+    return !(node.head.type === 'ThisHead') && node.tail.length === 1 && hasLocal(node.head.original);
   }
   function transformParams(b, params, type, moduleName, loc) {
     let [first, ...rest] = params;
@@ -16129,8 +16625,9 @@ define("ember-template-compiler/lib/plugins/transform-wrap-mount-and-outlet", ["
     return {
       name: 'transform-wrap-mount-and-outlet',
       visitor: {
-        Program: node,
+        Template: node,
         ElementNode: node,
+        Block: node,
         MustacheStatement(node) {
           if ((0, _utils.isPath)(node.path) && (node.path.original === 'mount' || node.path.original === 'outlet') && !hasLocal(node.path.original)) {
             let subexpression = b.sexpr(b.path("-" + node.path.original), node.params, node.hash, node.loc);
@@ -16160,22 +16657,33 @@ define("ember-template-compiler/lib/plugins/utils", ["exports"], function (_expo
   function isStringLiteral(node) {
     return node.type === 'StringLiteral';
   }
+  function getLocalName(node) {
+    if (typeof node === 'string') {
+      return node;
+    } else {
+      return node.original;
+    }
+  }
   function trackLocals() {
     let locals = new Map();
     let node = {
       enter(node) {
-        for (let param of node.blockParams) {
+        let params = 'params' in node ? node.params : node.blockParams;
+        for (let param of params) {
+          let name = getLocalName(param);
           let value = locals.get(param) || 0;
-          locals.set(param, value + 1);
+          locals.set(name, value + 1);
         }
       },
       exit(node) {
-        for (let param of node.blockParams) {
-          let value = locals.get(param) - 1;
+        let params = 'params' in node ? node.params : node.blockParams;
+        for (let param of params) {
+          let name = getLocalName(param);
+          let value = locals.get(name) - 1;
           if (value === 0) {
-            locals.delete(param);
+            locals.delete(name);
           } else {
-            locals.set(param, value);
+            locals.set(name, value);
           }
         }
       }
@@ -16399,6 +16907,9 @@ define("ember-template-compiler/lib/system/compile-options", ["exports", "@ember
       (true && !(meta) && (0, _debug.assert)('has meta', meta)); // We just set it
       meta.moduleName = options.moduleName;
     }
+    if (options.strictMode) {
+      options.keywords = _index.STRICT_MODE_KEYWORDS;
+    }
     return options;
   }
   function transformsFor(options) {
@@ -16577,7 +17088,7 @@ define("ember/version", ["exports"], function (_exports) {
     value: true
   });
   _exports.default = void 0;
-  var _default = _exports.default = "5.7.0";
+  var _default = _exports.default = "5.10.0-alpha.1+a474b88f";
 });
 define("simple-html-tokenizer", ["exports"], function (_exports) {
   "use strict";

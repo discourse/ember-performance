@@ -7,7 +7,7 @@ function emberVersions() {
   return fs
     .readdirSync("ember")
     .map(function (file) {
-      const matched = file.match(/^ember-(\d+\.\d+\.\d+)\.prod/);
+      const matched = file.match(/^ember-(.*)\.prod/);
 
       if (matched) {
         return matched[1];

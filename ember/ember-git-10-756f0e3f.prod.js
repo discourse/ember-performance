@@ -14,7 +14,7 @@ throw new TypeError("@@toPrimitive must return a primitive value.")}return("stri
  *            Portions Copyright 2008-2011 Apple Inc. All rights reserved.
  * @license   Licensed under MIT license
  *            See https://raw.github.com/emberjs/ember.js/master/LICENSE
- * @version   5.10.0
+ * @version   5.11.0-alpha.1+756f0e3f
  */if(function(e){"use strict"
 function t(){var e=Object.create(null)
 return e.__=void 0,delete e.__,e}var r={loader:loader,define:define,requireModule:requireModule,require:require,requirejs:requirejs}
@@ -223,7 +223,7 @@ for(let o of i){o.split(":")[0]===e&&(n[o]=!0)}return null!==this.fallback&&(t=t
 function gr([e]){let t=fr[e]
 if(t)return t
 let[r,n]=e.split(":")
-return fr[e]=y(`${r}:${n}-${mr}`)}const yr=Object.defineProperty({__proto__:null,Container:rr,INIT_FACTORY:lr,Registry:pr,getFactoryFor:ur,privatize:gr,setFactoryFor:cr},Symbol.toStringTag,{value:"Module"}),br="5.10.0",_r=Object.defineProperty({__proto__:null,default:br},Symbol.toStringTag,{value:"Module"}),vr=Object.defineProperty({__proto__:null,VERSION:br},Symbol.toStringTag,{value:"Module"}),wr=/[ _]/g,Sr=new ne(1e3,(e=>{return(t=e,Or.get(t)).replace(wr,"-")
+return fr[e]=y(`${r}:${n}-${mr}`)}const yr=Object.defineProperty({__proto__:null,Container:rr,INIT_FACTORY:lr,Registry:pr,getFactoryFor:ur,privatize:gr,setFactoryFor:cr},Symbol.toStringTag,{value:"Module"}),br="5.11.0-alpha.1",_r=Object.defineProperty({__proto__:null,default:br},Symbol.toStringTag,{value:"Module"}),vr=Object.defineProperty({__proto__:null,VERSION:br},Symbol.toStringTag,{value:"Module"}),wr=/[ _]/g,Sr=new ne(1e3,(e=>{return(t=e,Or.get(t)).replace(wr,"-")
 var t})),Pr=/^(-|_)+(.)?/,Er=/(.)(-|_|\.|\s)+(.)?/g,kr=/(^|\/|\.)([a-z])/g,Tr=new ne(1e3,(e=>{let t=(e,t,r)=>r?`_${r.toUpperCase()}`:"",r=(e,t,r,n)=>t+(n?n.toUpperCase():""),n=e.split("/")
 for(let i=0;i<n.length;i++)n[i]=n[i].replace(Pr,t).replace(Er,r)
 return n.join("/").replace(kr,(e=>e.toUpperCase()))})),Cr=/([a-z\d])([A-Z])/g,Or=new ne(1e3,(e=>e.replace(Cr,"$1_$2").toLowerCase()))

@@ -5,7 +5,7 @@
  *            Portions Copyright 2008-2011 Apple Inc. All rights reserved.
  * @license   Licensed under MIT license
  *            See https://raw.github.com/emberjs/ember.js/master/LICENSE
- * @version   5.10.0
+ * @version   5.10.0-alpha.1+53b2de8e
  */
 /* eslint-disable no-var */
 /* globals global globalThis self */
@@ -83,7 +83,7 @@ var define, require;
 
     var result = callback.apply(this, reified);
     if (!deps.includes('exports') || result !== undefined) {
-      exports = seen[name] = result;
+      exports = result;
     }
 
     return exports;
@@ -17766,7 +17766,7 @@ var define, require;
           }, Symbol.toStringTag, { value: 'Module' });
 
           // this file gets replaced with the real value during the build
-          const version = '5.10.0';
+          const version = '5.10.0-alpha.1';
 
           const emberVersion = /*#__PURE__*/Object.defineProperty({
                     __proto__: null,

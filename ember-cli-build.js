@@ -79,8 +79,6 @@ module.exports = function (defaults) {
     },
   });
 
-  app.import("vendor/bootstrap.css");
-
   return new MergeTrees(
     [
       app.toTree(),

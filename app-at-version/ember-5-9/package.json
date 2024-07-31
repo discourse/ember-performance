@@ -1,47 +1,41 @@
 {
-  "name": "ember-performance",
+  "name": "ember-5-9",
+  "version": "0.0.0",
   "private": true,
-  "version": "0.13.0",
-  "description": "Benchmark Ember.js Performance",
-  "repository": "https://github.com/eviltrout/ember-performance",
+  "description": "Small description for ember-5-9 goes here",
+  "repository": "",
   "license": "MIT",
-  "author": "Robin Ward",
+  "author": "",
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
   "scripts": {
     "build": "ember build --environment=production",
-    "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
+    "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\"",
     "lint:css": "stylelint \"**/*.css\"",
-    "lint:css:fix": "concurrently \"npm:lint:css -- --fix\"",
-    "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
-    "lint:hbs": "ember-template-lint \"app/**/*\" \"benchmarks/**/*\"",
-    "lint:hbs:fix": "ember-template-lint \"app/**/*\" \"benchmarks/**/*\" --fix",
+    "lint:css:fix": "concurrently \"pnpm:lint:css -- --fix\"",
+    "lint:fix": "concurrently \"pnpm:lint:*:fix\" --names \"fix:\"",
+    "lint:hbs": "ember-template-lint .",
+    "lint:hbs:fix": "ember-template-lint . --fix",
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
     "start": "ember serve",
-    "test": "concurrently \"npm:lint\" \"npm:test:*\" --names \"lint,test:\"",
+    "test": "concurrently \"pnpm:lint\" \"pnpm:test:*\" --names \"lint,test:\"",
     "test:ember": "ember test"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
     "@babel/eslint-parser": "^7.24.7",
     "@babel/plugin-proposal-decorators": "^7.24.7",
-    "@discourse/lint-configs": "^1.3.9",
     "@ember/optional-features": "^2.1.0",
-    "@ember/render-modifiers": "^2.1.0",
     "@ember/string": "^3.1.1",
     "@ember/test-helpers": "^3.3.0",
     "@glimmer/component": "^1.1.2",
     "@glimmer/tracking": "^1.1.2",
-    "ascii-table": "^0.0.9",
-    "benchmark": "bestiejs/benchmark.js#main",
-    "bootstrap": "^4.6.2",
     "broccoli-asset-rev": "^3.0.0",
-    "chart.js": "^4.4.3",
     "concurrently": "^8.2.2",
-    "ember-auto-import": "^2.7.3",
+    "ember-auto-import": "^2.7.4",
     "ember-cli": "~5.10.0",
     "ember-cli-app-version": "^6.0.1",
     "ember-cli-babel": "^8.2.0",
@@ -51,54 +45,36 @@
     "ember-cli-inject-live-reload": "^2.1.0",
     "ember-cli-sri": "^2.1.1",
     "ember-cli-terser": "^4.0.2",
-    "ember-data": "~5.3.3",
+    "ember-data": "~5.3.8",
     "ember-fetch": "^8.1.2",
     "ember-load-initializers": "^2.1.2",
-    "ember-modifier": "^4.1.0",
+    "ember-modifier": "^4.2.0",
     "ember-page-title": "^8.2.3",
-    "ember-qunit": "^8.0.2",
+    "ember-qunit": "^8.1.0",
     "ember-resolver": "^11.0.1",
-    "ember-route-template": "^1.0.3",
     "ember-source": "~5.10.0",
-    "ember-template-imports": "^4.1.1",
     "ember-template-lint": "^5.13.0",
     "ember-welcome-page": "^7.0.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-ember": "^12.1.1",
+    "eslint-plugin-ember": "^11.12.0",
     "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-qunit": "^8.1.1",
-    "headjs": "^1.0.3",
-    "javascript-natural-sort": "^0.7.1",
     "loader.js": "^4.7.0",
     "prettier": "^3.3.2",
-    "prettier-plugin-ember-template-tag": "^2.0.2",
     "qunit": "^2.21.0",
     "qunit-dom": "^2.0.0",
     "stylelint": "^15.11.0",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-prettier": "^4.1.0",
     "tracked-built-ins": "^3.3.0",
-    "webpack": "^5.91.0"
+    "webpack": "^5.92.1"
   },
   "engines": {
     "node": ">= 18"
   },
   "ember": {
     "edition": "octane"
-  },
-  "packageManager": "pnpm@9.6.0+sha512.38dc6fba8dba35b39340b9700112c2fe1e12f10b17134715a4aa98ccf7bb035e76fd981cf0bb384dfa98f8d6af5481c2bef2f4266a24bfa20c34eb7147ce0b5e",
-  "dependencies": {
-    "rsvp": "^4.8.5"
-  },
-  "volta": {
-    "node": "20.16.0",
-    "pnpm": "9.6.0"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "ember-cli@5.10.0": "patches/ember-cli@5.10.0.patch"
-    }
   }
 }

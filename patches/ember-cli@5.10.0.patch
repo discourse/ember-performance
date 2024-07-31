@@ -1,0 +1,14 @@
+diff --git a/lib/models/command.js b/lib/models/command.js
+index abe7f43d1dba5a17f052242aacf3bc412fc59f66..f72fd929656b07be991103d2ac086b4a38427ff9 100644
+--- a/lib/models/command.js
++++ b/lib/models/command.js
+@@ -271,7 +271,8 @@ let Command = CoreObject.extend({
+     }
+ 
+     if (this.works === 'outsideProject' && this.isWithinProject) {
+-      throw new SilentError(`You cannot use the ${chalk.green(this.name)} command inside an ember-cli project.`);
++      // Disabled, because 1. it's fine, 2. I just want a new project.
++      // throw new SilentError(`You cannot use the ${chalk.green(this.name)} command inside an ember-cli project.`);
+     }
+ 
+     if (this.works === 'insideProject') {

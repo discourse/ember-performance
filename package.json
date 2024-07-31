@@ -87,5 +87,18 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "packageManager": "pnpm@9.6.0+sha512.38dc6fba8dba35b39340b9700112c2fe1e12f10b17134715a4aa98ccf7bb035e76fd981cf0bb384dfa98f8d6af5481c2bef2f4266a24bfa20c34eb7147ce0b5e",
+  "dependencies": {
+    "rsvp": "^4.8.5"
+  },
+  "volta": {
+    "node": "20.16.0",
+    "pnpm": "9.6.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "ember-cli@5.10.0": "patches/ember-cli@5.10.0.patch"
+    }
   }
 }

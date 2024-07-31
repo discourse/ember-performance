@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("fs");
+const path = require("path");
 const naturalSort = require("javascript-natural-sort");
 
 function emberVersions() {
@@ -18,12 +19,12 @@ function emberVersions() {
 }
 
 const walkSync = require("walk-sync");
-const path = require("path");
 
 function benchmarks() {
-  return walkSync("benchmarks", ["**/bench.json"])
+  let baseDir = path.join("public", "benchmarks");
+  return walkSync(baseDir, ["**/bench.json"])
     .map(function (bench) {
-      const data = JSON.parse(fs.readFileSync("benchmarks" + "/" + bench));
+      const data = JSON.parse(fs.readFileSync(path.join(baseDir, bench)));
       data.path = "/" + path.dirname(bench);
       return data;
     })

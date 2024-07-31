@@ -12,7 +12,6 @@ const clientDepsTree = new Funnel("node_modules", {
     "benchmark/benchmark.js",
     "rsvp/dist/rsvp.js",
     "ascii-table/ascii-table.js",
-    "lodash/lodash.js",
   ],
 });
 
@@ -25,27 +24,12 @@ const testClient = new Concat(clientTree, {
     "test-client.js",
     "test-session.js",
     "headjs/dist/1.0.0/head.js",
-    "lodash/lodash.js",
     "benchmark/benchmark.js",
     "rsvp/dist/rsvp.js",
     "ascii-table/ascii-table.js",
     "people.js",
   ],
   outputFile: "/assets/test-client.js",
-});
-
-const compileTemplatesTree = new Funnel("compile-templates", {
-  include: ["index.{html,js}"],
-  destDir: "compile-templates",
-});
-
-const benchmarksIndexJs = new Funnel("benchmarks", {
-  include: ["**/*.js"],
-  destDir: "benchmarks",
-});
-
-const benchmarksIndexHtml = new CopyIndex(benchmarksIndexJs, {
-  annotation: "Copy index.html to benchmark",
 });
 
 const emberTree = new Funnel("ember", {
@@ -79,19 +63,7 @@ module.exports = function (defaults) {
     },
   });
 
-  app.import("vendor/bootstrap.css");
-
-  return new MergeTrees(
-    [
-      app.toTree(),
-      testClient,
-      compileTemplatesTree,
-      benchmarksIndexJs,
-      benchmarksIndexHtml,
-      emberTree,
-    ],
-    {
-      annotation: "final dist merge",
-    },
-  );
+  return new MergeTrees([app.toTree(), testClient, emberTree], {
+    annotation: "final dist merge",
+  });
 };

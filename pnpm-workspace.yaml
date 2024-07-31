@@ -1,0 +1,19 @@
+packages:
+  # The main app that aggregates the results of other projects
+  - '.'
+  # Libraries that provide a place to author shared behaviors
+  # and components for use in the individual per-version apps.
+  #
+  # Libraries made with:
+  #   npx ember-cli@latest addon $name --blueprint @embroider/addon-blueprint --addon-only --skip-install --skip-git --pnpm
+  #
+  - './libraries/*'
+  # Each ember version that we want to test exists here as a real app
+  #   that we can each build individually.
+  # These will depend on the libraries, and, when built,
+  #   can have their outputs called via iframe from the main app.
+  #
+  # Apps made with:
+  #   npx ember-cli@$version new ember-${version/\./-} --skip-install --skip-git --pnpm
+  #
+  - './app-at-version/*'

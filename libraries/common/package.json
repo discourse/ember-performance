@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@embroider/addon-shim": "^1.8.7",
+    "babel-plugin-transform-vite-meta-glob": "^1.1.2",
     "decorator-transforms": "^2.0.0"
   },
   "devDependencies": {
@@ -61,7 +62,11 @@
   "ember-addon": {
     "version": 2,
     "type": "addon",
-    "main": "addon-main.cjs"
+    "main": "addon-main.cjs",
+    "app-js": {
+      "./components/layout.js": "./dist/_app_/components/layout.js",
+      "./components/scenarios/baseline-handlebars-list.js": "./dist/_app_/components/scenarios/baseline-handlebars-list.js"
+    }
   },
   "volta": {
     "extends": "../../package.json"

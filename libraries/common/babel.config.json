@@ -1,6 +1,6 @@
 {
   "plugins": [
-    "@embroider/addon-dev/template-colocation-plugin",
+    "babel-plugin-transform-vite-meta-glob",
     ["babel-plugin-ember-template-compilation", {
       "targetFormat": "hbs",
       "transforms": []

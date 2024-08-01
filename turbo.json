@@ -1,0 +1,35 @@
+{
+  "globalDependencies": [
+    "pnpm-lock.yaml",
+    "patches",
+    ".npmrc"
+  ],
+  // "globalPassThroughEnv": [],
+  "tasks": {
+    "start": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "outputs": ["dist/**"],
+      "inputs": [
+        // native packages / modern ember
+        "src/**",
+        "unpublished-development-types/**",
+        "addon-main.*",
+        "tsconfig.json",
+        "rollup.config.*",
+        "babel.config.*",
+
+        // Apps
+        "app/**",
+        "config/**",
+        "public/**",
+        "tests/**",
+        "ember-cli-build.js"
+      ],
+      "dependsOn": ["^build"]
+    },
+  }
+}

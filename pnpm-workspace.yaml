@@ -1,6 +1,8 @@
 packages:
   # The main app that aggregates the results of other projects
   - './benchmark'
+  # Utilities for helping manage the monorepo
+  - './scripts'
   # Libraries that provide a place to author shared behaviors
   # and components for use in the individual per-version apps.
   #

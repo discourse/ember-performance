@@ -76,5 +76,12 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  },
+  "dependencies": {
+    "common": "workspace:^",
+    "perf-testing": "workspace:^"
   }
 }

@@ -89,6 +89,11 @@
     "edition": "octane"
   },
   "dependencies": {
+    "common": "workspace:^",
+    "perf-testing": "workspace:^",
     "rsvp": "^4.8.5"
+  },
+  "volta": {
+    "extends": "../package.json"
   }
 }

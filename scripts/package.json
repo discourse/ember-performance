@@ -1,0 +1,15 @@
+{
+  "name": "scripts",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@manypkg/get-packages": "^2.2.2",
+    "common": "workspace:^",
+    "ember-apply": "^2.12.0",
+    "perf-testing": "workspace:^"
+  },
+  "volta": {
+    "extends": "../package.json"
+  }
+}

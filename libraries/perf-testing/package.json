@@ -1,6 +1,7 @@
 {
   "name": "perf-testing",
   "version": "0.0.0",
+  "private": true,
   "description": "The default blueprint for Embroider v2 addons.",
   "keywords": [
     "ember-addon"
@@ -54,9 +55,6 @@
     "rollup": "^4.16.4",
     "rollup-plugin-copy": "^3.5.0"
   },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
   "ember": {
     "edition": "octane"
   },
@@ -64,5 +62,8 @@
     "version": 2,
     "type": "addon",
     "main": "addon-main.cjs"
+  },
+  "volta": {
+    "extends": "../../package.json"
   }
 }

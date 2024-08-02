@@ -1,0 +1,22 @@
+{
+  "name": "ember-cli-utils",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./index.js",
+    "./environment": {
+      "require": "./environment.cjs"
+    }
+  },
+  "dependencies": {
+    "@embroider/broccoli-side-watch": "0.0.2-unstable.ba9fd29",
+    "read-package-up": "^11.0.0"
+  },
+  "devDependencies": {
+    "@embroider/compat": "^3.6.0",
+    "@embroider/core": "^3.4.14",
+    "@embroider/webpack": "^4.0.4",
+    "ember-cli-utils": "workspace:^"
+  }
+}

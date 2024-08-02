@@ -1,35 +1,58 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+
+import { use } from 'ember-resources';
+
+import { OneOffTinyBench, type Options } from './bench.ts';
 import { Layout } from './layout.gts';
-import { microBench } from './bench.ts';
-import { noop } from './consts.ts';
+import { store } from './storage.ts';
+import { onRenderIsh } from './utils.ts';
 
-export class MicroBenchmark extends Component {
-  @tracked status;
-  @tracked remaining;
-  @tracked progress;
+export class MicroBenchmark extends Component<{
+  Args: {
+    name: string;
+    version: string;
+  } & Options;
+}> {
+  @tracked status = '';
+  @tracked remaining = '';
+  @tracked progress = '';
 
-  run = () => {
-    return microBench({
-      name: this.args.name,
+  @use bench = OneOffTinyBench(() => ({
+    options: this.args,
+    updateStatus: (msg: string) => (this.status = msg),
+  }));
 
-      fn: {
-        test: this.args.test || noop,
-        setup: this.args.test || noop,
-        reset: this.args.test || noop,
-        teardown: this.args.test || noop,
-      },
+  isRunning = false;
 
-      on: {
-        start: () => {},
-        status: (message) => (this.status = message),
-        error: (message) => (this.status = message),
-        finish: () => (),
-      },
+  run = async () => {
+    if (this.isRunning) {
+      console.info('Already running');
+
+      return;
+    }
+
+    this.isRunning = true;
+
+    let bench = this.bench;
+
+    this.status = 'Warming up...';
+
+    requestIdleCallback(async () => {
+      await bench.warmup();
+
+      this.status = 'Running...';
+      requestIdleCallback(async () => {
+        await bench.run();
+
+        store(this.args.name, this.args.version, bench.results[0]);
+      });
     });
   };
 
   <template>
+    {{onRenderIsh this.run}}
+
     <Layout @name={{@name}} @version={{@version}}>
       <:remaining>{{this.remaining}}</:remaining>
       <:status>{{this.status}}</:status>

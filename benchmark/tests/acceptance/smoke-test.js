@@ -1,6 +1,6 @@
 import { currentURL,visit } from "@ember/test-helpers";
-import { setupApplicationTest } from "ember-qunit";
 import { module, test } from "qunit";
+import { setupApplicationTest } from "ember-qunit";
 
 module("Acceptance | smoke", function (hooks) {
   setupApplicationTest(hooks);

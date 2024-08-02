@@ -5,6 +5,7 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { equal, gt } from "@ember/object/computed";
 import { htmlSafe } from "@ember/template";
+
 import { formatNumber } from "../helpers/format-number";
 import AreaChart from "./area-chart";
 
@@ -25,6 +26,7 @@ export default class BenchmarkReport extends Component {
 
   get groupedTests() {
     const tests = {};
+
     this.args.report.testGroupReports.forEach((testGroupReport) => {
       testGroupReport.results.forEach((result) => {
         const test = tests[result.name] || {
@@ -39,6 +41,7 @@ export default class BenchmarkReport extends Component {
             ],
           ],
         };
+
         test.data.push({
           emberVersion: testGroupReport.emberVersion,
           result,
@@ -65,9 +68,11 @@ export default class BenchmarkReport extends Component {
     let result = "User Agent: " + navigator.userAgent + "\n";
 
     const featureFlags = this.args.report.featureFlags;
+
     if (featureFlags && featureFlags.length) {
       result += "Feature Flags: " + featureFlags.join(", ") + "\n";
     }
+
     result += "\n";
 
     const table = new window.AsciiTable("Ember Performance Suite - Results");

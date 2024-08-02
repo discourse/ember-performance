@@ -1,49 +1,53 @@
-import Benchmark from 'benchmark';
+import { resource } from 'ember-resources';
+import { Bench } from 'tinybench';
 
-export function microbench(config) {
-  return new Promise(function (resolve) {
-    config.on.start();
-    config.on.status('Running Micro Benchmark...');
+export type Options = {
+  name: string;
+  test: () => unknown;
+} & Omit<ConstructorParameters<typeof Bench>, 'signal'>;
 
-    requestIdleCallback(() => {
-      let suite = new Benchmark.Suite();
+/**
+ * One-off Bench.
+ * In this whole suite of code in this monorepo, we don't directly compare bench results
+ * in the same TinyBench run.
+ * We have to load separate apps to get the results for each app and each app will load TinyBench,
+ * and run its one test, and save those results to local storage for the host app to load and compare.
+ */
+export function OneOffTinyBench(
+  optionsFn: () => { options: Options; updateStatus: (msg: string) => void }
+) {
+  return resource(({ on }) => {
+    let opts = optionsFn();
+    let { name, test, ...options } = opts.options;
 
-      suite.add(config.name, config.fn.test, {
-        setup: config.fn.setup,
-        teardown: config.fn.teardown,
-      });
+    let abortController = new AbortController();
 
-      suite.on('complete', function () {
-        config.on.status('Finished');
-        config.on.finish();
-      });
+    let bench = new Bench({ ...options, signal: abortController.signal });
 
-      suite.on('cycle', function (evt) {
-        console.log('running cycle');
-        config.fn.reset();
+    on.cleanup(() => abortController.abort());
 
-        let r = evt.target;
+    bench.add(name, test);
 
-        resolve({
-          name: r.name,
-          hz: r.hz,
-          rme: r.stats.rme,
-          deviation: r.stats.deviation,
-          mean: r.stats.mean,
-          samples: r.stats.sample.length,
-          emberVersion: r.emberVersion,
-          createdAt: new Date(),
-        });
-      });
-
-      suite.on('error', function (evt) {
-        let err = evt.target.error;
-
-        config.on.error('Error: ' + err.message);
-        throw err;
-      });
-
-      suite.run();
+    bench.addEventListener('abort', () => {
+      opts.updateStatus('Benchmark aborted.');
     });
+
+    bench.addEventListener('warmup', () => {
+      opts.updateStatus('Warming up...');
+    });
+
+    bench.addEventListener('start', () => {
+      opts.updateStatus('Running...');
+    });
+
+    bench.addEventListener('error', (error) => {
+      opts.updateStatus(`Error! ${error.message}`);
+    });
+
+    bench.addEventListener('complete', () => {
+      opts.updateStatus('Done!');
+    });
+
+    return bench;
   });
 }

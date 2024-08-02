@@ -1,23 +1,25 @@
-import { babel } from '@rollup/plugin-babel';
-import { Addon } from '@embroider/addon-dev/rollup';
+import { Addon } from "@embroider/addon-dev/rollup";
+
+import { babel } from "@rollup/plugin-babel";
 
 const addon = new Addon({
-  srcDir: 'src',
-  destDir: 'dist',
+  srcDir: "src",
+  destDir: "dist",
 });
 
 export default {
   output: addon.output(),
 
   plugins: [
-    addon.publicEntrypoints(['index.js']),
+    addon.publicEntrypoints(["index.js", "templates/*.js"]),
+    addon.appReexports(["templates/*.js", "routes/*.js"]),
     addon.dependencies(),
     babel({
-      extensions: ['.js', '.gjs'],
-      babelHelpers: 'bundled',
+      extensions: [".js", ".ts", ".gjs", ".gts"],
+      babelHelpers: "bundled",
     }),
     addon.gjs(),
-    addon.keepAssets(['**/*.css']),
+    addon.keepAssets(["**/*.css"]),
     addon.clean(),
   ],
 };

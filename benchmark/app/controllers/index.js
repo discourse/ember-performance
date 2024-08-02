@@ -30,6 +30,7 @@ export default class IndexController extends Controller {
 
     // Remember any custom urls we set for another run
     let customEmberVersion = this.customEmberVersion;
+
     if (customEmberVersion.isEnabled) {
       localStorage.setItem("ember-perf-ember-url", customEmberVersion.path);
       localStorage.setItem(
@@ -101,6 +102,7 @@ export default class IndexController extends Controller {
       if (!this.featureFlags.includes(this.newFlagName)) {
         this.featureFlags.push(this.newFlagName);
       }
+
       this.newFlagName = "";
     }
   }

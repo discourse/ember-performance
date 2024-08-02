@@ -1,4 +1,5 @@
 import Route from "@ember/routing/route";
+
 import config from "ember-performance/config/environment";
 import { TrackedArray } from "tracked-built-ins";
 

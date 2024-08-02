@@ -1,6 +1,8 @@
 import Component from "@glimmer/component";
+
 import Chart from "chart.js/auto";
 import { modifier } from "ember-modifier";
+
 import { formatNumber } from "../helpers/format-number";
 
 export default class AreaChart extends Component {

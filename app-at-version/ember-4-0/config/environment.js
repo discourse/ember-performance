@@ -1,5 +1,7 @@
 'use strict';
 
+const envUtils = require('ember-cli-utils/environment');
+
 module.exports = function (environment) {
   const ENV = {
     modulePrefix: 'ember-4-0',
@@ -18,6 +20,8 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    deps: envUtils.getDeps(__dirname),
   };
 
   if (environment === 'development') {

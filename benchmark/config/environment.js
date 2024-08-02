@@ -22,10 +22,13 @@ const walkSync = require("walk-sync");
 
 function benchmarks() {
   let baseDir = path.join("public", "benchmarks");
+
   return walkSync(baseDir, ["**/bench.json"])
     .map(function (bench) {
       const data = JSON.parse(fs.readFileSync(path.join(baseDir, bench)));
+
       data.path = "/" + path.dirname(bench);
+
       return data;
     })
     .filter(function (data) {

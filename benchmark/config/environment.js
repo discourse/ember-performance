@@ -7,19 +7,17 @@ function emberVersions() {
   return fs
     .readdirSync('../app-at-version')
     .map(function (file) {
-      const matched = file.match(/^ember-(\d+\.\d+)/);
-
-      if (matched) {
-        return matched[1];
-      }
+      return file;
     })
     .filter(Boolean)
     .sort(naturalSort);
 }
 
+let localEmbers = emberVersions();
+
 module.exports = function (environment) {
   const ENV = {
-    LOCAL_EMBER_VERSIONS: emberVersions(),
+    LOCAL_EMBER_VERSIONS: localEmbers,
     modulePrefix: 'ember-performance',
     environment,
     rootURL: '/',

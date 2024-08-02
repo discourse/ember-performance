@@ -181,7 +181,7 @@ jobs:
           # Remove any / in the branch name
           #   renovate/uuid becomes renovate-uuid
           subdomain="${branch//\//-/}"
-          echo "subdomain=$subdomain" >> $GITHUB_OUTPUT
+          echo "subdomain=${subdomain:0:28}" >> $GITHUB_OUTPUT
 
   PostComment:
     name: Post Preview URL as comment to PR

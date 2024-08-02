@@ -11,6 +11,30 @@
       "cache": false,
       "persistent": true
     },
+    "build:prod": {
+      "outputs": ["dist/**"],
+      "dependsOn": ["^build"],
+      "inputs": [
+        // Apps
+        "app/**",
+        "config/**",
+        "public/**",
+        "tests/**",
+        "ember-cli-build.js"
+      ]
+    },
+    "build:dev": {
+      "outputs": ["dist/**"],
+      "dependsOn": ["^build"],
+      "inputs": [
+        // Apps
+        "app/**",
+        "config/**",
+        "public/**",
+        "tests/**",
+        "ember-cli-build.js"
+      ]
+    },
     "build": {
       "outputs": ["dist/**"],
       "inputs": [
@@ -21,13 +45,6 @@
         "tsconfig.json",
         "rollup.config.*",
         "babel.config.*",
-
-        // Apps
-        "app/**",
-        "config/**",
-        "public/**",
-        "tests/**",
-        "ember-cli-build.js"
       ],
       "dependsOn": ["^build"]
     },

@@ -16,7 +16,6 @@
   "devDependencies": {
     "@embroider/compat": "^3.6.0",
     "@embroider/core": "^3.4.14",
-    "@embroider/webpack": "^4.0.4",
-    "ember-cli-utils": "workspace:^"
+    "@embroider/webpack": "^4.0.4"
   }
 }

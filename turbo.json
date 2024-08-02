@@ -44,7 +44,7 @@
         "addon-main.*",
         "tsconfig.json",
         "rollup.config.*",
-        "babel.config.*",
+        "babel.config.*"
       ],
       "dependsOn": ["^build"]
     },

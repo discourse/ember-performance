@@ -186,7 +186,7 @@ jobs:
   PostComment:
     name: Post Preview URL as comment to PR
     runs-on: ubuntu-latest
-    needs: [DeployPreview, ReformatSubDomain]
+    needs: [DeployPreview_Dev, DeployPreview_Prod, ReformatSubDomain]
     permissions:
       pull-requests: write
     steps:

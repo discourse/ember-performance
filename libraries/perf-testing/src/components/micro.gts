@@ -1,19 +1,10 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { Layout } from './layout.gjs';
-import { microBench } from './bench.js';
-import { noop } from './consts.js';
+import { Layout } from './layout.gts';
+import { microBench } from './bench.ts';
+import { noop } from './consts.ts';
 
 export class MicroBenchmark extends Component {
-  <template>
-    <Layout @name={{@name}} @version={{@version}}>
-      <:remaining>{{this.remaining}}</:remaining>
-      <:status>{{this.status}}</:status>
-      <:progress>{{this.progress}}</:progress>
-      <:scratch></:scratch>
-    </Layout
-  </template>
-
   @tracked status;
   @tracked remaining;
   @tracked progress;
@@ -37,4 +28,13 @@ export class MicroBenchmark extends Component {
       },
     });
   };
+
+  <template>
+    <Layout @name={{@name}} @version={{@version}}>
+      <:remaining>{{this.remaining}}</:remaining>
+      <:status>{{this.status}}</:status>
+      <:progress>{{this.progress}}</:progress>
+      <:scratch></:scratch>
+    </Layout>
+  </template>
 }

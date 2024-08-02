@@ -10,6 +10,7 @@ for (let [filePath, esModule] of Object.entries(definedScenarios)) {
   if (!name) {
     throw new Error(`Scenario at ${filePath} did not export a name`);
   }
+
   if (!component) {
     throw new Error(
       `Scenario at ${filePath} did not export a component (as a default export)`,

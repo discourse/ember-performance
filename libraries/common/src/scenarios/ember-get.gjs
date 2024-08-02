@@ -1,5 +1,6 @@
-import { MicroBenchmark } from 'perf-testing';
 import EmberObject from '@ember/object';
+
+import { MicroBenchmark } from 'perf-testing';
 
 export const name = 'Ember.get';
 

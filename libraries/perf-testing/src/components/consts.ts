@@ -1,4 +1,5 @@
 export const noop = () => {};
+
 export const MACRO_MAX_TIME = 15000;
 export const MACRO_MIN_TIME = 2000;
 export const MACRO_STOP_RME = 3.0;

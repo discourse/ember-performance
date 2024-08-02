@@ -1,4 +1,5 @@
 import EmberRouter from '@ember/routing/router';
+
 import config from 'ember-3-28/config/environment';
 
 export default class Router extends EmberRouter {

@@ -1,8 +1,10 @@
-import { Input } from "@ember/component";
-import { fn } from "@ember/helper";
-import { on } from "@ember/modifier";
-import RouteTemplate from "ember-route-template";
-import BenchmarkReport from "../components/benchmark-report";
+import { Input } from '@ember/component';
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+
+import RouteTemplate from 'ember-route-template';
+
+import BenchmarkReport from '../components/benchmark-report';
 
 export default RouteTemplate(
   <template>
@@ -104,8 +106,7 @@ export default RouteTemplate(
       />
       <button
         type="button"
-        class="btn :btn-default :btn-xs
-          {{if @controller.addFeatureDisabled 'disabled'}}"
+        class="btn :btn-default :btn-xs {{if @controller.addFeatureDisabled 'disabled'}}"
         {{on "click" @controller.addFeature}}
       >Add Feature
       </button>
@@ -125,5 +126,5 @@ export default RouteTemplate(
         disabled={{@controller.cantStart}}
       >Run Tests with Profile</button>
     </div>
-  </template>,
+  </template>
 );

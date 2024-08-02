@@ -21,4 +21,4 @@ function makeHTML() {
   return html;
 }
 
-<template>{{{(makeHTML)}}}</template>
+<template>{{! template-lint-disable no-triple-curlies }}{{{(makeHTML)}}}</template>

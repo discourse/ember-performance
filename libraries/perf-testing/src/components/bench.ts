@@ -23,6 +23,7 @@ export function microbench(config) {
         config.fn.reset();
 
         let r = evt.target;
+
         resolve({
           name: r.name,
           hz: r.hz,
@@ -37,6 +38,7 @@ export function microbench(config) {
 
       suite.on('error', function (evt) {
         let err = evt.target.error;
+
         config.on.error('Error: ' + err.message);
         throw err;
       });

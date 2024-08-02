@@ -4,7 +4,9 @@
   "packageManager": "pnpm@9.6.0",
   "scripts": {
     "start": "pnpm turbo --filter 'ember-performance' start",
-    "lint:fix": "pnpm turbo fix"
+    "lint:fix": "pnpm turbo fix",
+    "build:dev": "pnpm turbo build:dev",
+    "build:prod": "pnpm turbo build:prod"
   },
   "volta": {
     "node": "22.5.1",

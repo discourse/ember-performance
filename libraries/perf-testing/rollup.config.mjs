@@ -11,7 +11,8 @@ export default {
   output: addon.output(),
 
   plugins: [
-    addon.publicEntrypoints(["index.js"]),
+    addon.publicEntrypoints(["index.js", "services/*.js"]),
+    addon.appReexports(["services/*.js"]),
     addon.dependencies(),
     babel({
       extensions: [".js", ".ts", ".gjs", ".gts"],

@@ -1687,6 +1687,9 @@ importers:
       tinybench:
         specifier: ^2.9.0
         version: 2.9.0
+      tracked-built-ins:
+        specifier: ^3.3.0
+        version: 3.3.0
     devDependencies:
       '@babel/core':
         specifier: ^7.24.4

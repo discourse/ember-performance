@@ -30,3 +30,5 @@ for (let [filePath, esModule] of Object.entries(definedScenarios)) {
 }
 
 export const scenarios = scenariosByName;
+
+export const benchmarkNames = Object.keys(scenarios);

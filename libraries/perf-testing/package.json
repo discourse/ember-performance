@@ -35,7 +35,8 @@
     "@embroider/addon-shim": "^1.8.7",
     "decorator-transforms": "^2.0.0",
     "ember-resources": "^7.0.2",
-    "tinybench": "^2.9.0"
+    "tinybench": "^2.9.0",
+    "tracked-built-ins": "^3.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
@@ -79,7 +80,10 @@
   "ember-addon": {
     "version": 2,
     "type": "addon",
-    "main": "addon-main.cjs"
+    "main": "addon-main.cjs",
+    "app-js": {
+      "./services/bench-session.js": "./dist/_app_/services/bench-session.js"
+    }
   },
   "volta": {
     "extends": "../../package.json"

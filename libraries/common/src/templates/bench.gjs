@@ -28,8 +28,8 @@ class Index extends Component {
   <template>
     <LinkTo @route="index">🠰 Benchmark List</LinkTo>
 
-    {{#let (get @model.name) as |s|}}
-      <s @version={{this.emberSource}} />
+    {{#let (get @model.name) as |Scenario|}}
+      <Scenario @version={{this.emberSource}} />
     {{/let}}
   </template>
 }

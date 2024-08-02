@@ -1,0 +1,70 @@
+{
+  "globalDependencies": [
+    "pnpm-lock.yaml",
+    "patches",
+    ".npmrc"
+  ],
+  // "globalPassThroughEnv": [],
+  "tasks": {
+    "start": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "build:prod": {
+      "outputs": ["dist/**"],
+      "dependsOn": ["^build"],
+      "inputs": [
+        // Apps
+        "app/**",
+        "config/**",
+        "public/**",
+        "tests/**",
+        "ember-cli-build.js"
+      ]
+    },
+    "build:dev": {
+      "outputs": ["dist/**"],
+      "dependsOn": ["^build"],
+      "inputs": [
+        // Apps
+        "app/**",
+        "config/**",
+        "public/**",
+        "tests/**",
+        "ember-cli-build.js"
+      ]
+    },
+    "build": {
+      "outputs": ["dist/**"],
+      "inputs": [
+        // native packages / modern ember
+        "src/**",
+        "unpublished-development-types/**",
+        "addon-main.*",
+        "tsconfig.json",
+        "rollup.config.*",
+        "babel.config.*",
+      ],
+      "dependsOn": ["^build"]
+    },
+    "fix": {
+      "inputs": [],
+      "outputs": [],
+      "dependsOn": ["lint:prettier:fix"]
+    },
+    "lint:prettier:fix": {
+      "outputs": [],
+      "dependsOn": ["lint:js:fix", "lint:hbs:fix"]
+    },
+    "lint:js:fix": {
+      "inputs": ["**/*.{js,json,gjs,gts,ts,cjs,mjs,cts,mts}"],
+      "outputs": [],
+      "dependsOn": ["lint:hbs:fix"]
+    },
+    "lint:hbs:fix": {
+      "inputs": ["**/*.{hbs,gjs,gts}"],
+      "outputs": []
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "scripts",
+  "private": true,
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@manypkg/get-packages": "^2.2.2",
+    "common": "workspace:^",
+    "ember-apply": "^2.12.0",
+    "perf-testing": "workspace:^"
+  },
+  "volta": {
+    "extends": "../package.json"
+  },
+  "devDependencies": {
+    "@embroider/compat": "^3.6.0",
+    "@embroider/core": "^3.4.14",
+    "@embroider/webpack": "^4.0.4",
+    "@glint/core": "1.4.0",
+    "@glint/environment-ember-loose": "1.4.0",
+    "@glint/environment-ember-template-imports": "1.4.0",
+    "@glint/template": "1.4.0",
+    "@nullvoxpopuli/eslint-configs": "^4.2.0",
+    "@tsconfig/ember": "3.0.8",
+    "@typescript-eslint/eslint-plugin": "8.0.0",
+    "@typescript-eslint/parser": "8.0.0",
+    "ember-cli-utils": "workspace:^",
+    "prettier": "3.3.3",
+    "prettier-plugin-ember-template-tag": "2.0.2",
+    "typescript": "5.5.4"
+  }
+}

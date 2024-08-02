@@ -211,13 +211,17 @@ for (let pkg of result.packages) {
   // await linkWorkspacePackages(pkg);
   // await fixLinting(pkg);
   // await addTS(pkg);
-  packageJson.addDevDependencies(
-    {
-      'ember-cli-utils': 'workspace:^',
-      '@embroider/compat': '^3.6.0',
-      '@embroider/core': '^3.4.14',
-      '@embroider/webpack': '^4.0.4',
-    },
+  packageJson.removeDevDependencies(
+    [
+      'ember-data',
+      'ember-fetch',
+      'ember-cli-sri',
+      'ember-welcome-page',
+      'stylelint',
+      'stylelint-config-prettier',
+      'stylelint-prettier',
+      'ember-cli-clean-css',
+    ],
     pkg.dir
   );
 }

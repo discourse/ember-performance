@@ -1,14 +1,13 @@
-"use strict";
+'use strict';
 
-const fs = require("fs");
-const path = require("path");
-const naturalSort = require("javascript-natural-sort");
+const fs = require('fs');
+const naturalSort = require('javascript-natural-sort');
 
 function emberVersions() {
   return fs
-    .readdirSync("ember")
+    .readdirSync('../app-at-version')
     .map(function (file) {
-      const matched = file.match(/^ember-(\d+\.\d+\.\d+)\.prod/);
+      const matched = file.match(/^ember-(\d+\.\d+)/);
 
       if (matched) {
         return matched[1];
@@ -18,33 +17,13 @@ function emberVersions() {
     .sort(naturalSort);
 }
 
-const walkSync = require("walk-sync");
-
-function benchmarks() {
-  let baseDir = path.join("public", "benchmarks");
-
-  return walkSync(baseDir, ["**/bench.json"])
-    .map(function (bench) {
-      const data = JSON.parse(fs.readFileSync(path.join(baseDir, bench)));
-
-      data.path = "/" + path.dirname(bench);
-
-      return data;
-    })
-    .filter(function (data) {
-      return data.disabled !== false;
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
 module.exports = function (environment) {
   const ENV = {
     LOCAL_EMBER_VERSIONS: emberVersions(),
-    BENCHMARKS: benchmarks(),
-    modulePrefix: "ember-performance",
+    modulePrefix: 'ember-performance',
     environment,
-    rootURL: "/",
-    locationType: "history",
+    rootURL: '/',
+    locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,
       FEATURES: {
@@ -59,7 +38,7 @@ module.exports = function (environment) {
     },
   };
 
-  if (environment === "development") {
+  if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
     // ENV.APP.LOG_ACTIVE_GENERATION = true;
     // ENV.APP.LOG_TRANSITIONS = true;
@@ -67,19 +46,19 @@ module.exports = function (environment) {
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
   }
 
-  if (environment === "test") {
+  if (environment === 'test') {
     // Testem prefers this...
-    ENV.locationType = "none";
+    ENV.locationType = 'none';
 
     // keep test console output quieter
     ENV.APP.LOG_ACTIVE_GENERATION = false;
     ENV.APP.LOG_VIEW_LOOKUPS = false;
 
-    ENV.APP.rootElement = "#ember-testing";
+    ENV.APP.rootElement = '#ember-testing';
     ENV.APP.autoboot = false;
   }
 
-  if (environment === "production") {
+  if (environment === 'production') {
     // here you can enable a production-specific feature
   }
 

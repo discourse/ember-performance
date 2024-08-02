@@ -1,27 +1,35 @@
-import Component from "@glimmer/component";
-import { tracked } from "@glimmer/tracking";
-import { fn } from "@ember/helper";
-import { on } from "@ember/modifier";
-import { action } from "@ember/object";
-import { equal, gt } from "@ember/object/computed";
-import { htmlSafe } from "@ember/template";
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import { action } from '@ember/object';
+import { htmlSafe } from '@ember/template';
 
-import { formatNumber } from "../helpers/format-number";
-import AreaChart from "./area-chart";
+import { formatNumber } from '../helpers/format-number';
+import AreaChart from './area-chart';
 
 export default class BenchmarkReport extends Component {
-  @tracked mode = "html";
-  @equal("mode", "html") isHtmlMode;
-  @equal("mode", "text") isTextMode;
-  @gt("args.report.testGroupReports.length", 1) showGraph;
+  @tracked mode = 'html';
+
+  get isHtmlMode() {
+    return this.mode === 'html';
+  }
+
+  get isTextMode() {
+    return this.mode === 'text';
+  }
+
+  get showGraph() {
+    return this.args.report.testGroupReports.length > 1;
+  }
 
   chartOptions = {
-    title: "Time (ms) (lower is better)",
+    title: 'Time (ms) (lower is better)',
     hAxis: {
-      title: "Ember Version",
+      title: 'Ember Version',
     },
-    intervals: { style: "area" },
-    legend: "none",
+    intervals: { style: 'area' },
+    legend: 'none',
   };
 
   get groupedTests() {
@@ -34,10 +42,10 @@ export default class BenchmarkReport extends Component {
           data: [],
           chartData: [
             [
-              "Ember Version",
-              "Time in ms (lower is better)",
-              { role: "interval" },
-              { role: "interval" },
+              'Ember Version',
+              'Time in ms (lower is better)',
+              { role: 'interval' },
+              { role: 'interval' },
             ],
           ],
         };
@@ -50,10 +58,7 @@ export default class BenchmarkReport extends Component {
         test.chartData.push({
           emberVersion: testGroupReport.emberVersion.name,
           mean: result.mean,
-          margin_error_lower: Math.max(
-            result.mean - (result.mean * result.rme) / 100,
-            0,
-          ),
+          margin_error_lower: Math.max(result.mean - (result.mean * result.rme) / 100, 0),
           margin_error_upper: result.mean + (result.mean * result.rme) / 100,
         });
 
@@ -65,22 +70,22 @@ export default class BenchmarkReport extends Component {
   }
 
   get asciiTable() {
-    let result = "User Agent: " + navigator.userAgent + "\n";
+    let result = 'User Agent: ' + navigator.userAgent + '\n';
 
     const featureFlags = this.args.report.featureFlags;
 
     if (featureFlags && featureFlags.length) {
-      result += "Feature Flags: " + featureFlags.join(", ") + "\n";
+      result += 'Feature Flags: ' + featureFlags.join(', ') + '\n';
     }
 
-    result += "\n";
+    result += '\n';
 
-    const table = new window.AsciiTable("Ember Performance Suite - Results");
+    const table = new window.AsciiTable('Ember Performance Suite - Results');
 
-    table.setHeading("Name", "Speed", "Error", "Samples", "Mean");
+    table.setHeading('Name', 'Speed', 'Error', 'Samples', 'Mean');
 
     this.args.report.testGroupReports.forEach((testGroupReport) => {
-      table.addRow(" -- Ember " + testGroupReport.emberVersion.name + " -- ");
+      table.addRow(' -- Ember ' + testGroupReport.emberVersion.name + ' -- ');
 
       testGroupReport.results.forEach((item) => {
         table.addRow(
@@ -88,17 +93,17 @@ export default class BenchmarkReport extends Component {
           formatNumber(item.hz, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          }) + " / sec",
-          "∓" +
+          }) + ' / sec',
+          '∓' +
             formatNumber(item.rme, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }) +
-            "%",
+            '%',
           formatNumber(item.samples, {
             maximumFractionDigits: 0,
           }),
-          formatNumber(item.mean) + " ms",
+          formatNumber(item.mean) + ' ms'
         );
       });
     });
@@ -132,14 +137,9 @@ export default class BenchmarkReport extends Component {
           </div>
           <div class="panel-body">
             {{#if this.showGraph}}
-              <AreaChart
-                @data={{test.chartData}}
-                @options={{this.chartOptions}}
-              />
+              <AreaChart @data={{test.chartData}} @options={{this.chartOptions}} />
             {{/if}}
-            <table
-              class="table table-striped table-hover table-condensed table-responsive"
-            >
+            <table class="table table-striped table-hover table-condensed table-responsive">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -154,9 +154,7 @@ export default class BenchmarkReport extends Component {
                   <tr>
                     <td>
                       <strong>{{test.name}}</strong>
-                      <span
-                        class="label label-primary"
-                      >{{item.emberVersion.name}}</span>
+                      <span class="label label-primary">{{item.emberVersion.name}}</span>
                     </td>
                     <td class="numeric">{{formatNumber
                         item.result.hz
@@ -173,10 +171,7 @@ export default class BenchmarkReport extends Component {
                       }}%
                     </td>
                     <td class="numeric">{{item.result.samples}}</td>
-                    <td class="numeric">{{formatNumber
-                        item.result.mean
-                        mode="auto"
-                      }}
+                    <td class="numeric">{{formatNumber item.result.mean mode="auto"}}
                       ms
                     </td>
                   </tr>

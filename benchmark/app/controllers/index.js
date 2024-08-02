@@ -1,7 +1,8 @@
-import { tracked } from "@glimmer/tracking";
-import Controller from "@ember/controller";
-import { action, set } from "@ember/object";
-import { empty, filterBy, or } from "@ember/object/computed";
+import { tracked } from '@glimmer/tracking';
+import Controller from '@ember/controller';
+import { action, set } from '@ember/object';
+// eslint-disable-next-line
+import { empty, filterBy, or } from '@ember/object/computed';
 
 export default class IndexController extends Controller {
   @tracked emberVersions;
@@ -12,13 +13,13 @@ export default class IndexController extends Controller {
   @tracked featureFlags = null;
   @tracked newFlagName = null;
 
-  @filterBy("model", "isEnabled", true) enabledTests;
-  @filterBy("emberVersions", "isEnabled", true) enabledEmberVersions;
-  @filterBy("emberVersions", "isCustom", false) nonCustomEmberVersions;
-  @empty("newFlagName") addFeatureDisabled;
-  @empty("enabledTests") hasNoEnabledTests;
-  @empty("enabledEmberVersions") hasNoEnabledEmberVersions;
-  @or("hasNoEnabledTests", "hasNoEnabledEmberVersions") cantStart;
+  @filterBy('model', 'isEnabled', true) enabledTests;
+  @filterBy('emberVersions', 'isEnabled', true) enabledEmberVersions;
+  @filterBy('emberVersions', 'isCustom', false) nonCustomEmberVersions;
+  @empty('newFlagName') addFeatureDisabled;
+  @empty('enabledTests') hasNoEnabledTests;
+  @empty('enabledEmberVersions') hasNoEnabledEmberVersions;
+  @or('hasNoEnabledTests', 'hasNoEnabledEmberVersions') cantStart;
 
   get customEmberVersion() {
     return this.emberVersions[this.emberVersions.length - 1];
@@ -32,17 +33,14 @@ export default class IndexController extends Controller {
     let customEmberVersion = this.customEmberVersion;
 
     if (customEmberVersion.isEnabled) {
-      localStorage.setItem("ember-perf-ember-url", customEmberVersion.path);
-      localStorage.setItem(
-        "ember-perf-compiler-url",
-        customEmberVersion.compilerPath,
-      );
+      localStorage.setItem('ember-perf-ember-url', customEmberVersion.path);
+      localStorage.setItem('ember-perf-compiler-url', customEmberVersion.compilerPath);
     } else {
-      localStorage.removeItem("ember-perf-ember-url");
-      localStorage.removeItem("ember-perf-compiler-url");
+      localStorage.removeItem('ember-perf-ember-url');
+      localStorage.removeItem('ember-perf-compiler-url');
     }
 
-    localStorage.setItem("ember-perf-flags", JSON.stringify(this.featureFlags));
+    localStorage.setItem('ember-perf-flags', JSON.stringify(this.featureFlags));
 
     let testSession = new window.TestSession();
 
@@ -66,27 +64,27 @@ export default class IndexController extends Controller {
 
   @action
   toggleEnabled(target, evt) {
-    set(target, "isEnabled", evt.target.checked);
+    set(target, 'isEnabled', evt.target.checked);
   }
 
   @action
   selectAllTests() {
-    this.model.forEach((t) => set(t, "isEnabled", true));
+    this.model.forEach((t) => set(t, 'isEnabled', true));
   }
 
   @action
   selectNoTests() {
-    this.model.forEach((t) => set(t, "isEnabled", false));
+    this.model.forEach((t) => set(t, 'isEnabled', false));
   }
 
   @action
   selectAllVersions() {
-    this.nonCustomEmberVersions.forEach((v) => set(v, "isEnabled", true));
+    this.nonCustomEmberVersions.forEach((v) => set(v, 'isEnabled', true));
   }
 
   @action
   selectNoVersions() {
-    this.nonCustomEmberVersions.forEach((v) => set(v, "isEnabled", false));
+    this.nonCustomEmberVersions.forEach((v) => set(v, 'isEnabled', false));
   }
 
   @action
@@ -103,7 +101,7 @@ export default class IndexController extends Controller {
         this.featureFlags.push(this.newFlagName);
       }
 
-      this.newFlagName = "";
+      this.newFlagName = '';
     }
   }
 

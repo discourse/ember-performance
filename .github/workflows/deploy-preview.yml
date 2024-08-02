@@ -157,7 +157,7 @@ jobs:
       - uses: actions/download-artifact@v4
         name: deploy-prep-prod
       - name: Preview Prod
-        working-directory: ./deploy-prep-dist/
+        working-directory: ./deploy-prep-prod/
         run: |
           ls -la
           npx wrangler pages deploy ./ \

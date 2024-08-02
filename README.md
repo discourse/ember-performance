@@ -102,4 +102,7 @@ MIT
     "build:prod": "ember build --environment=production",
     "build:dev":  "ember build --environment=development",
     ```
-    
+11. Add the new app as a `dependencies` entry in `benchmark/package.json`
+    ```
+    "ember-6-0": "workspace:*"
+    ```

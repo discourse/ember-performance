@@ -2,8 +2,10 @@
 /blueprints/*/files/
 
 # compiled output
-/declarations/
-/dist/
+declarations/
+dist/
+public/
+scripts/
 
 # misc
 /coverage/

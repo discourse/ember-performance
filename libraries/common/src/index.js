@@ -1,1 +1,1 @@
-export { scenarios, benchmarkNames } from './scenarios.js';
+export { benchmarkNames,scenarios } from './scenarios.js';

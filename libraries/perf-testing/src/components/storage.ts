@@ -4,6 +4,7 @@ function keyFor(name: string, version: string) {
   return name + SEP + version;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function store(testName: string, emberVersion: string, benchmarkResults: any) {
   let key = keyFor(testName, emberVersion);
 

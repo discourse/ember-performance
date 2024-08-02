@@ -8,6 +8,7 @@ import BenchmarkReport from '../components/benchmark-report';
 
 export default RouteTemplate(
   <template>
+    {{! template-lint-disable }}
     {{#if @controller.report}}
       <BenchmarkReport @report={{@controller.report}} />
     {{/if}}

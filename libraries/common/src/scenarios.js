@@ -16,8 +16,6 @@ let scenariosByName = {};
 for (let [filePath, esModule] of Object.entries(definedScenarios)) {
   let { name, default: component } = esModule;
 
-  console.log(esModule);
-
   if (!name) {
     throw new Error(`Scenario at ${filePath} did not export a name`);
   }

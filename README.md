@@ -97,5 +97,9 @@ MIT
       this.route('bench', { path: ':name' });
     });
     ```
-
-
+10. Change the build scripts `package.json`. Delete `build` and add:
+    ```
+    "build:prod": "ember build --environment=production",
+    "build:dev":  "ember build --environment=development",
+    ```
+    

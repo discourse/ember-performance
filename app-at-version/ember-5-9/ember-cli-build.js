@@ -6,7 +6,7 @@ module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
   const app = new EmberApp(defaults, {
     // Add options here
-    ...utils.configure(__dirname, ['common', 'perf-testing']),
+    ...utils.configure(__dirname, ['common']),
   });
 
   const { Webpack } = require('@embroider/webpack');

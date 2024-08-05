@@ -5,13 +5,22 @@ import * as _1 from './scenarios/baseline-handlebars-list.gjs';
 import * as _2 from './scenarios/baseline-inner-html.gjs';
 import * as _3 from './scenarios/ember-get.gjs';
 
+import type { ComponentLike } from '@glint/template';
+
 const definedScenarios = {
   _1,
   _2,
   _3,
 };
 
-let scenariosByName = {};
+let scenariosByName: Record<
+  string,
+  ComponentLike<{
+    Args: {
+      version: string;
+    };
+  }>
+> = {};
 
 for (let [filePath, esModule] of Object.entries(definedScenarios)) {
   let { name, default: component } = esModule;

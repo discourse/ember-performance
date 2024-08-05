@@ -89,7 +89,6 @@
     "common": "workspace:^",
     "ember-cli-utils": "workspace:^",
     "ember-route-template": "^1.0.3",
-    "ember-template-imports": "^4.1.1",
-    "perf-testing": "workspace:^"
+    "ember-template-imports": "^4.1.1"
   }
 }

@@ -1,6 +1,6 @@
 import EmberObject from '@ember/object';
 
-import { MicroBenchmark } from 'perf-testing';
+import { MicroBenchmark } from 'common';
 
 export const name = 'Ember.get';
 
@@ -27,10 +27,5 @@ function test() {
 }
 
 <template>
-  <MicroBenchmark
-    @name={{name}}
-    @version={{@version}}
-    @setup={{setup}}
-    @test={{test}}
-  />
+  <MicroBenchmark @name={{name}} @version={{@version}} @setup={{setup}} @test={{test}} />
 </template>

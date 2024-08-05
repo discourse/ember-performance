@@ -1,4 +1,4 @@
-import { people } from 'perf-testing';
+import { people } from 'common';
 
 export const name = 'Baseline: Handlebars List';
 
@@ -7,11 +7,11 @@ export const name = 'Baseline: Handlebars List';
     <tbody>
       {{#each people as |person|}}
         <tr>
-          <td class='name'>{{person.name}}</td>
-          <td class='email'>{{person.email}}</td>
-          <td class='company'>{{person.company}}</td>
-          <td class='city'>{{person.city}}</td>
-          <td class='url'><a href={{person.url}}>Link</a></td>
+          <td class="name">{{person.name}}</td>
+          <td class="email">{{person.email}}</td>
+          <td class="company">{{person.company}}</td>
+          <td class="city">{{person.city}}</td>
+          <td class="url"><a href={{person.url}}>Link</a></td>
         </tr>
       {{/each}}
     </tbody>

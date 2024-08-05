@@ -99,7 +99,6 @@
     "ember-4-0": "workspace:*",
     "ember-3-28": "workspace:*",
     "common": "workspace:^",
-    "perf-testing": "workspace:^",
     "rsvp": "^4.8.5"
   },
   "volta": {

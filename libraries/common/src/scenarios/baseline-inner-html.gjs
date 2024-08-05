@@ -1,4 +1,4 @@
-import { people } from 'perf-testing';
+import { people } from 'common';
 
 export const name = 'Baseline: List via {{{ rawHTML }}}';
 

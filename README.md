@@ -43,7 +43,7 @@ MIT
 3. Add dependencies 
     ```bash
     pnpm add --save-dev @nullvoxpopuli/eslint-configs \
-        common@workspace:^ ember-cli-utils@workspace:^ perf-testing@workspace:^ \
+        common@workspace:^ ember-cli-utils@workspace:^ \
         ember-template-imports \
         prettier-plugin-ember-template-tag \
         ember-route-template  
@@ -88,7 +88,7 @@ MIT
       const utils = await import('ember-cli-utils');
       const app = new EmberApp(defaults, {
         // Add options here
-        ...utils.configure(__dirname, ['common', 'perf-testing']),
+        ...utils.configure(__dirname, ['common']),
       });
     ```
 9. Add to `app/router.js` (or `app/router.ts`)

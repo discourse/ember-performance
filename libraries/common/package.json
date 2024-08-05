@@ -36,7 +36,6 @@
     "babel-plugin-transform-vite-meta-glob": "^1.1.2",
     "decorator-transforms": "^2.0.0",
     "ember-route-template": "^1.0.3",
-    "perf-testing": "workspace:^",
     "semver": "^7.6.3"
   },
   "devDependencies": {

@@ -86,7 +86,6 @@
     "extends": "../../package.json"
   },
   "dependencies": {
-    "common": "workspace:^",
-    "perf-testing": "workspace:^"
+    "common": "workspace:^"
   }
 }

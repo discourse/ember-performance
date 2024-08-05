@@ -86,9 +86,11 @@ MIT
     ```js
     module.exports = async function (defaults) {
       const utils = await import('ember-cli-utils');
+      const config = await utils.configure(__dirname, ['common']);
+
       const app = new EmberApp(defaults, {
+        ...config,
         // Add options here
-        ...utils.configure(__dirname, ['common']),
       });
     ```
 9. Add to `app/router.js` (or `app/router.ts`)

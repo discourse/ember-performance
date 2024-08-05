@@ -4,7 +4,7 @@ import { LinkTo } from '@ember/routing';
 
 import Route from 'ember-route-template';
 
-import { scenarios } from '../scenarios.js';
+import { scenarios } from '../scenarios.ts';
 
 function get(name) {
   return scenarios[name];

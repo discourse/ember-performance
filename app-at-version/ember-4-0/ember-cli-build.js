@@ -4,9 +4,11 @@ const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
+  const config = await utils.configure(__dirname, ['common']);
+
   const app = new EmberApp(defaults, {
     // Add options here
-    ...utils.configure(__dirname, ['common']),
+    ...config,
   });
 
   const { Webpack } = require('@embroider/webpack');

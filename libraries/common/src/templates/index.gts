@@ -1,8 +1,9 @@
+// @ts-expect-error types-missing
 import { LinkTo } from '@ember/routing';
 
 import Route from 'ember-route-template';
 
-import { scenarios } from '../scenarios.js';
+import { scenarios } from '../scenarios.ts';
 
 export default Route(
   <template>

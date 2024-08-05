@@ -1,16 +1,22 @@
 'use strict';
 
+const semverCompare = require('semver/functions/compare-loose');
 const fs = require('fs');
-const naturalSort = require('javascript-natural-sort');
 
 function emberVersions() {
   return fs
     .readdirSync('../app-at-version')
     .map(function (file) {
-      return file;
+      let matchResult = file.match(/\d+\-\d+/);
+
+      if (!matchResult) return;
+
+      let version = matchResult[0];
+
+      return version.replace('-', '.');
     })
     .filter(Boolean)
-    .sort(naturalSort);
+    .sort((a, b) => semverCompare(`${a}.0`, `${b}.0`));
 }
 
 let localEmbers = emberVersions();

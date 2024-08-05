@@ -8,5 +8,6 @@ export default class Router extends EmberRouter {
 }
 
 Router.map(function () {
+  this.route('report');
   this.route('bench', { path: ':name' });
 });

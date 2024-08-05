@@ -1,10 +1,7 @@
 import Component from '@glimmer/component';
-import { cached } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
-
-import ENV from 'ember-performance/config/environment';
 
 import type { BenchSession } from 'common';
 import type QueryParams from 'ember-performance/services/query-params';

@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { assert } from '@ember/debug';
-import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 
@@ -42,7 +41,9 @@ export class Runner extends Component {
 
           await promise;
 
+          // eslint-disable-next-line
           console.log('loaded!');
+
           /**
            * Load iframe
            * wait for onload
@@ -76,6 +77,7 @@ export class Runner extends Component {
 
     {{#if this.testUrl}}
       <iframe
+        title="Current Test"
         src={{this.testUrl}}
         style="width: 100%; min-height: 600px;"
         {{on "load" this.emitReady}}

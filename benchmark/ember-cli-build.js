@@ -4,8 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
-function distsList() {}
-
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
   const config = await utils.configure(__dirname, ['common']);
@@ -24,6 +22,7 @@ module.exports = async function (defaults) {
     }
 
     let target = path.join('./public', appFolderName);
+
     fs.mkdirSync(target, { recursive: true });
     fs.cpSync(distFolder, target, { recursive: true });
   }

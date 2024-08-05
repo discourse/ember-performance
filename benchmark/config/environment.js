@@ -7,7 +7,7 @@ function emberVersions() {
   return fs
     .readdirSync('../app-at-version')
     .map(function (file) {
-      let matchResult = file.match(/\d+\-\d+/);
+      let matchResult = file.match(/\d+-\d+/);
 
       if (!matchResult) return;
 

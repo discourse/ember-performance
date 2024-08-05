@@ -9,6 +9,7 @@ export default RouteTemplate(
   <template>
     {{#let (loadAll) as |results|}}
       {{#if results}}
+        <LinkTo @route="index">🠰 Back to Benchmarking</LinkTo>
         <BenchmarkReport @report={{results}} />
       {{else}}
         No results have been recorded yet. Run a benchmark to get started.

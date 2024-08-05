@@ -17,6 +17,7 @@ export function store(testName: string, emberVersion: string, benchmarkResults: 
   let results = { ...benchmarkResults };
 
   // This data is too big to be useful
+  results.numSamples = results.samples.length;
   delete results.samples;
 
   localStorage.setItem(key, JSON.stringify(results));

@@ -6,7 +6,17 @@ const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
-  const config = await utils.configure(__dirname, ['common']);
+  const config = await utils.configure(__dirname, [
+    'common',
+    'ember-5-10',
+    'ember-5-9',
+    'ember-5-8',
+    'ember-5-7',
+    'ember-5-6',
+    'ember-5-5',
+    'ember-4-0',
+    'ember-3-28',
+  ]);
 
   console.info(`
     Once per boot, we copy the dist directories from ../app-at-version into our public folder so that we can load those other apps.

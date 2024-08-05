@@ -1,25 +1,20 @@
+import { LinkTo } from '@ember/routing';
+
+import { loadAll } from 'common';
 import RouteTemplate from 'ember-route-template';
 
-import BenchmarkReport from '../components/benchmark-report';
+import BenchmarkReport from './components/benchmark-report';
 
-interface Report {
-  featureFlags: string[];
-  testGroupReports: {
-    emberVersion: {
-      name: string;
-    };
-    results: {
-      name: string;
-      rme: number;
-      samples: number;
-      hz: number;
-      mean: number;
-    }[];
-  }[];
-}
+export default RouteTemplate(
+  <template>
+    {{#let (loadAll) as |results|}}
+      {{#if results}}
+        <BenchmarkReport @report={{results}} />
+      {{else}}
+        No results have been recorded yet. Run a benchmark to get started.
 
-function buildData(): Report {
-  return null as unknown as Report;
-}
-
-export default RouteTemplate(<template><BenchmarkReport @report={{(buildData)}} /></template>);
+        <LinkTo @route="index">Run some tests</LinkTo>
+      {{/if}}
+    {{/let}}
+  </template>
+);

@@ -5,8 +5,8 @@ import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import { htmlSafe } from '@ember/template';
 
-import { formatNumber } from '../helpers/format-number';
 import AreaChart from './area-chart';
+import { formatNumber } from './utils';
 
 export default class BenchmarkReport extends Component {
   @tracked mode = 'html';
@@ -20,7 +20,7 @@ export default class BenchmarkReport extends Component {
   }
 
   get showGraph() {
-    return this.args.report.testGroupReports.length > 1;
+    return this.args.report.length > 1;
   }
 
   chartOptions = {
@@ -35,35 +35,33 @@ export default class BenchmarkReport extends Component {
   get groupedTests() {
     const tests = {};
 
-    this.args.report.testGroupReports.forEach((testGroupReport) => {
-      testGroupReport.results.forEach((result) => {
-        const test = tests[result.name] || {
-          name: result.name,
-          data: [],
-          chartData: [
-            [
-              'Ember Version',
-              'Time in ms (lower is better)',
-              { role: 'interval' },
-              { role: 'interval' },
-            ],
+    this.args.report.forEach(({ name, version, results: result }) => {
+      const test = tests[name] || {
+        name: name,
+        data: [],
+        chartData: [
+          [
+            'Ember Version',
+            'Time in ms (lower is better)',
+            { role: 'interval' },
+            { role: 'interval' },
           ],
-        };
+        ],
+      };
 
-        test.data.push({
-          emberVersion: testGroupReport.emberVersion,
-          result,
-        });
-
-        test.chartData.push({
-          emberVersion: testGroupReport.emberVersion.name,
-          mean: result.mean,
-          margin_error_lower: Math.max(result.mean - (result.mean * result.rme) / 100, 0),
-          margin_error_upper: result.mean + (result.mean * result.rme) / 100,
-        });
-
-        tests[result.name] = test;
+      test.data.push({
+        emberVersion: version,
+        result,
       });
+
+      test.chartData.push({
+        emberVersion: version,
+        mean: result.mean,
+        margin_error_lower: Math.max(result.mean - (result.mean * result.rme) / 100, 0),
+        margin_error_upper: result.mean + (result.mean * result.rme) / 100,
+      });
+
+      tests[result.name] = test;
     });
 
     return tests;
@@ -72,22 +70,16 @@ export default class BenchmarkReport extends Component {
   get asciiTable() {
     let result = 'User Agent: ' + navigator.userAgent + '\n';
 
-    const featureFlags = this.args.report.featureFlags;
-
-    if (featureFlags && featureFlags.length) {
-      result += 'Feature Flags: ' + featureFlags.join(', ') + '\n';
-    }
-
     result += '\n';
 
     const table = new window.AsciiTable('Ember Performance Suite - Results');
 
     table.setHeading('Name', 'Speed', 'Error', 'Samples', 'Mean');
 
-    this.args.report.testGroupReports.forEach((testGroupReport) => {
-      table.addRow(' -- Ember ' + testGroupReport.emberVersion.name + ' -- ');
+    this.args.report.forEach(({ name, version, results }) => {
+      table.addRow(' -- Ember ' + version + ' -- ');
 
-      testGroupReport.results.forEach((item) => {
+      results.forEach((item) => {
         table.addRow(
           item.name,
           formatNumber(item.hz, {

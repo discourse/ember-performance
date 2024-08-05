@@ -1,9 +1,9 @@
-import Component from "@glimmer/component";
+import Component from '@glimmer/component';
 
-import Chart from "chart.js/auto";
-import { modifier } from "ember-modifier";
+import Chart from 'chart.js/auto';
+import { modifier } from 'ember-modifier';
 
-import { formatNumber } from "../helpers/format-number";
+import { formatNumber } from './utils';
 
 export default class AreaChart extends Component {
   limit = 8;
@@ -11,7 +11,7 @@ export default class AreaChart extends Component {
   options = null;
 
   renderChart = modifier((element) => {
-    this._renderChart(element?.querySelector(".chart-canvas"));
+    this._renderChart(element?.querySelector('.chart-canvas'));
 
     return () => {
       this._chart?.destroy();
@@ -25,7 +25,7 @@ export default class AreaChart extends Component {
       return;
     }
 
-    const context = canvasElement.getContext("2d");
+    const context = canvasElement.getContext('2d');
     const chartData = this.args.data;
 
     const [axis, ...datasets] = chartData;
@@ -36,29 +36,29 @@ export default class AreaChart extends Component {
       labels,
       datasets: [
         {
-          label: "Mean",
+          label: 'Mean',
           data: datasets.map((v) => {
             return v.mean;
           }),
-          backgroundColor: "transparent",
-          borderColor: "steelblue",
+          backgroundColor: 'transparent',
+          borderColor: 'steelblue',
           pointRadius: 2,
-          pointBackgroundColor: "steelblue",
-          pointBorderColor: "steelblue",
+          pointBackgroundColor: 'steelblue',
+          pointBorderColor: 'steelblue',
           borderWidth: 5,
         },
         {
           data: datasets.map((v) => v.margin_error_lower),
-          backgroundColor: "rgb(0, 0, 0, 0.1)",
-          borderColor: "transparent",
+          backgroundColor: 'rgb(0, 0, 0, 0.1)',
+          borderColor: 'transparent',
           fill: 0,
           pointRadius: 0,
           borderWidth: 0,
         },
         {
           data: datasets.map((v) => v.margin_error_upper),
-          backgroundColor: "rgb(0, 0, 0, 0.1)",
-          borderColor: "transparent",
+          backgroundColor: 'rgb(0, 0, 0, 0.1)',
+          borderColor: 'transparent',
           fill: 0,
           pointRadius: 0,
           borderWidth: 0,
@@ -76,7 +76,7 @@ export default class AreaChart extends Component {
 
   buildChartConfig(data, { axis } = {}) {
     return {
-      type: "line",
+      type: 'line',
       data,
       options: {
         responsive: true,
@@ -84,7 +84,7 @@ export default class AreaChart extends Component {
         resizeDelay: 50,
         scales: {
           x: {
-            type: "category",
+            type: 'category',
             title: {
               display: axis?.[0],
               text: axis?.[0],
@@ -95,7 +95,7 @@ export default class AreaChart extends Component {
             },
           },
           y: {
-            type: "linear",
+            type: 'linear',
             grace: 0,
             title: {
               display: false,
@@ -110,7 +110,7 @@ export default class AreaChart extends Component {
         plugins: {
           title: {
             display: axis?.[1],
-            align: "start",
+            align: 'start',
             text: axis?.[1],
           },
           legend: {
@@ -129,10 +129,10 @@ export default class AreaChart extends Component {
             },
           },
         },
-        pointBackgroundColor: "#fff",
+        pointBackgroundColor: '#fff',
         radius: 10,
         interaction: {
-          mode: "index",
+          mode: 'index',
           intersect: false,
         },
       },

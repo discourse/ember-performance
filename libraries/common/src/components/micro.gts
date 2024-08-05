@@ -46,6 +46,8 @@ export class MicroBenchmark extends Component<{
         await bench.run();
 
         store(this.args.name, this.args.version, bench.results[0]);
+
+        window.top.postMessage('finish');
       });
     });
   };

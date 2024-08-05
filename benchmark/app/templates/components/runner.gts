@@ -4,10 +4,12 @@ import { assert } from '@ember/debug';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 
+import type RouterService from '@ember/routing/router-service';
 import type { BenchSession } from 'common';
 import type QueryParams from 'ember-performance/services/query-params';
 
 export class Runner extends Component {
+  @service declare router: RouterService;
   @service declare queryParams: QueryParams;
   @service declare benchSession: BenchSession;
 
@@ -15,8 +17,13 @@ export class Runner extends Component {
   @tracked isRunning = false;
 
   waiter?: (value?: unknown) => void;
-  emitReady = () => {
+  currentIframeWindow?: Window;
+  emitReady = (event: Event) => {
+    let win = event.target.contentWindow;
+
+    this.currentIframeWindow = win;
     assert(`Cannot resume when there is no waiter`, this.waiter);
+
     this.waiter();
   };
   start = async () => {
@@ -37,24 +44,37 @@ export class Runner extends Component {
 
           let promise = new Promise((resolve) => (this.waiter = resolve));
 
-          this.testUrl = `/ember-${current.replace('.', '-')}/${bench}`;
+          let { protocol, host } = window.location;
+
+          this.testUrl = `${protocol}//${host}/ember-${current.replace(
+            '.',
+            '-'
+          )}/index.html?run=${bench}`;
 
           await promise;
 
-          // eslint-disable-next-line
-          console.log('loaded!');
+          assert(`Could not determine iframe for test`, this.currentIframeWindow);
 
-          /**
-           * Load iframe
-           * wait for onload
-           * send start command
-           * wait for finish
-           * set next URL
-           */
+          let finish: (v?: unknown) => void;
+          let finishPromise = new Promise((resolve) => (finish = resolve));
+
+          // eslint-disable-next-line
+          function waitForFinish(event: MessageEvent) {
+            if (event.data === 'finish') {
+              window.removeEventListener('message', waitForFinish);
+              finish();
+            }
+          }
+
+          window.addEventListener('message', waitForFinish);
+          this.currentIframeWindow.postMessage(JSON.stringify(['run', bench]));
+
+          await finishPromise;
         }
       }
     } finally {
       this.isRunning = false;
+      this.router.transitionTo('report');
     }
   };
   get canStart() {

@@ -23,8 +23,9 @@ export class BenchSelection extends Component {
   };
 
   <template>
-    <h4>
-      Benchmarks:
+    <fieldset>
+      <legend>Benchmarks</legend>
+
       <button
         {{on "click" this.selectAll}}
         type="button"
@@ -35,23 +36,23 @@ export class BenchSelection extends Component {
         type="button"
         class="btn btn-default btn-xs"
       >None</button>
-    </h4>
 
-    <div class="form-group">
-      {{#each this.benchSession.availableBenchmarks as |name|}}
-        <div>
-          <label>
+      <div class="form-group">
+        {{#each this.benchSession.availableBenchmarks as |name|}}
+          <div>
+            <label>
 
-            <input
-              type="checkbox"
-              checked={{this.queryParams.benchmarks.hasItem name}}
-              {{on "change" (fn this.toggle name)}}
-            />
+              <input
+                type="checkbox"
+                checked={{this.queryParams.benchmarks.hasItem name}}
+                {{on "change" (fn this.toggle name)}}
+              />
 
-            {{name}}
-          </label>
-        </div>
-      {{/each}}
-    </div>
+              {{name}}
+            </label>
+          </div>
+        {{/each}}
+      </div>
+    </fieldset>
   </template>
 }

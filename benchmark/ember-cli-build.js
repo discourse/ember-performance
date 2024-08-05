@@ -1,10 +1,32 @@
 'use strict';
 
+const path = require('path');
+const fs = require('fs');
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
+
+function distsList() {}
 
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
   const config = await utils.configure(__dirname, ['common']);
+
+  console.info(`
+    Once per boot, we copy the dist directories from ../app-at-version into our public folder so that we can load those other apps.
+  `);
+
+  for (let appFolderName of fs.readdirSync('../app-at-version')) {
+    let distFolder = path.join('../app-at-version', appFolderName, 'dist');
+
+    if (!fs.existsSync(distFolder)) {
+      console.warn(`${distFolder} doesn't exist. Skipping.`);
+
+      continue;
+    }
+
+    let target = path.join('./public', appFolderName);
+    fs.mkdirSync(target, { recursive: true });
+    fs.cpSync(distFolder, target, { recursive: true });
+  }
 
   const app = new EmberApp(defaults, {
     ...config,

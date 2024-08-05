@@ -26,8 +26,8 @@ export class VersionSelection extends Component {
   };
 
   <template>
-    <h4>
-      Versions:
+    <fieldset>
+      <legend>Versions</legend>
       <button
         {{on "click" this.selectAll}}
         type="button"
@@ -38,23 +38,23 @@ export class VersionSelection extends Component {
         type="button"
         class="btn btn-default btn-xs"
       >None</button>
-    </h4>
 
-    <div class="form-group">
-      {{#each this.benchSession.availableEmberVersions as |version|}}
-        <div>
-          <label>
+      <div class="form-group">
+        {{#each this.benchSession.availableEmberVersions as |version|}}
+          <div>
+            <label>
 
-            <input
-              type="checkbox"
-              checked={{this.queryParams.emberVersions.hasItem version}}
-              {{on "change" (fn this.toggle version)}}
-            />
+              <input
+                type="checkbox"
+                checked={{this.queryParams.emberVersions.hasItem version}}
+                {{on "change" (fn this.toggle version)}}
+              />
 
-            {{version}}
-          </label>
-        </div>
-      {{/each}}
-    </div>
+              {{version}}
+            </label>
+          </div>
+        {{/each}}
+      </div>
+    </fieldset>
   </template>
 }

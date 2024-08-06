@@ -1,0 +1,32 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 8f84ba99511b803c60bbe1cc53f338190ef014d5..0000000000000000000000000000000000000000
+diff --git a/dist/ember.debug.js b/dist/ember.debug.js
+index e137445039ac47fc80e41269230d80e3ca42ddf2..d8f14a96c4585bb450929dfbd35c801e95077f97 100644
+--- a/dist/ember.debug.js
++++ b/dist/ember.debug.js
+@@ -5755,7 +5755,7 @@ define("@ember/-internals/glimmer/index", ["exports", "@glimmer/opcode-compiler"
+     }
+ 
+     getDebugName(definition) {
+-      return (0, _utils.getDebugName)(definition.class['prototype']);
++      return definition.class ? (0, _utils.getDebugName)(definition.class['prototype']) : '(unknown helper)';
+     }
+ 
+   }
+diff --git a/dist/packages/@ember/-internals/glimmer/index.js b/dist/packages/@ember/-internals/glimmer/index.js
+index 3d36ce85469cc5d34d1d72f8a708035ee0102a91..d69578d29fa8087533176fc69dfac24f08dd1884 100644
+--- a/dist/packages/@ember/-internals/glimmer/index.js
++++ b/dist/packages/@ember/-internals/glimmer/index.js
+@@ -3546,7 +3546,7 @@ class ClassicHelperManager {
+   }
+ 
+   getDebugName(definition) {
+-    return getDebugName(definition.class['prototype']);
++    return definition.class ? getDebugName(definition.class['prototype']) : '(unknown helper)';
+   }
+ 
+ }
+diff --git a/dist/packages/@ember/-internals/runtime/.gitignore b/dist/packages/@ember/-internals/runtime/.gitignore
+deleted file mode 100644
+index a1136368651e6eb6d0d93a09c478f4978f4196fa..0000000000000000000000000000000000000000

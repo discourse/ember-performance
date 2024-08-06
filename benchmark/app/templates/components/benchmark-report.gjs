@@ -4,6 +4,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 import { htmlSafe } from '@ember/template';
+import semverCompare from 'semver/functions/compare-loose';
 
 import AreaChart from './area-chart';
 import { formatNumber } from './utils';
@@ -25,7 +26,9 @@ export default class BenchmarkReport extends Component {
   get groupedTests() {
     const tests = {};
 
-    for (let data of this.args.report) {
+    let sorted = this.args.report.sort((a, b) => semverCompare(a.version, b.version));
+
+    for (let data of sorted) {
       let { name, results, version } = data;
       let result = results;
 

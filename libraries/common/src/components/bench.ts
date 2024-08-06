@@ -22,7 +22,11 @@ export function OneOffTinyBench(
 
     let abortController = new AbortController();
 
-    let bench = new Bench({ ...options, signal: abortController.signal });
+    let bench = new Bench({
+      time: 1_000,
+      ...options,
+      signal: abortController.signal,
+    });
 
     on.cleanup(() => abortController.abort());
 

@@ -11,6 +11,9 @@ importers:
       '@embroider/addon-shim':
         specifier: ^1.8.7
         version: 1.8.9
+      '@embroider/macros':
+        specifier: ^1.16.5
+        version: 1.16.5(@glint/template@1.4.0)
       babel-plugin-transform-vite-meta-glob:
         specifier: ^1.1.2
         version: 1.1.2

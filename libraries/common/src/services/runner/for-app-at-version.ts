@@ -1,5 +1,15 @@
-import { getOwner } from '@ember/owner';
 import Service from '@ember/service';
+import { dependencySatisfies, importSync, macroCondition } from '@embroider/macros';
+
+let getOwner: any = () => {
+  throw new Error('Could not find getOwner');
+};
+
+if (macroCondition(dependencySatisfies('ember-source', '>= 4.11'))) {
+  getOwner = (importSync('@ember/owner') as any).getOwner;
+} else {
+  getOwner = (importSync('@ember/application') as any).getOwner;
+}
 
 export default class ForAppAtVersion extends Service {
   get env() {

@@ -7,7 +7,9 @@
   "license": "MIT",
   "author": "",
   "main": "ember-cli-build.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -21,9 +23,10 @@
     "lint:hbs:fix": "ember-template-lint . --fix",
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
-    "start": "ember serve",
+    "start": "pnpm _syncPnpm && NODE_NO_WARNINGS=1 concurrently 'ember serve' 'pnpm _syncPnpm --watch' --names 'serve,inject'",
     "test": "concurrently \"pnpm:lint\" \"pnpm:test:*\" --names \"lint,test:\"",
-    "test:ember": "ember test"
+    "test:ember": "ember test",
+    "_syncPnpm": "pnpm sync-dependencies-meta-injected"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
@@ -61,7 +64,7 @@
     "ember-page-title": "^8.2.3",
     "ember-qunit": "^8.1.0",
     "ember-resolver": "^12.0.1",
-    "ember-source": "~5.10.0",
+    "ember-source": "~4.0.0",
     "ember-template-lint": "^6.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -73,10 +76,14 @@
     "prettier": "3.3.3",
     "prettier-plugin-ember-template-tag": "2.0.2",
     "qunit": "^2.21.0",
+    "common": "workspace:^",
     "qunit-dom": "^3.2.0",
     "tracked-built-ins": "^3.3.0",
     "typescript": "5.5.4",
-    "webpack": "^5.92.1"
+    "webpack": "^5.92.1",
+    "pnpm-sync-dependencies-meta-injected": "^0.0.14",
+    "ember-template-imports": "^4.0.0",
+    "ember-route-template": "^1.0.3"
   },
   "engines": {
     "node": ">= 18"
@@ -87,7 +94,9 @@
   "volta": {
     "extends": "../../package.json"
   },
-  "dependencies": {
-    "common": "workspace:^"
+  "dependenciesMeta": {
+    "common": {
+      "injected": true
+    }
   }
 }

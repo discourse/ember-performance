@@ -41,7 +41,7 @@ export async function configure(__dirname, deps) {
           return toWatch;
         });
 
-        console.debug("All side-watched paths:", paths);
+        console.debug("All side-watched paths:", paths.flat());
 
         return sideWatch("app", { watching: paths.flat() });
       })(),

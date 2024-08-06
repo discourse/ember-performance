@@ -3,6 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
+const Funnel = require('broccoli-funnel');
 
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
@@ -22,19 +23,21 @@ module.exports = async function (defaults) {
     Once per boot, we copy the dist directories from ../app-at-version into our public folder so that we can load those other apps.
   `);
 
+  let appAtVersionPublicTrees = [];
+
+  /**
+   * TODO: how to make this funnel update when the `dist` updates?
+   */
   for (let appFolderName of fs.readdirSync('../app-at-version')) {
     let distFolder = path.join('../app-at-version', appFolderName, 'dist');
 
-    if (!fs.existsSync(distFolder)) {
-      console.warn(`${distFolder} doesn't exist. Skipping.`);
+    let funnel = new Funnel(distFolder, {
+      destDir: appFolderName,
+      overwrite: true,
+      allowEmpty: true,
+    });
 
-      continue;
-    }
-
-    let target = path.join('./public', appFolderName);
-
-    fs.mkdirSync(target, { recursive: true });
-    fs.cpSync(distFolder, target, { recursive: true });
+    appAtVersionPublicTrees.push(funnel);
   }
 
   const app = new EmberApp(defaults, {
@@ -63,6 +66,7 @@ module.exports = async function (defaults) {
   const { Webpack } = require('@embroider/webpack');
 
   return require('@embroider/compat').compatBuild(app, Webpack, {
+    extraPublicTrees: [...appAtVersionPublicTrees],
     staticAddonTestSupportTrees: true,
     staticAddonTrees: true,
     staticHelpers: true,

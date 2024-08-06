@@ -1,6 +1,7 @@
 'use strict';
 
 const semverCompare = require('semver/functions/compare-loose');
+const envUtils = require('ember-cli-utils/environment');
 const fs = require('fs');
 
 function emberVersions() {
@@ -40,6 +41,8 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    deps: envUtils.getDeps(__dirname),
   };
 
   if (environment === 'development') {

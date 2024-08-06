@@ -1,15 +1,19 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
+import type RouterService from '@ember/routing/router-service';
+
 export default class Application extends Route {
-  @service router;
+  @service declare router: RouterService;
 
   queryParams = {
     run: { refreshModel: false },
   };
 
-  beforeModel() {
+  model() {
+    console.log('before model running');
     window.addEventListener('message', (e) => {
+      console.log(e);
       if (typeof e.data !== 'string') return;
 
       let parsed;

@@ -1,12 +1,16 @@
 import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+
+import type RouterService from '@ember/routing/router-service';
 
 export default class Bench extends Route {
-  async beforeModel(transition) {
-    let name = transition.to.params.name;
+  @service declare router: RouterService;
 
-    console.log(name, transition);
+  model({ name }) {
+    console.log('bench', name, ...arguments);
 
     if (name === 'index.html') {
+      this.router.transitionTo('application');
     }
   }
 }

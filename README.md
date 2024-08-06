@@ -48,6 +48,10 @@ MIT
         prettier-plugin-ember-template-tag \
         ember-route-template  
     ```
+
+    It's important that these remain devdependencies, because we'll be adding the new 
+    app as a `dependencies` entry in `benchmark/package.json` later.
+
 4. Remove dependencies 
     ```bash 
     pnpm remove ember-data ember-fetch ember-cli-sri ember-cli-clean-css \

@@ -19,9 +19,10 @@
     "lint:hbs:fix": "ember-template-lint \"app/**/*\" --fix",
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
-    "start": "NODE_NO_WARNINGS=1 ember serve",
+    "start": "pnpm _syncPnpm && NODE_NO_WARNINGS=1 concurrently 'ember serve' 'pnpm _syncPnpm --watch' --names 'serve,inject'",
     "test": "concurrently \"npm:lint\" \"npm:test:*\" --names \"lint,test:\"",
-    "test:ember": "ember test"
+    "test:ember": "ember test",
+    "_syncPnpm": "pnpm sync-dependencies-meta-injected"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
@@ -64,7 +65,7 @@
     "ember-resolver": "^12.0.1",
     "ember-route-template": "^1.0.3",
     "ember-source": "~5.10.0",
-    "ember-template-imports": "^4.1.1",
+    "ember-template-imports": "^4.0.0",
     "ember-template-lint": "^6.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -80,7 +81,8 @@
     "qunit-dom": "^3.2.0",
     "tracked-built-ins": "^3.3.0",
     "typescript": "5.5.4",
-    "webpack": "^5.91.0"
+    "webpack": "^5.91.0",
+    "pnpm-sync-dependencies-meta-injected": "^0.0.14"
   },
   "engines": {
     "node": ">= 22.3.0"
@@ -106,5 +108,10 @@
   },
   "volta": {
     "extends": "../package.json"
+  },
+  "dependenciesMeta": {
+    "common": {
+      "injected": true
+    }
   }
 }

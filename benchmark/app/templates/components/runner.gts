@@ -17,8 +17,11 @@ export class Runner extends Component {
   @tracked isRunning = false;
 
   waiter?: (value?: unknown) => void;
-  currentIframeWindow?: Window;
+  currentIframeWindow?: Window | null;
   emitReady = (event: Event) => {
+    assert(`event.target cannot be null`, event.target);
+    assert(`event.target must be an iframe element`, event.target instanceof HTMLIFrameElement);
+
     let win = event.target.contentWindow;
 
     this.currentIframeWindow = win;

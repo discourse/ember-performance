@@ -103,12 +103,17 @@ MIT
       this.route('bench', { path: ':name' });
     });
     ```
-10. Change the build scripts `package.json`. Delete `build` and add:
+10. Add a file, `app/routes/application.js` with contents:
+    ```js 
+    export { ApplicationRoute as default } from 'common';
+    ```
+
+11. Change the build scripts `package.json`. Delete `build` and add:
     ```
     "build:prod": "ember build --environment=production",
     "build:dev":  "ember build --environment=development",
     ```
-11. Add the new app as a `dependencies` entry in `benchmark/package.json`
+12. Add the new app as a `dependencies` entry in `benchmark/package.json`
     ```
     "ember-6-0": "workspace:*"
     ```

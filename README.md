@@ -110,7 +110,7 @@ MIT
 
 11. Change the build scripts `package.json`. Delete `build` and add:
     ```
-    "build:prod": "ember build --environment=production",
+    "build:prod": "pnpm _syncPnpm && ember build --environment=production",
     "build:dev":  "ember build --environment=development",
     ```
 12. Add the new app as a `dependencies` entry in `benchmark/package.json`

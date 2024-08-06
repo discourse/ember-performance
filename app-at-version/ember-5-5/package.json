@@ -15,8 +15,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build:prod": "ember build --environment=production",
-    "build:dev": "ember build --environment=development",
+    "build:prod": "pnpm _syncPnpm && ember build --environment=production",
+    "build:dev": "pnpm _syncPnpm && ember build --environment=development",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\"",
     "lint:fix": "concurrently \"pnpm:lint:*:fix\" --names \"fix:\"",
     "lint:hbs": "ember-template-lint .",

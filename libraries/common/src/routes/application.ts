@@ -1,19 +1,19 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
+import type ForAppVersion from '../services/runner/for-app-at-version.ts';
 import type RouterService from '@ember/routing/router-service';
 
-export default class Application extends Route {
+export class ApplicationRoute extends Route {
   @service declare router: RouterService;
+  @service('runner/for-app-at-version') declare forApp: ForAppVersion;
 
   queryParams = {
     run: { refreshModel: false },
   };
 
   model() {
-    console.log('before model running');
     window.addEventListener('message', (e) => {
-      console.log(e);
       if (typeof e.data !== 'string') return;
 
       let parsed;
@@ -29,6 +29,7 @@ export default class Application extends Route {
       let [command, arg] = parsed;
 
       if (command === 'run') {
+        console.info(`Preparing bench ${arg} for version ${this.forApp.emberVersion}`);
         this.router.transitionTo('bench', arg);
       }
     });

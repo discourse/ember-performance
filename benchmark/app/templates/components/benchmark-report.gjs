@@ -9,16 +9,6 @@ import AreaChart from './area-chart';
 import { formatNumber } from './utils';
 
 export default class BenchmarkReport extends Component {
-  @tracked mode = 'html';
-
-  get isHtmlMode() {
-    return this.mode === 'html';
-  }
-
-  get isTextMode() {
-    return this.mode === 'text';
-  }
-
   get showGraph() {
     return this.args.report.length > 1;
   }
@@ -35,7 +25,10 @@ export default class BenchmarkReport extends Component {
   get groupedTests() {
     const tests = {};
 
-    this.args.report.forEach(({ name, version, results: result }) => {
+    for (let data of this.args.report) {
+      let { name, results, version } = data;
+      let result = results;
+
       const test = tests[name] || {
         name: name,
         data: [],
@@ -61,8 +54,8 @@ export default class BenchmarkReport extends Component {
         margin_error_upper: result.mean + (result.mean * result.rme) / 100,
       });
 
-      tests[result.name] = test;
-    });
+      tests[name] = test;
+    }
 
     return tests;
   }
@@ -94,7 +87,7 @@ export default class BenchmarkReport extends Component {
                 <tr>
                   <td>
                     <strong>{{test.name}}</strong>
-                    <span class="label label-primary">{{item.emberVersion.name}}</span>
+                    <span class="label label-primary">{{item.emberVersion}}</span>
                   </td>
                   <td class="numeric">{{formatNumber
                       item.result.hz

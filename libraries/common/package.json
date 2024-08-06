@@ -92,8 +92,6 @@
     "type": "addon",
     "main": "addon-main.cjs",
     "app-js": {
-      "./routes/application.js": "./dist/_app_/routes/application.js",
-      "./routes/bench.js": "./dist/_app_/routes/bench.js",
       "./services/bench-session.js": "./dist/_app_/services/bench-session.js",
       "./services/runner/for-app-at-version.js": "./dist/_app_/services/runner/for-app-at-version.js",
       "./templates/application.js": "./dist/_app_/templates/application.js",

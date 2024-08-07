@@ -16,4 +16,4 @@ async function test() {
   await promise;
 }
 
-<template><MicroBenchmark @name={{name}} @version={{@version}} @test={{test}} /></template>
+<template><MicroBenchmark @name={{name}} @test={{test}} /></template>

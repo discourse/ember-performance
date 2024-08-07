@@ -11,19 +11,33 @@ import { onRenderIsh } from './utils.ts';
 
 import type ForAppVersion from '../services/runner/for-app-at-version.ts';
 
-export class MicroBenchmark extends Component<{
+export class RenderBenchmark extends Component<{
   Args: {
     name: string;
-  } & Options;
+  } & Omit<Options, 'test'>;
 }> {
   @service('runner/for-app-at-version') declare forApp: ForAppVersion;
 
   @tracked status = '';
   @tracked remaining = '';
   @tracked progress = '';
+  @tracked showContents = false;
 
   @use bench = OneOffTinyBench(() => ({
-    options: this.args,
+    options: {
+      ...this.args,
+      test: async () => {
+        this.showContents = true;
+        await new Promise((resolve) => requestIdleCallback(resolve));
+      },
+      teardown: async () => {
+        this.showContents = false;
+
+        await new Promise((resolve) => {
+          requestAnimationFrame(resolve);
+        });
+      },
+    },
     updateStatus: (msg: string) => (this.status = msg),
   }));
 
@@ -64,7 +78,11 @@ export class MicroBenchmark extends Component<{
       <:remaining>{{this.remaining}}</:remaining>
       <:status>{{this.status}}</:status>
       <:progress>{{this.progress}}</:progress>
-      <:scratch></:scratch>
+      <:scratch>
+        {{#if this.showContents}}
+          {{yield}}
+        {{/if}}
+      </:scratch>
     </Layout>
   </template>
 }

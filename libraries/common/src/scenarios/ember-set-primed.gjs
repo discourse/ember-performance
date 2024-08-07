@@ -26,6 +26,4 @@ function test() {
   obj.set('person.pet.name', 'Nibbler');
 }
 
-<template>
-  <MicroBenchmark @name={{name}} @version={{@version}} @setup={{setup}} @test={{test}} />
-</template>
+<template><MicroBenchmark @name={{name}} @setup={{setup}} @test={{test}} /></template>

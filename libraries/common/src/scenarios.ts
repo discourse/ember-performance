@@ -8,6 +8,7 @@ import * as _3_2 from './scenarios/ember-get-primed.gjs';
 import * as _4 from './scenarios/ember-run.gjs';
 import * as _6 from './scenarios/ember-set.gjs';
 import * as _6_2 from './scenarios/ember-set-primed.gjs';
+import * as _7 from './scenarios/render-complex-html-classic.gjs';
 import * as _5 from './scenarios/string-classify.gjs';
 
 import type { ComponentLike } from '@glint/template';
@@ -21,14 +22,13 @@ const definedScenarios = {
   _6_2,
   _4,
   _5,
+  _7,
 };
 
 let scenariosByName: Record<
   string,
   ComponentLike<{
-    Args: {
-      version: string;
-    };
+    Args: {};
   }>
 > = {};
 

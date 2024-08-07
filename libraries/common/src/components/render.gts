@@ -15,6 +15,9 @@ export class RenderBenchmark extends Component<{
   Args: {
     name: string;
   } & Omit<Options, 'test'>;
+  Blocks: {
+    default: [];
+  };
 }> {
   @service('runner/for-app-at-version') declare forApp: ForAppVersion;
 
@@ -30,11 +33,18 @@ export class RenderBenchmark extends Component<{
         this.showContents = true;
         await new Promise((resolve) => requestIdleCallback(resolve));
       },
+      reset: async () => {
+        this.showContents = false;
+
+        await new Promise((resolve) => {
+          requestIdleCallback(resolve);
+        });
+      },
       teardown: async () => {
         this.showContents = false;
 
         await new Promise((resolve) => {
-          requestAnimationFrame(resolve);
+          requestIdleCallback(resolve);
         });
       },
     },

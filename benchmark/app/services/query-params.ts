@@ -22,6 +22,7 @@ export default class QueryParams extends Service {
 
   @link emberVersions = new QPArray('emberVersions', (...args) => this.setQP(...args));
   @link benchmarks = new QPArray('benchmarks', (...args) => this.setQP(...args));
+  @link clear = new QPBoolean('clear', (...args) => this.setQP(...args));
 
   /**
    * Allows batching QP updates
@@ -47,6 +48,39 @@ export default class QueryParams extends Service {
         queryParams: this.#qps,
       });
     });
+  };
+}
+
+class QPBoolean {
+  @service declare router: RouterService;
+
+  #name: string;
+  #setQP: (qps: QPs) => void;
+
+  constructor(name: string, setQP: (qps: QPs) => void) {
+    this.#name = name;
+    this.#setQP = setQP;
+  }
+
+  get queryParams(): QPs {
+    return (this.router.currentRoute?.queryParams ?? {}) as QPs;
+  }
+
+  @cached
+  get value() {
+    return this.queryParams[this.#name] === '1';
+  }
+
+  set = (item: boolean) => this.#setQP({ [this.#name]: item ? '1' : '0' });
+
+  toggle = () => {
+    if (this.value) {
+      this.set(false);
+
+      return;
+    }
+
+    this.set(true);
   };
 }
 

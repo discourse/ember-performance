@@ -6,6 +6,31 @@ import { service } from '@ember/service';
 import type { BenchSession } from 'common';
 import type QueryParams from 'ember-performance/services/query-params';
 
+const { Array } = globalThis;
+
+class Item extends Component<{ Args: { name: string } }> {
+  @service declare queryParams: QueryParams;
+
+  toggle = (name: string) => {
+    this.queryParams.benchmarks.toggle(name);
+  };
+
+  <template>
+    <div>
+      <label>
+
+        <input
+          type="checkbox"
+          checked={{this.queryParams.benchmarks.hasItem @name}}
+          {{on "change" (fn this.toggle @name)}}
+        />
+
+        {{@name}}
+      </label>
+    </div>
+  </template>
+}
+
 export class BenchSelection extends Component {
   @service declare queryParams: QueryParams;
   @service declare benchSession: BenchSession;
@@ -18,11 +43,63 @@ export class BenchSelection extends Component {
     this.queryParams.benchmarks.set([]);
   };
 
-  toggle = (name: string) => {
-    this.queryParams.benchmarks.toggle(name);
-  };
+  hasAnyActive = (maybeGroup: typeof this.benchSession.groupedBenchmarks) => {
+    if (Array.isArray(maybeGroup)) {
+      return maybeGroup.some(esModule => this.queryParams.benchmarks.hasItem(esModule.name));
+    }
+
+    return Object.values(maybeGroup).flat().some(esModule => this.queryParams.benchmarks.hasItem(esModule.name))
+  }
 
   <template>
+    <style>
+      .benchmark-list {
+        padding-left: 0.5rem;
+
+        ul {
+          padding-left: 1rem;
+        }
+
+        li {
+          list-style: none;
+        }
+        span {
+          font-size: 1.5rem;
+          line-height: 2rem;
+          cursor: pointer;
+          border-bottom: 1px solid;
+        }
+
+        span + li {
+          margin-left: 0.5rem;
+        }
+
+        details > summary {
+            list-style-type: none;
+        }
+
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details > summary::before {
+            content: '➤  ' ;
+        }
+
+        details[open] > summary::before {
+            content: '⮟ ';
+        }
+
+        details {
+            padding: 0.5rem;
+        }
+
+        details[open] > summary {
+            margin-bottom: 0.5rem;
+        }
+
+      }
+    </style>
     <fieldset>
       <legend>Benchmarks</legend>
 
@@ -37,22 +114,31 @@ export class BenchSelection extends Component {
         class="btn btn-default btn-xs"
       >None</button>
 
-      <div class="form-group">
-        {{#each this.benchSession.availableBenchmarks as |name|}}
-          <div>
-            <label>
+      <ul class="benchmark-list form-group">
+        {{#each-in this.benchSession.groupedBenchmarks as |groupName group|}}
+          <li>
+            <details open={{this.hasAnyActive group}}><summary><span>{{groupName}}</span></summary>
+              {{#if (Array.isArray group)}}
+                {{#each group as |esModule|}}
+                  <Item @name={{esModule.name}} />
+                {{/each}}
+              {{else}}
+                <ul>
+                  {{#each-in group as |subGroup group|}}
+                    <li>
+                      <span>{{subGroup}}</span>
+                      {{#each group as |esModule|}}
+                        <Item @name={{esModule.name}} />
+                      {{/each}}
+                    </li>
+                  {{/each-in}}
 
-              <input
-                type="checkbox"
-                checked={{this.queryParams.benchmarks.hasItem name}}
-                {{on "change" (fn this.toggle name)}}
-              />
-
-              {{name}}
-            </label>
-          </div>
-        {{/each}}
-      </div>
+                </ul>
+              {{/if}}
+            </details>
+          </li>
+        {{/each-in}}
+      </ul>
     </fieldset>
   </template>
 }

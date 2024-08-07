@@ -1,8 +1,9 @@
 import { tracked } from '@glimmer/tracking';
 import Service from '@ember/service';
 
-import { benchmarkNames } from 'common';
 import { TrackedSet } from 'tracked-built-ins';
+
+import { benchmarkNames, groups } from '../scenarios.ts';
 
 interface UISettings {
   enabled: {
@@ -17,6 +18,7 @@ export default class BenchSession extends Service {
   @tracked availableEmberVersions: string[] = [];
 
   availableBenchmarks = benchmarkNames;
+  groupedBenchmarks = groups;
 
   @tracked enabledEmberVersions = new TrackedSet();
   @tracked enabledScenarios = new TrackedSet();

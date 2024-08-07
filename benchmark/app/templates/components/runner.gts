@@ -4,6 +4,8 @@ import { assert } from '@ember/debug';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 
+import { clearAll } from 'common';
+
 import type RouterService from '@ember/routing/router-service';
 import type { BenchSession } from 'common';
 import type QueryParams from 'ember-performance/services/query-params';
@@ -33,6 +35,11 @@ export class Runner extends Component {
     try {
       await Promise.resolve();
       this.isRunning = true;
+
+      if (this.queryParams.clear.value) {
+        this.queryParams.clear.toggle();
+        clearAll();
+      }
 
       let remainingVersions = [...this.queryParams.emberVersions.value];
       let remainingTests = [...this.queryParams.benchmarks.value];

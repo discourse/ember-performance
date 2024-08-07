@@ -35,7 +35,19 @@ export function load(testName: string, emberVersion: string) {
   return parsed;
 }
 
-export function loadAll() {
+export function clearAll() {
+  let keys = allKeys();
+
+  for (let i = 0; i < keys.length; i++) {
+    let key = keys[i];
+
+    if (!key) continue;
+
+    localStorage.removeItem(key);
+  }
+}
+
+function allKeys() {
   let results = [];
 
   for (let i = 0; i < localStorage.length; i++) {
@@ -43,6 +55,22 @@ export function loadAll() {
 
     if (!key) continue;
     if (!key.includes(SEP)) continue;
+
+    results.push(key);
+  }
+
+  return results;
+}
+
+export function loadAll() {
+  let results = [];
+
+  let keys = allKeys();
+
+  for (let i = 0; i < keys.length; i++) {
+    let key = keys[i];
+
+    if (!key) continue;
 
     let { name, version } = partsForKey(key);
 

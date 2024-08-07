@@ -4,6 +4,11 @@
 import * as _1 from './scenarios/baseline-handlebars-list.gjs';
 import * as _2 from './scenarios/baseline-inner-html.gjs';
 import * as _3 from './scenarios/ember-get.gjs';
+import * as _3_2 from './scenarios/ember-get-primed.gjs';
+import * as _4 from './scenarios/ember-run.gjs';
+import * as _6 from './scenarios/ember-set.gjs';
+import * as _6_2 from './scenarios/ember-set-primed.gjs';
+import * as _5 from './scenarios/string-classify.gjs';
 
 import type { ComponentLike } from '@glint/template';
 
@@ -11,6 +16,11 @@ const definedScenarios = {
   _1,
   _2,
   _3,
+  _3_2,
+  _6,
+  _6_2,
+  _4,
+  _5,
 };
 
 let scenariosByName: Record<

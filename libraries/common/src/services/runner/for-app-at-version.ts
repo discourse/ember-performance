@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Service from '@ember/service';
 import { dependencySatisfies, importSync, macroCondition } from '@embroider/macros';
 

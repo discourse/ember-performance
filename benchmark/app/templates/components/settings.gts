@@ -1,5 +1,4 @@
 import Component from '@glimmer/component';
-import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 
@@ -25,7 +24,7 @@ export class Settings extends Component {
             <input
               type="checkbox"
               checked={{this.queryParams.clear.value}}
-              {{on "change" (fn this.toggle)}}
+              {{on "change" this.toggle}}
             />
 
             Clear prior results

@@ -36,12 +36,7 @@ import type { ComponentLike } from '@glint/template';
 
 const definedScenarios = [...micro, ...Object.values(rendering).flat()];
 
-let scenariosByName: Record<
-  string,
-  ComponentLike<{
-    Args: {};
-  }>
-> = {};
+let scenariosByName: Record<string, ComponentLike> = {};
 
 // for (let [filePath, esModule] of Object.entries(definedScenarios)) {
 for (let esModule of definedScenarios) {

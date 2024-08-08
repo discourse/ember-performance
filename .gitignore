@@ -25,4 +25,6 @@ yarn.lock.ember-try
 
 # broccoli-debug
 DEBUG/
+public/ember-*
 
+**/CHANGELOG.md

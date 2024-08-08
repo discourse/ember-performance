@@ -1,0 +1,34 @@
+{
+  "name": "ember-cli-utils",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./index.js",
+    "./environment": {
+      "require": "./environment.cjs"
+    }
+  },
+  "dependencies": {
+    "@embroider/broccoli-side-watch": "0.0.2-unstable.ba9fd29",
+    "read-package-up": "^11.0.0"
+  },
+  "devDependencies": {
+    "@embroider/compat": "^3.6.0",
+    "@embroider/core": "^3.4.14",
+    "@embroider/webpack": "^4.0.4",
+    "pnpm-sync-dependencies-meta-injected": "^0.0.14",
+    "ember-page-title": "^8.2.3",
+    "ember-template-imports": "^4.0.0",
+    "ember-route-template": "^1.0.3"
+  },
+  "dependenciesMeta": {
+    "common": {
+      "injected": true
+    }
+  },
+  "scripts": {
+    "start": "pnpm _syncPnpm && NODE_NO_WARNINGS=1 concurrently 'ember serve' 'pnpm _syncPnpm --watch' --names 'serve,inject'",
+    "_syncPnpm": "pnpm sync-dependencies-meta-injected"
+  }
+}

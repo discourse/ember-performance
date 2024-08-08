@@ -43,11 +43,15 @@ MIT
 3. Add dependencies 
     ```bash
     pnpm add --save-dev @nullvoxpopuli/eslint-configs \
-        common@workspace:^ ember-cli-utils@workspace:^ perf-testing@workspace:^ \
+        common@workspace:^ ember-cli-utils@workspace:^ \
         ember-template-imports \
         prettier-plugin-ember-template-tag \
         ember-route-template  
     ```
+
+    It's important that these remain devdependencies, because we'll be adding the new 
+    app as a `dependencies` entry in `benchmark/package.json` later.
+
 4. Remove dependencies 
     ```bash 
     pnpm remove ember-data ember-fetch ember-cli-sri ember-cli-clean-css \
@@ -86,9 +90,11 @@ MIT
     ```js
     module.exports = async function (defaults) {
       const utils = await import('ember-cli-utils');
+      const config = await utils.configure(__dirname, ['common']);
+
       const app = new EmberApp(defaults, {
+        ...config,
         // Add options here
-        ...utils.configure(__dirname, ['common', 'perf-testing']),
       });
     ```
 9. Add to `app/router.js` (or `app/router.ts`)
@@ -97,9 +103,17 @@ MIT
       this.route('bench', { path: ':name' });
     });
     ```
-10. Change the build scripts `package.json`. Delete `build` and add:
+10. Add a file, `app/routes/application.js` with contents:
+    ```js 
+    export { ApplicationRoute as default } from 'common';
     ```
-    "build:prod": "ember build --environment=production",
+
+11. Change the build scripts `package.json`. Delete `build` and add:
+    ```
+    "build:prod": "pnpm _syncPnpm && ember build --environment=production",
     "build:dev":  "ember build --environment=development",
     ```
-    
+12. Add the new app as a `dependencies` entry in `benchmark/package.json`
+    ```
+    "ember-6-0": "workspace:*"
+    ```

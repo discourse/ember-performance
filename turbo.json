@@ -7,13 +7,13 @@
   // "globalPassThroughEnv": [],
   "tasks": {
     "start": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^build:dev"],
       "cache": false,
       "persistent": true
     },
     "build:prod": {
       "outputs": ["dist/**"],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build:prod", "^build"],
       "inputs": [
         // Apps
         "app/**",
@@ -25,7 +25,7 @@
     },
     "build:dev": {
       "outputs": ["dist/**"],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build:dev", "^build"],
       "inputs": [
         // Apps
         "app/**",
@@ -44,7 +44,7 @@
         "addon-main.*",
         "tsconfig.json",
         "rollup.config.*",
-        "babel.config.*",
+        "babel.config.*"
       ],
       "dependsOn": ["^build"]
     },

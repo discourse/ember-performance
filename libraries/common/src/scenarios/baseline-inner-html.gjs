@@ -1,4 +1,5 @@
-import { people } from 'perf-testing';
+import { people } from 'common';
+import { RenderBenchmark } from 'common';
 
 export const name = 'Baseline: List via {{{ rawHTML }}}';
 
@@ -21,4 +22,8 @@ function makeHTML() {
   return html;
 }
 
-<template>{{! template-lint-disable no-triple-curlies }}{{{(makeHTML)}}}</template>
+<template>
+  <RenderBenchmark @name={{name}} @version={{@version}}>
+    {{{(makeHTML)}}}
+  </RenderBenchmark>
+</template>

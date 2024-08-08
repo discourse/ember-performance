@@ -1,47 +1,50 @@
-"use strict";
+'use strict';
 
-const EmberApp = require("ember-cli/lib/broccoli/ember-app");
-const MergeTrees = require("broccoli-merge-trees");
-const Concat = require("broccoli-concat");
-const CopyIndex = require("./lib/copy-index");
-const Funnel = require("broccoli-funnel");
+const path = require('path');
+const fs = require('fs');
+const EmberApp = require('ember-cli/lib/broccoli/ember-app');
+const Funnel = require('broccoli-funnel');
 
-const clientDepsTree = new Funnel("node_modules", {
-  include: [
-    "headjs/dist/1.0.0/head.js",
-    "benchmark/benchmark.js",
-    "rsvp/dist/rsvp.js",
-    "ascii-table/ascii-table.js",
-  ],
-});
+module.exports = async function (defaults) {
+  const utils = await import('ember-cli-utils');
+  const config = await utils.configure(__dirname, [
+    'common',
+    'ember-5-10',
+    'ember-5-9',
+    'ember-5-8',
+    'ember-5-7',
+    'ember-5-6',
+    'ember-5-5',
+    'ember-4-0',
+    'ember-3-28',
+  ]);
 
-const clientTree = new MergeTrees(["test-client", clientDepsTree], {
-  annotation: "test-client merge",
-});
+  console.info(`
+    Once per boot, we copy the dist directories from ../app-at-version into our public folder so that we can load those other apps.
+  `);
 
-const testClient = new Concat(clientTree, {
-  headerFiles: [
-    "test-client.js",
-    "test-session.js",
-    "headjs/dist/1.0.0/head.js",
-    "benchmark/benchmark.js",
-    "rsvp/dist/rsvp.js",
-    "ascii-table/ascii-table.js",
-    "people.js",
-  ],
-  outputFile: "/assets/test-client.js",
-});
+  let appAtVersionPublicTrees = [];
 
-const emberTree = new Funnel("ember", {
-  include: ["**/*.js"],
-  destDir: "ember",
-});
+  /**
+   * TODO: how to make this funnel update when the `dist` updates?
+   */
+  for (let appFolderName of fs.readdirSync('../app-at-version')) {
+    let distFolder = path.join('../app-at-version', appFolderName, 'dist');
 
-module.exports = function (defaults) {
+    let funnel = new Funnel(distFolder, {
+      destDir: appFolderName,
+      overwrite: true,
+      allowEmpty: true,
+    });
+
+    appAtVersionPublicTrees.push(funnel);
+  }
+
   const app = new EmberApp(defaults, {
-    "@embroider/macros": {
+    ...config,
+    '@embroider/macros': {
       setConfig: {
-        "ember-qunit": {
+        'ember-qunit': {
           /**
            * default: false
            *
@@ -54,16 +57,31 @@ module.exports = function (defaults) {
            *
            * Sets the theme for the Web UI of the test runner. Use a different value to disable loading any theme, allowing you to provide your own external one.
            */
-          theme: "qunit-default",
+          theme: 'qunit-default',
         },
       },
     },
-    fingerprint: {
-      enabled: false,
-    },
   });
 
-  return new MergeTrees([app.toTree(), testClient, emberTree], {
-    annotation: "final dist merge",
+  const { Webpack } = require('@embroider/webpack');
+
+  return require('@embroider/compat').compatBuild(app, Webpack, {
+    extraPublicTrees: [...appAtVersionPublicTrees],
+    staticAddonTestSupportTrees: true,
+    staticAddonTrees: true,
+    staticHelpers: true,
+    staticModifiers: true,
+    staticComponents: true,
+    staticEmberSource: true,
+    skipBabel: [
+      {
+        package: 'qunit',
+      },
+    ],
+    packagerOptions: {
+      webpackConfig: {
+        devtool: 'source-map',
+      },
+    },
   });
 };

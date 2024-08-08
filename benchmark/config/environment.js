@@ -1,50 +1,34 @@
-"use strict";
+'use strict';
 
-const fs = require("fs");
-const path = require("path");
-const naturalSort = require("javascript-natural-sort");
+const semverCompare = require('semver/functions/compare-loose');
+const envUtils = require('ember-cli-utils/environment');
+const fs = require('fs');
 
 function emberVersions() {
   return fs
-    .readdirSync("ember")
+    .readdirSync('../app-at-version')
     .map(function (file) {
-      const matched = file.match(/^ember-(\d+\.\d+\.\d+)\.prod/);
+      let matchResult = file.match(/\d+-\d+/);
 
-      if (matched) {
-        return matched[1];
-      }
+      if (!matchResult) return;
+
+      let version = matchResult[0];
+
+      return version.replace('-', '.');
     })
     .filter(Boolean)
-    .sort(naturalSort);
+    .sort((a, b) => semverCompare(`${a}.0`, `${b}.0`));
 }
 
-const walkSync = require("walk-sync");
-
-function benchmarks() {
-  let baseDir = path.join("public", "benchmarks");
-
-  return walkSync(baseDir, ["**/bench.json"])
-    .map(function (bench) {
-      const data = JSON.parse(fs.readFileSync(path.join(baseDir, bench)));
-
-      data.path = "/" + path.dirname(bench);
-
-      return data;
-    })
-    .filter(function (data) {
-      return data.disabled !== false;
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
+let localEmbers = emberVersions();
 
 module.exports = function (environment) {
   const ENV = {
-    LOCAL_EMBER_VERSIONS: emberVersions(),
-    BENCHMARKS: benchmarks(),
-    modulePrefix: "ember-performance",
+    LOCAL_EMBER_VERSIONS: localEmbers,
+    modulePrefix: 'ember-performance',
     environment,
-    rootURL: "/",
-    locationType: "history",
+    rootURL: '/',
+    locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,
       FEATURES: {
@@ -57,9 +41,11 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    deps: envUtils.getDeps(__dirname),
   };
 
-  if (environment === "development") {
+  if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
     // ENV.APP.LOG_ACTIVE_GENERATION = true;
     // ENV.APP.LOG_TRANSITIONS = true;
@@ -67,19 +53,19 @@ module.exports = function (environment) {
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
   }
 
-  if (environment === "test") {
+  if (environment === 'test') {
     // Testem prefers this...
-    ENV.locationType = "none";
+    ENV.locationType = 'none';
 
     // keep test console output quieter
     ENV.APP.LOG_ACTIVE_GENERATION = false;
     ENV.APP.LOG_VIEW_LOOKUPS = false;
 
-    ENV.APP.rootElement = "#ember-testing";
+    ENV.APP.rootElement = '#ember-testing';
     ENV.APP.autoboot = false;
   }
 
-  if (environment === "production") {
+  if (environment === 'production') {
     // here you can enable a production-specific feature
   }
 

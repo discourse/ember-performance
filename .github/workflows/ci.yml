@@ -83,6 +83,7 @@ jobs:
   Deploy_Dev:
     name: "Deploy: Dev"
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     timeout-minutes: 15
     needs: [Build_Dev]
     permissions:
@@ -105,6 +106,7 @@ jobs:
   Deploy_Prod:
     name: "Deploy: Prod"
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     timeout-minutes: 15
     needs: [Build_Prod]
     permissions:

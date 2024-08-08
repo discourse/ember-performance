@@ -27,33 +27,36 @@ export class RenderBenchmark extends Component<{
   @tracked progress = '';
   @tracked showContents = false;
 
+  #continue?: (x?: unknown) => void;
+
   @use bench = OneOffTinyBench(() => ({
     options: {
       ...this.args,
+      beforeEach: async () => {
+        this.showContents = false;
+
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      },
       test: async () => {
         this.showContents = true;
+
         await new Promise((resolve) => schedule('afterRender', resolve));
       },
       reset: async () => {
         this.showContents = false;
 
-        await new Promise((resolve) => {
-          requestIdleCallback(resolve);
-        });
+        await new Promise((resolve) => requestAnimationFrame(resolve));
       },
       teardown: async () => {
         this.showContents = false;
 
-        await new Promise((resolve) => {
-          requestIdleCallback(resolve);
-        });
+        await new Promise((resolve) => requestAnimationFrame(resolve));
       },
     },
     updateStatus: (msg: string) => (this.status = msg),
   }));
 
   isRunning = false;
-
   run = async () => {
     if (this.isRunning) {
       console.info('Already running');

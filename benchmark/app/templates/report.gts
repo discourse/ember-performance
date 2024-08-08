@@ -8,7 +8,6 @@ import BenchmarkReport from './components/benchmark-report';
 export default RouteTemplate(
   <template>
     {{#let (loadAll) as |results|}}
-      {{log results}}
       {{#if results}}
         <LinkTo @route="index">🠰 Back to Benchmarking</LinkTo>
         <BenchmarkReport @report={{results}} />

@@ -7,7 +7,7 @@
   // "globalPassThroughEnv": [],
   "tasks": {
     "start": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^build:dev"],
       "cache": false,
       "persistent": true
     },

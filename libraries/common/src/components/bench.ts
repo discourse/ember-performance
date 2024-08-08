@@ -24,13 +24,16 @@ export function OneOffTinyBench(
 
     let bench = new Bench({
       time: 1_000,
+      iterations: 50,
       ...options,
       signal: abortController.signal,
     });
 
     on.cleanup(() => abortController.abort());
 
-    bench.add(name, test);
+    bench.add(name, test, {
+      beforeEach: opts.beforeEach,
+    });
 
     bench.addEventListener('abort', () => {
       opts.updateStatus('Benchmark aborted.');

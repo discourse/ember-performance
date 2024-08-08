@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { schedule } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 
 import { use } from 'ember-resources';
@@ -31,7 +32,7 @@ export class RenderBenchmark extends Component<{
       ...this.args,
       test: async () => {
         this.showContents = true;
-        await new Promise((resolve) => requestIdleCallback(resolve));
+        await new Promise((resolve) => schedule('afterRender', resolve));
       },
       reset: async () => {
         this.showContents = false;

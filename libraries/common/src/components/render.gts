@@ -1,6 +1,9 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { schedule } from '@ember/runloop';
+// Isn't exposed until Ember v5 something
+// import { renderSettled } from '@ember/renderer';
+import { renderSettled } from '@ember/-internals/glimmer';
+import { assert } from '@ember/debug';
 import { inject as service } from '@ember/service';
 
 import { use } from 'ember-resources';
@@ -11,6 +14,14 @@ import { store } from './storage.ts';
 import { onRenderIsh } from './utils.ts';
 
 import type ForAppVersion from '../services/runner/for-app-at-version.ts';
+
+/**
+ * renderSettled doesn't exist in earlier versions of ember.
+ */
+// async function renderSettled() {
+//   await new Promise((resolve) => schedule('afterRender', resolve));
+//   await Promise.resolve();
+// }
 
 export class RenderBenchmark extends Component<{
   Args: {
@@ -29,32 +40,38 @@ export class RenderBenchmark extends Component<{
 
   #continue?: (x?: unknown) => void;
 
-  @use bench = OneOffTinyBench(() => ({
-    options: {
-      ...this.args,
-      beforeEach: async () => {
-        this.showContents = false;
+  @use bench = OneOffTinyBench(() => {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let renderComponent = this;
 
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-      },
-      test: async () => {
-        this.showContents = true;
+    return {
+      options: {
+        ...this.args,
+        setup: async () => {
+          if ('gc' in globalThis) {
+            // eslint-disable-next-line no-undef
+            gc();
+          }
+        },
+        beforeEach: async () => {
+          renderComponent.showContents = false;
 
-        await new Promise((resolve) => schedule('afterRender', resolve));
-      },
-      reset: async () => {
-        this.showContents = false;
+          await renderSettled();
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+        },
+        test: async () => {
+          assert(
+            `showContents must be false. It was: ${renderComponent.showContents}`,
+            false === renderComponent.showContents
+          );
+          renderComponent.showContents = true;
 
-        await new Promise((resolve) => requestAnimationFrame(resolve));
+          await renderSettled();
+        },
       },
-      teardown: async () => {
-        this.showContents = false;
-
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-      },
-    },
-    updateStatus: (msg: string) => (this.status = msg),
-  }));
+      updateStatus: (msg: string) => (this.status = msg),
+    };
+  });
 
   isRunning = false;
   run = async () => {
@@ -71,14 +88,22 @@ export class RenderBenchmark extends Component<{
 
     this.status = 'Warming up...';
 
-    requestIdleCallback(async () => {
+    this.showContents = false;
+
+    requestAnimationFrame(async () => {
       await bench.warmup();
 
       this.status = 'Running...';
-      requestIdleCallback(async () => {
+      requestAnimationFrame(async () => {
         await bench.run();
 
-        store(this.args.name, version, bench.results[0]);
+        let result = bench.results[0];
+
+        if (result?.error) {
+          throw result.error;
+        }
+
+        store(this.args.name, version, result);
 
         window.top.postMessage('finish');
       });

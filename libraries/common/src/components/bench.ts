@@ -32,7 +32,7 @@ export function OneOffTinyBench(
     on.cleanup(() => abortController.abort());
 
     bench.add(name, test, {
-      beforeEach: opts.beforeEach,
+      beforeEach: options.beforeEach,
     });
 
     bench.addEventListener('abort', () => {

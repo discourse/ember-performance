@@ -45,3 +45,7 @@ td.numeric {
 .form-group {
   margin-bottom: 1rem;
 }
+
+.chart-canvas-container {
+  height: 300px;
+}

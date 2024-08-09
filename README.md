@@ -31,6 +31,7 @@ MIT
     pnpm add --save-dev @nullvoxpopuli/eslint-configs \
         common@workspace:^ ember-cli-utils@workspace:^ \
         ember-template-imports \
+        pnpm-sync-dependencies-meta-injected \
         prettier-plugin-ember-template-tag \
         ember-route-template  
     ```
@@ -40,7 +41,8 @@ MIT
 
 4. Remove dependencies 
     ```bash 
-    pnpm remove ember-data ember-fetch ember-cli-sri ember-cli-clean-css \
+    pnpm remove 
+    ember-data ember-fetch ember-cli-sri ember-cli-clean-css \
         stylelint stylelint-config-standard stylelint-prettier \
         ember-welcome-page \
         @types/ember-data @types/ember-data__adapter @types/ember-data__model \
@@ -97,7 +99,7 @@ MIT
 11. Change the build scripts `package.json`. Delete `build` and add:
     ```
     "build:prod": "pnpm _syncPnpm && ember build --environment=production",
-    "build:dev":  "ember build --environment=development",
+    "build:dev":  "pnpm _syncPnpm && ember build --environment=development",
     ```
 12. Add the new app as a `dependencies` entry in `benchmark/package.json`
     ```

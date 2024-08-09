@@ -1,0 +1,11 @@
+{
+  "name": "new-app",
+  "private": true,
+  "version": "0.0.0",
+  "description": "automates the steps from the README",
+  "type": "module",
+  "dependencies": {
+    "ember-apply": "^2.12.0",
+    "execa": "^9.3.0"
+  }
+}

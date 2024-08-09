@@ -25,7 +25,7 @@ MIT
 ### Adding a new app 
 
 1. `cd app-at-version`
-2. `npx ember-cli@6.0 new ember-6-0 --typescript --pnpm --skip-install --skip-git --embroider`
+2. `npx ember-cli@6.0 new ember-6-0 --no-welcome --pnpm --skip-install --skip-git --embroider`
 3. Add dependencies 
     ```bash
     pnpm add --save-dev @nullvoxpopuli/eslint-configs \
@@ -41,30 +41,10 @@ MIT
 
 4. Remove dependencies 
     ```bash 
-    pnpm remove 
-    ember-data ember-fetch ember-cli-sri ember-cli-clean-css \
-        stylelint stylelint-config-standard stylelint-prettier \
-        ember-welcome-page \
-        @types/ember-data @types/ember-data__adapter @types/ember-data__model \
-        @types/ember-data__serializer @types/ember-data__store \
-        @types/ember__application @types/ember__array \
-        @types/ember_component @types/ember__controller \
-        @types/ember_debug @types/ember_destroyable \
-        @types/ember__engine @types/ember__error \
-        @types/ember__helper @types/ember__modifier \
-        @types/ember__object @types/ember_owner \
-        @types/ember__polyfills @types/ember__routing \
-        @types/ember__runloop @types/ember__service \
-        @types/ember__string @types/ember__test \
-        @types/ember__utils
+    pnpm remove ember-data ember-fetch ember-cli-clean-css \
+        stylelint stylelint-config-standard stylelint-prettier
     ```
-5. Interactively update dependencies via `pnpm up -iL -r`
-    `qunit-dom`, `ember-cli-app-version`, `ember-resolver`, etc (everything but eslint)
-6. Add to `types/index.d.ts`:
-    ```ts
-    import 'ember-source/types';
-    ```
-7. Add to `config/environment.js`
+5. Add to `config/environment.js`
     ```js
     const envUtils = require('ember-cli-utils/environment');
 
@@ -74,7 +54,7 @@ MIT
       rootURL: '/ember-6-0/',
     }
     ```
-8. Add to `ember-cli-build.js`    
+6. Add to `ember-cli-build.js`    
     ```js
     module.exports = async function (defaults) {
       const utils = await import('ember-cli-utils');
@@ -85,23 +65,33 @@ MIT
         // Add options here
       });
     ```
-9. Add to `app/router.js` (or `app/router.ts`)
+7. Add to `app/router.js` (or `app/router.ts`)
     ```js
     Router.map(function () {
       this.route('bench', { path: ':name' });
     });
     ```
-10. Add a file, `app/routes/application.js` with contents:
+8. Add a file, `app/routes/application.js` with contents:
     ```js 
     export { ApplicationRoute as default } from 'common';
     ```
 
-11. Change the build scripts `package.json`. Delete `build` and add:
+9. Change the build scripts `package.json`. Delete `build` and add:
     ```
     "build:prod": "pnpm _syncPnpm && ember build --environment=production",
     "build:dev":  "pnpm _syncPnpm && ember build --environment=development",
+    "_syncPnpm": "pnpm sync-dependencies-meta-injected",
     ```
-12. Add the new app as a `dependencies` entry in `benchmark/package.json`
+
+10. Add a dependenciesMeta entry to your new project:
+    ```
+    "dependenciesMeta": {
+      "common": {
+        "injected": true
+      }
+    }
+    ```
+11. Add the new app as a `dependencies` entry in `benchmark/package.json`
     ```
     "ember-6-0": "workspace:*"
     ```

@@ -10,6 +10,10 @@ import type RouterService from '@ember/routing/router-service';
 import type { BenchSession } from 'common';
 import type QueryParams from 'ember-performance/services/query-params';
 
+function isSpecial(name: string) {
+  return name.includes('canary') || name.includes('bata');
+}
+
 export class Runner extends Component {
   @service declare router: RouterService;
   @service declare queryParams: QueryParams;
@@ -56,10 +60,9 @@ export class Runner extends Component {
 
           let { protocol, host } = window.location;
 
-          this.testUrl = `${protocol}//${host}/ember-${current.replace(
-            '.',
-            '-'
-          )}/index.html?run=${bench}`;
+          let subPath = isSpecial(current) ? current : `ember-${current.replace(`.`, `-`)}`
+
+          this.testUrl = `${protocol}//${host}/${subPath}/index.html?run=${bench}`;
 
           await promise;
 

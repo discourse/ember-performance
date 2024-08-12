@@ -1,1 +1,1 @@
-  export { ApplicationRoute as default } from 'common';
+export { ApplicationRoute as default } from 'common';

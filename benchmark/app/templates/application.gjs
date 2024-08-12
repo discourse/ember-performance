@@ -1,9 +1,11 @@
 import Component from '@glimmer/component';
+import { LinkTo } from '@ember/routing';
 import { service } from '@ember/service';
 
 import { pageTitle } from 'ember-page-title';
-import { ExternalLink } from 'ember-primitives/components/external-link';
 import RouteTemplate from 'ember-route-template';
+
+import { ExternalLink } from './components/external-link';
 
 export default RouteTemplate(
   <template>
@@ -27,10 +29,20 @@ class TopLinks extends Component {
   }
 
   <template>
-    <div style="position: absolute; top: 0.5rem; right: 0.5rem;">
-      <ExternalLink href="https://ember-performance-testing-prod.pages.dev/?{{this.qps}}">Production Tests</ExternalLink> --
-      <ExternalLink href="https://ember-performance-testing-dev.pages.dev/?{{this.qps}}">Development Tests</ExternalLink> --
-      <ExternalLink href="https://github.com/nullvoxpopuli/ember-performance">GitHub</ExternalLink>
+    <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 1rem;">
+      <LinkTo @route="versions">Versions</LinkTo>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <ExternalLink href="https://ember-performance-testing-prod.pages.dev/?{{this.qps}}">
+        Production Tests
+      </ExternalLink>
+      <ExternalLink href="https://ember-performance-testing-dev.pages.dev/?{{this.qps}}">
+        Development Tests
+      </ExternalLink>
+      <ExternalLink href="https://github.com/nullvoxpopuli/ember-performance">
+        GitHub
+      </ExternalLink>
     </div>
   </template>
 }

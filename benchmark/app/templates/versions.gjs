@@ -6,7 +6,7 @@ import { ExternalLink } from './components/external-link';
 const { LOCAL_EMBER_VERSIONS } = ENV;
 
 function toUrl(version) {
-  let name = version.replace('.', '-');
+  let name = version.startsWith('ember') ? version : `ember-${version.replace('.', '-')}`;
 
   return `${location.protocol}//${location.host}/${name}/`;
 }

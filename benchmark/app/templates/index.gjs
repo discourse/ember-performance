@@ -10,11 +10,11 @@ import { VersionSelection } from './components/version-selection';
 export default RouteTemplate(
   <template>
     <LinkTo @route="report">View Report</LinkTo>
+    <Runner />
     <div style="display: flex; gap: 1rem;">
       <Settings />
       <BenchSelection />
       <VersionSelection />
     </div>
-    <Runner />
   </template>
 );

@@ -36,6 +36,8 @@ export class VersionSelection extends Component {
         class="btn btn-default btn-xs"
       >None</button>
 
+      <br><br>
+
       <div class="form-group">
         {{#each this.benchSession.availableEmberVersions as |version|}}
           <div>

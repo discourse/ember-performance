@@ -23,6 +23,7 @@ export default class QueryParams extends Service {
   @link emberVersions = new QPArray('emberVersions', (...args) => this.setQP(...args));
   @link benchmarks = new QPArray('benchmarks', (...args) => this.setQP(...args));
   @link clear = new QPBoolean('clear', (...args) => this.setQP(...args));
+  @link randomize = new QPBoolean('randomize', (...args) => this.setQP(...args), true);
 
   /**
    * Allows batching QP updates
@@ -55,11 +56,13 @@ class QPBoolean {
   @service declare router: RouterService;
 
   #name: string;
+  #defaultValue?: boolean;
   #setQP: (qps: QPs) => void;
 
-  constructor(name: string, setQP: (qps: QPs) => void) {
+  constructor(name: string, setQP: (qps: QPs) => void, defaultValue?: boolean) {
     this.#name = name;
     this.#setQP = setQP;
+    this.#defaultValue = defaultValue;
   }
 
   get queryParams(): QPs {
@@ -68,7 +71,13 @@ class QPBoolean {
 
   @cached
   get value() {
-    return this.queryParams[this.#name] === '1';
+    let setValue = this.queryParams[this.#name];
+
+    if (typeof setValue === 'string') {
+      return setValue === '1';
+    }
+
+    return this.#defaultValue;
   }
 
   set = (item: boolean) => this.#setQP({ [this.#name]: item ? '1' : '0' });

@@ -14,6 +14,15 @@ function isSpecial(name: string) {
   return name.includes('canary') || name.includes('bata');
 }
 
+// https://stackoverflow.com/a/12646864
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 export class Runner extends Component {
   @service declare router: RouterService;
   @service declare queryParams: QueryParams;
@@ -21,6 +30,9 @@ export class Runner extends Component {
 
   @tracked testUrl = '';
   @tracked isRunning = false;
+  @tracked totalTests = 0;
+  @tracked remainingTests = 0;
+  @tracked status = '';
 
   waiter?: (value?: unknown) => void;
   currentIframeWindow?: Window | null;
@@ -35,6 +47,10 @@ export class Runner extends Component {
 
     this.waiter();
   };
+
+  /**
+  * This is gross, I'm sorry
+  */
   start = async () => {
     try {
       await Promise.resolve();
@@ -45,18 +61,30 @@ export class Runner extends Component {
         clearAll();
       }
 
+      let isRandom = this.queryParams.randomize.value;
       let remainingVersions = [...this.queryParams.emberVersions.value];
       let remainingTests = [...this.queryParams.benchmarks.value];
+
+      this.totalTests = remainingVersions.length * remainingTests.length;
+      this.remainingTests = this.totalTests;
+
+      if (isRandom) {
+        shuffleArray(remainingVersions);
+      }
 
       while (remainingVersions.length) {
         let current = remainingVersions.pop();
 
         let testsForVersion = [...remainingTests];
 
+        if (isRandom) {
+          shuffleArray(testsForVersion);
+        }
+
         while (testsForVersion.length) {
           let bench = testsForVersion.pop();
 
-          let promise = new Promise((resolve) => (this.waiter = resolve));
+          let waitForIFrameLoad = new Promise((resolve) => (this.waiter = resolve));
 
           let { protocol, host } = window.location;
 
@@ -64,7 +92,7 @@ export class Runner extends Component {
 
           this.testUrl = `${protocol}//${host}/${subPath}/index.html?run=${bench}`;
 
-          await promise;
+          await waitForIFrameLoad;
 
           assert(`Could not determine iframe for test`, this.currentIframeWindow);
 
@@ -72,9 +100,18 @@ export class Runner extends Component {
           let finishPromise = new Promise((resolve) => (finish = resolve));
 
           // eslint-disable-next-line
-          function waitForFinish(event: MessageEvent) {
+          const waitForFinish = async (event: MessageEvent) => {
             if (event.data === 'finish') {
               window.removeEventListener('message', waitForFinish);
+              // Removes the IFrame
+              this.testUrl = '';
+
+              this.remainingTests--;
+              // This is an arbitrary timeout of 1s to try to give the Garbage Collector some time to catch up.
+              // The goal is to reduce the variance in the tests.
+              this.status = 'Letting GC catch up...'
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              this.status = '';
               finish();
             }
           }
@@ -106,13 +143,18 @@ export class Runner extends Component {
         {{on "click" this.start}}
         disabled={{this.cannotStart}}
       >Run Tests</button>
+
+      {{#if this.isRunning}}
+        Running {{this.totalTests}} Tests. {{this.remainingTests}} Remaining... {{this.status}}
+      {{/if}}
     </div>
+
 
     {{#if this.testUrl}}
       <iframe
         title="Current Test"
         src={{this.testUrl}}
-        style="width: 100%; min-height: 600px;"
+        style="width: 300px; min-height: 400px; position: fixed; right: 0.5rem; bottom: 0.5rem; border: 1px solid; border-radius: 0.5rem; background: white;"
         {{on "load" this.emitReady}}
       ></iframe>
     {{/if}}

@@ -11,6 +11,8 @@ export default class Application extends Route {
   queryParams = {
     emberVersions: { refreshModel: false },
     benchmarks: { refreshModel: false },
+    clear: { refreshModel: false },
+    randomize: { refreshModel: false },
   };
 
   beforeModel() {

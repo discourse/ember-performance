@@ -9,9 +9,13 @@ export class Settings extends Component {
   @service declare queryParams: QueryParams;
   @service declare benchSession: BenchSession;
 
-  toggle = () => {
+  toggleClear = () => {
     this.queryParams.clear.toggle();
   };
+
+  toggleRandom = () => {
+    this.queryParams.randomize.toggle();    
+  }
 
   <template>
     <fieldset>
@@ -24,10 +28,22 @@ export class Settings extends Component {
             <input
               type="checkbox"
               checked={{this.queryParams.clear.value}}
-              {{on "change" this.toggle}}
+              {{on "change" this.toggleClear}}
             />
 
             Clear prior results
+          </label>
+        </div>
+        <div>
+          <label>
+
+            <input
+              type="checkbox"
+              checked={{this.queryParams.randomize.value}}
+              {{on "change" this.toggleRandom}}
+            />
+
+            Randomize 
           </label>
         </div>
       </div>

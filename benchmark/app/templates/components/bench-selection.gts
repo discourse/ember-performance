@@ -73,31 +73,6 @@ export class BenchSelection extends Component {
         span + li {
           margin-left: 0.5rem;
         }
-
-        details > summary {
-            list-style-type: none;
-        }
-
-        details > summary::-webkit-details-marker {
-            display: none;
-        }
-
-        details > summary::before {
-            content: '➤  ' ;
-        }
-
-        details[open] > summary::before {
-            content: '⮟ ';
-        }
-
-        details {
-            padding: 0.5rem;
-        }
-
-        details[open] > summary {
-            margin-bottom: 0.5rem;
-        }
-
       }
     </style>
     <fieldset>
@@ -114,28 +89,29 @@ export class BenchSelection extends Component {
         class="btn btn-default btn-xs"
       >None</button>
 
+      <br><br>
+
       <ul class="benchmark-list form-group">
         {{#each-in this.benchSession.groupedBenchmarks as |groupName group|}}
           <li>
-            <details open={{this.hasAnyActive group}}><summary><span>{{groupName}}</span></summary>
-              {{#if (Array.isArray group)}}
-                {{#each group as |esModule|}}
-                  <Item @name={{esModule.name}} />
-                {{/each}}
-              {{else}}
-                <ul>
-                  {{#each-in group as |subGroup group|}}
-                    <li>
-                      <span>{{subGroup}}</span>
-                      {{#each group as |esModule|}}
-                        <Item @name={{esModule.name}} />
-                      {{/each}}
-                    </li>
-                  {{/each-in}}
+            <span>{{groupName}}</span>
+            {{#if (Array.isArray group)}}
+              {{#each group as |esModule|}}
+                <Item @name={{esModule.name}} />
+              {{/each}}
+            {{else}}
+              <ul>
+                {{#each-in group as |subGroup group|}}
+                  <li>
+                    <span>{{subGroup}}</span>
+                    {{#each group as |esModule|}}
+                      <Item @name={{esModule.name}} />
+                    {{/each}}
+                  </li>
+                {{/each-in}}
 
-                </ul>
-              {{/if}}
-            </details>
+              </ul>
+            {{/if}}
           </li>
         {{/each-in}}
       </ul>

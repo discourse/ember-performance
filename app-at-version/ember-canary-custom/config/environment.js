@@ -1,65 +1,12 @@
 'use strict';
 
-const semverCompare = require('semver/functions/compare-loose');
 const envUtils = require('ember-cli-utils/environment');
-const fs = require('fs');
-
-function isCanaryOrBeta(str) {
-  return str.includes('-canary') || str.includes('-beta');
-}
-
-function emberVersions() {
-  return fs
-    .readdirSync('../app-at-version')
-    .map(function (file) {
-      if (file.includes('-canary')) {
-        return file;
-      }
-
-      if (file.includes('-beta')) {
-        return file;
-      }
-
-      let matchResult = file.match(/\d+-\d+/);
-
-      if (!matchResult) return;
-
-      let version = matchResult[0];
-
-      return version.replace('-', '.');
-    })
-    .filter(Boolean)
-    .sort((a, b) => {
-      let isASpecial = isCanaryOrBeta(a);
-      let isBSpecial = isCanaryOrBeta(b);
-
-      if (isASpecial && isBSpecial) {
-        return a.localeCompare(b);
-      }
-
-      if (isASpecial) {
-        return 1;
-      }
-
-      if (isBSpecial) {
-        return 1;
-      }
-
-
-    return semverCompare(`${a}.0`, `${b}.0`)
-    });
-}
-
-
-
-let localEmbers = emberVersions();
 
 module.exports = function (environment) {
   const ENV = {
-    LOCAL_EMBER_VERSIONS: localEmbers,
-    modulePrefix: 'ember-performance',
+    modulePrefix: 'ember-canary-custom',
     environment,
-    rootURL: '/',
+    rootURL: '/ember-canary-custom/',
     locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,

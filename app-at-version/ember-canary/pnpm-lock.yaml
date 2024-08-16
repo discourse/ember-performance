@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: false
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  fs-extra@9.1.0:
+    hash: iuytnanvkv5as4i7ls7oxpvdd4
+    path: patches/fs-extra@9.1.0.patch
+
 importers:
 
   .:
@@ -7885,7 +7890,7 @@ snapshots:
       debug: 4.3.6(supports-color@9.4.0)
       escape-string-regexp: 4.0.0
       fast-sourcemap-concat: 2.1.1
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       fs-tree-diff: 2.0.1
       jsdom: 16.7.0
       lodash: 4.17.21
@@ -7921,7 +7926,7 @@ snapshots:
       debug: 4.3.6(supports-color@9.4.0)
       fast-sourcemap-concat: 2.1.1
       filesize: 10.1.4
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       fs-tree-diff: 2.0.1
       handlebars: 4.7.8
       js-string-escape: 1.0.1
@@ -7961,7 +7966,7 @@ snapshots:
       babel-import-util: 2.1.1
       debug: 4.3.6(supports-color@9.4.0)
       ember-rfc176-data: 0.3.18
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       js-string-escape: 1.0.1
       lodash: 4.17.21
       minimatch: 3.1.2
@@ -7976,7 +7981,7 @@ snapshots:
       babel-import-util: 2.1.1
       debug: 4.3.6(supports-color@8.1.1)
       ember-rfc176-data: 0.3.18
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       js-string-escape: 1.0.1
       lodash: 4.17.21
       minimatch: 3.1.2
@@ -8001,7 +8006,7 @@ snapshots:
       csso: 4.2.0
       debug: 4.3.6(supports-color@8.1.1)
       escape-string-regexp: 4.0.0
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       jsdom: 16.7.0(supports-color@8.1.1)
       lodash: 4.17.21
       mini-css-extract-plugin: 2.9.0(webpack@5.93.0)
@@ -8298,7 +8303,7 @@ snapshots:
     dependencies:
       '@types/eslint': 8.56.11
       find-up: 5.0.0
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       proper-lockfile: 4.1.2
       slash: 3.0.0
       tslib: 2.6.3
@@ -10706,7 +10711,7 @@ snapshots:
       babel-plugin-debug-macros: 0.2.0(@babel/core@7.25.2)
       ember-cli-version-checker: 5.1.2
       find-up: 5.0.0
-      fs-extra: 9.1.0
+      fs-extra: 9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4)
       semver: 5.7.2
     transitivePeerDependencies:
       - '@babel/core'
@@ -11718,7 +11723,7 @@ snapshots:
       jsonfile: 4.0.0
       universalify: 0.1.2
 
-  fs-extra@9.1.0:
+  fs-extra@9.1.0(patch_hash=iuytnanvkv5as4i7ls7oxpvdd4):
     dependencies:
       at-least-node: 1.0.0
       graceful-fs: 4.2.11

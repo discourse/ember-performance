@@ -5,6 +5,17 @@ import semverCompare from 'semver/functions/compare-loose';
 import AreaChart from './area-chart';
 import { formatNumber } from './utils';
 
+function cleanedVersion(version) {
+  /**
+    * version is potentially a path to a tgz
+    */
+  if (version.includes('/')) {
+    return version.split('/').at(-1).replace('ember-source-', '');
+  }
+
+  return version;
+}
+
 export default class BenchmarkReport extends Component {
   get showGraph() {
     return this.args.report.length > 1;
@@ -22,7 +33,13 @@ export default class BenchmarkReport extends Component {
   get groupedTests() {
     const tests = {};
 
-    let sorted = this.args.report.sort((a, b) => semverCompare(a.version, b.version));
+    let sorted = this.args.report.sort((a, b) => {
+      try {
+        return semverCompare(a.version, b.version)
+      } catch {
+        return a.version.localeCompare(b.version);
+      }
+    });
 
     for (let data of sorted) {
       let { name, results, version } = data;
@@ -42,12 +59,12 @@ export default class BenchmarkReport extends Component {
       };
 
       test.data.push({
-        emberVersion: version,
+        emberVersion: cleanedVersion(version),
         result,
       });
 
       test.chartData.push({
-        emberVersion: version,
+        emberVersion: cleanedVersion(version),
         mean: result.mean,
         margin_error_lower: Math.max(result.mean - (result.mean * result.rme) / 100, 0),
         margin_error_upper: result.mean + (result.mean * result.rme) / 100,

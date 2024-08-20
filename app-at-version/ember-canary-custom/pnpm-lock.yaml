@@ -2928,7 +2928,7 @@ packages:
     engines: {node: 8.* || 10.* || >= 12}
 
   ember-source@file:ember-source-5.12.0-alpha.5.canary+f971719d.tgz:
-    resolution: {integrity: sha512-wjfQK+B/KZsvDvXwKilIe1O2Ku7lMasP+7d7xgTH97YfJQBp9FddSrlBppHOdyXi0meQqNfaJUkhTbdDsKDJnA==, tarball: file:ember-source-5.12.0-alpha.5.canary+f971719d.tgz}
+    resolution: {integrity: sha512-sUvzN5SqHtN2S6ESmC2jBSsB0K/7tbW/JSPTprz+bQLbv4ypZLuO7p+O37aIp8Tq1IM1gkq4Te2EwW+4NSu4GQ==, tarball: file:ember-source-5.12.0-alpha.5.canary+f971719d.tgz}
     version: 5.12.0-alpha.5.canary
     engines: {node: '>= 18.*'}
     peerDependencies:

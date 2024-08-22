@@ -13,6 +13,13 @@ function cleanedVersion(version) {
     return version.split('/').at(-1).replace('ember-source-', '');
   }
 
+  /**
+    * version is a local tgz, probably
+    */
+  if (version.startsWith('file:')) {
+    return version.split('file:').at(-1).replace('ember-source-', '');
+  }
+
   return version;
 }
 

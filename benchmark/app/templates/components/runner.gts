@@ -89,8 +89,9 @@ export class Runner extends Component {
           let { protocol, host } = window.location;
 
           let subPath = isSpecial(current) ? current : `ember-${current.replace(`.`, `-`)}`
+          let timePerTest = this.queryParams.timePerTest.value;
 
-          this.testUrl = `${protocol}//${host}/${subPath}/index.html?run=${bench}`;
+          this.testUrl = `${protocol}//${host}/${subPath}/index.html?run=${bench}&timePerTest=${timePerTest}`;
 
           await waitForIFrameLoad;
 

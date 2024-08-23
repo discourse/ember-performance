@@ -10,6 +10,7 @@ export class ApplicationRoute extends Route {
 
   queryParams = {
     run: { refreshModel: false },
+    timePerTest: { refreshModel: false },
   };
 
   model() {

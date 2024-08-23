@@ -13,6 +13,7 @@ export default class Application extends Route {
     benchmarks: { refreshModel: false },
     clear: { refreshModel: false },
     randomize: { refreshModel: false },
+    timePerTest: { refreshModel: false },
   };
 
   beforeModel() {

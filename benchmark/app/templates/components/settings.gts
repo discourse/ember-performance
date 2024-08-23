@@ -1,4 +1,5 @@
 import Component from '@glimmer/component';
+import { assert } from '@ember/debug';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
 
@@ -14,7 +15,12 @@ export class Settings extends Component {
   };
 
   toggleRandom = () => {
-    this.queryParams.randomize.toggle();    
+    this.queryParams.randomize.toggle();
+  }
+
+  setTimePerTest = (event: Event) => {
+    assert(`[Bug]`, event.target instanceof HTMLInputElement);
+    this.queryParams.timePerTest.set(event.target.value);
   }
 
   <template>
@@ -34,6 +40,7 @@ export class Settings extends Component {
             Clear prior results
           </label>
         </div>
+
         <div>
           <label>
 
@@ -43,7 +50,20 @@ export class Settings extends Component {
               {{on "change" this.toggleRandom}}
             />
 
-            Randomize 
+            Randomize
+          </label>
+        </div>
+
+        <br>
+        <div>
+          <label>
+            Test Duration (ms)
+            <br>
+            <input
+              type="number"
+              value={{this.queryParams.timePerTest.value}}
+              {{on "input" this.setTimePerTest}}
+            />
           </label>
         </div>
       </div>

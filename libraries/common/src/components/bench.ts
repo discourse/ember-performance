@@ -16,22 +16,35 @@ export type Options = {
 export function OneOffTinyBench(
   optionsFn: () => { options: Options; updateStatus: (msg: string) => void }
 ) {
-  return resource(({ on }) => {
+  return resource(({ on, owner }) => {
     let opts = optionsFn();
     let { name, test, ...options } = opts.options;
 
     let abortController = new AbortController();
 
-    let bench = new Bench({
-      time: 1_000,
-      iterations: 50,
+    /**
+     * QPs Must be configured in the application route
+     */
+    let router = owner.lookup('service:router');
+    let queryParams = router.currentRoute?.queryParams ?? {};
+    let { timePerTest } = queryParams;
+    let time = timePerTest ? parseInt(timePerTest) : 1_000;
+
+    let benchOptions = {
       ...options,
+      time,
       signal: abortController.signal,
-    });
+    };
+
+    console.debug(`Options for ${name}: `, { options: benchOptions, queryParams });
+
+    let bench = new Bench(benchOptions);
 
     on.cleanup(() => abortController.abort());
 
     bench.add(name, test, {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       beforeEach: options.beforeEach,
     });
 

@@ -60,7 +60,7 @@
     "lint:js:fix": {
       "inputs": ["**/*.{js,json,gjs,gts,ts,cjs,mjs,cts,mts}"],
       "outputs": [],
-      "dependsOn": ["lint:hbs:fix"]
+      "dependsOn": ["lint:hbs:fix", "^build"]
     },
     "lint:hbs:fix": {
       "inputs": ["**/*.{hbs,gjs,gts}"],

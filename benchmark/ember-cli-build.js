@@ -38,19 +38,17 @@ module.exports = async function (defaults) {
   }
 
   const app = new EmberApp(defaults, {
-    ...(isCI
-      ? {}
-      : await utils.configure(__dirname, [
-          'common',
-          'ember-5-10',
-          'ember-5-9',
-          'ember-5-8',
-          'ember-5-7',
-          'ember-5-6',
-          'ember-5-5',
-          'ember-4-0',
-          'ember-3-28',
-        ])),
+    ...(await utils.configure(__dirname, [
+      'common',
+      'ember-5-10',
+      'ember-5-9',
+      'ember-5-8',
+      'ember-5-7',
+      'ember-5-6',
+      'ember-5-5',
+      'ember-4-0',
+      'ember-3-28',
+    ])),
     '@embroider/macros': {
       setConfig: {
         'ember-qunit': {

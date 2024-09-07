@@ -14,25 +14,37 @@
     "build:prod": {
       "outputs": ["dist/**"],
       "dependsOn": ["^build:prod", "^build"],
+      "env": ["BUILD"],
       "inputs": [
+        "pnpm-lock.yaml",
+        "package.json",
+        "babel.config.*",
         // Apps
         "app/**",
         "config/**",
         "public/**",
         "tests/**",
-        "ember-cli-build.js"
+        "index.html",
+        "ember-cli-build.js",
+        "vite.config.*"
       ]
     },
     "build:dev": {
       "outputs": ["dist/**"],
       "dependsOn": ["^build:dev", "^build"],
+      "env": ["BUILD"],
       "inputs": [
+        "pnpm-lock.yaml",
+        "package.json",
+        "babel.config.*",
         // Apps
         "app/**",
         "config/**",
         "public/**",
         "tests/**",
-        "ember-cli-build.js"
+        "index.html",
+        "ember-cli-build.js",
+        "vite.config.*"
       ]
     },
     "build": {

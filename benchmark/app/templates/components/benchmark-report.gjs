@@ -7,20 +7,23 @@ import { formatNumber } from './utils';
 
 function cleanedVersion(version) {
   /**
-    * version is potentially a path to a tgz
-    */
+   * version is potentially a path to a tgz
+   */
   if (version.includes('/')) {
     return version.split('/').at(-1).replace('ember-source-', '');
   }
 
   /**
-    * version is a local tgz, probably
-    */
+   * version is a local tgz, probably
+   */
   if (version.startsWith('file:')) {
     return version.split('file:').at(-1).replace('ember-source-', '');
   }
 
-  return version;
+  /**
+   * Version may be the app name instead of the package version
+   */
+  return version.replaceAll('-', '.');
 }
 
 export default class BenchmarkReport extends Component {
@@ -41,10 +44,13 @@ export default class BenchmarkReport extends Component {
     const tests = {};
 
     let sorted = this.args.report.sort((a, b) => {
+      let av = cleanedVersion(a.version);
+      let bv = cleanedVersion(b.version);
+
       try {
-        return semverCompare(a.version, b.version)
+        return semverCompare(av, bv);
       } catch {
-        return a.version.localeCompare(b.version);
+        return av.localeCompare(bv);
       }
     });
 

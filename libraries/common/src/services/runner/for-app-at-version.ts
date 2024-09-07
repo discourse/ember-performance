@@ -21,7 +21,7 @@ export default class ForAppAtVersion extends Service {
 
   get emberVersion() {
     let name = this.env.deps.__name__;
-    let cleaned = name.replace(/ember-/, '').replaceAll('-', '.');
+    let cleaned = name.replace(/ember-/, '');
 
     return cleaned;
     // let versionSpecifier = this.env.deps['ember-source'];

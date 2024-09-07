@@ -20,26 +20,47 @@ export default RouteTemplate(
   </template>
 );
 
-
 class TopLinks extends Component {
-   @service router;
+  @service router;
 
   get qps() {
     return new URLSearchParams(this.router.currentRoute?.queryParams || {});
   }
 
   <template>
-    <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 1rem;">
+    <div
+      style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 1rem; align-items: start;"
+    >
       <LinkTo @route="versions">Versions</LinkTo>
 
       &nbsp;&nbsp;&nbsp;
 
-      <ExternalLink href="https://ember-performance-testing-prod.pages.dev/?{{this.qps}}">
-        Production Tests
-      </ExternalLink>
-      <ExternalLink href="https://ember-performance-testing-dev.pages.dev/?{{this.qps}}">
-        Development Tests
-      </ExternalLink>
+      <div>
+        Embroider Builds
+        <ul>
+          <li>
+            <ExternalLink href="https://ember-performance-testing-prod.pages.dev/?{{this.qps}}">
+              Production
+            </ExternalLink>
+          </li><li>
+            <ExternalLink href="https://ember-performance-testing-dev.pages.dev/?{{this.qps}}">
+              Development
+            </ExternalLink>
+          </li>
+        </ul>
+      </div>
+      <div>
+        Broccoli Builds
+        <ul>
+          <li>
+            <ExternalLink
+              href="https://ember-performance-testing-prod-classic.pages.dev/?{{this.qps}}"
+            >
+              Production
+            </ExternalLink>
+          </li>
+        </ul>
+      </div>
       <ExternalLink href="https://github.com/nullvoxpopuli/ember-performance">
         GitHub
       </ExternalLink>

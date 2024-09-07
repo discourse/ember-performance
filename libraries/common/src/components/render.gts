@@ -85,6 +85,7 @@ export class RenderBenchmark extends Component<{
 
     let bench = this.bench;
     let version = this.forApp.emberVersion;
+    let altName = this.forApp.name;
 
     this.status = 'Warming up...';
 
@@ -103,7 +104,7 @@ export class RenderBenchmark extends Component<{
           throw result.error;
         }
 
-        store(this.args.name, version, result);
+        store(this.args.name, version, altName, result);
 
         window.top.postMessage('finish');
       });

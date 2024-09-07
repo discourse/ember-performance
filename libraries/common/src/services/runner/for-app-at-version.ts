@@ -19,15 +19,18 @@ export default class ForAppAtVersion extends Service {
     return env;
   }
 
-  get emberVersion() {
+  get name() {
     let name = this.env.deps.__name__;
     let cleaned = name.replace(/ember-/, '');
 
     return cleaned;
-    // let versionSpecifier = this.env.deps['ember-source'];
-    //
-    // let cleaned = versionSpecifier.replace(/(\^|~|>=|<|>|<=)/, '');
-    //
-    // return cleaned;
+  }
+
+  get emberVersion() {
+    let versionSpecifier = this.env.deps['ember-source'];
+
+    let cleaned = versionSpecifier.replace(/(\^|~|>=|<|>|<=)/, '');
+
+    return cleaned;
   }
 }

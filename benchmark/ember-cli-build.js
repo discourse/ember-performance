@@ -2,10 +2,10 @@
 
 const path = require('path');
 const fs = require('fs');
-const fsP = require('fs/promises');
+// const fsP = require('fs/promises');
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
-// const Funnel = require('broccoli-funnel');
-let isCI = process.env.CI;
+const MergeTrees = require('broccoli-merge-trees');
+const Funnel = require('broccoli-funnel');
 
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
@@ -14,7 +14,7 @@ module.exports = async function (defaults) {
     Once per boot, we copy the dist directories from ../app-at-version into our public folder so that we can load those other apps.
   `);
 
-  // let appAtVersionPublicTrees = [];
+  let appAtVersionPublicTrees = [];
 
   /**
    * TODO: how to make this funnel update when the `dist` updates?
@@ -27,14 +27,14 @@ module.exports = async function (defaults) {
       continue;
     }
 
-    // let funnel = new Funnel(distFolder, {
-    //   destDir: appFolderName,
-    //   overwrite: true,
-    //   allowEmpty: true,
-    // });
-    //
-    // appAtVersionPublicTrees.push(funnel);
-    await fsP.cp(distFolder, path.join(__dirname, 'public', appFolderName), { recursive: true });
+    let funnel = new Funnel(distFolder, {
+      destDir: appFolderName,
+      overwrite: true,
+      allowEmpty: true,
+    });
+
+    appAtVersionPublicTrees.push(funnel);
+    // await fsP.cp(distFolder, path.join(__dirname, 'public', appFolderName), { recursive: true });
   }
 
   const app = new EmberApp(defaults, {
@@ -72,8 +72,7 @@ module.exports = async function (defaults) {
 
   const { Webpack } = require('@embroider/webpack');
 
-  return require('@embroider/compat').compatBuild(app, Webpack, {
-    // extraPublicTrees: [...appAtVersionPublicTrees],
+  const embroiderApp = require('@embroider/compat').compatBuild(app, Webpack, {
     staticAddonTestSupportTrees: true,
     staticAddonTrees: true,
     staticHelpers: true,
@@ -91,4 +90,6 @@ module.exports = async function (defaults) {
       },
     },
   });
+
+  return new MergeTrees([embroiderApp, ...appAtVersionPublicTrees]);
 };

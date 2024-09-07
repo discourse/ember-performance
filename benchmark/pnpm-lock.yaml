@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      broccoli-merge-trees:
+        specifier: ^4.2.0
+        version: 4.2.0
       common:
         specifier: workspace:^
         version: file:../libraries/common(@babel/core@7.25.2)(@glimmer/component@1.1.2(@babel/core@7.25.2))(@glimmer/tracking@1.1.2)(@glint/template@1.4.0)(ember-source@5.10.2(@glimmer/component@1.1.2(@babel/core@7.25.2))(@glint/template@1.4.0)(rsvp@4.8.5)(webpack@5.94.0))

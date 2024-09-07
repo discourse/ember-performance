@@ -47,9 +47,6 @@ importers:
       ember-canary:
         specifier: workspace:*
         version: link:../app-at-version/ember-canary
-      ember-canary-custom:
-        specifier: workspace:*
-        version: link:../app-at-version/ember-canary-custom
       ember-canary-vite:
         specifier: workspace:*
         version: link:../app-at-version/ember-canary-vite

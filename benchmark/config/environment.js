@@ -8,10 +8,18 @@ function isCanaryOrBeta(str) {
   return str.includes('-canary') || str.includes('-beta');
 }
 
+const isClassic = process.env.BUILD === 'classic';
+
 function emberVersions() {
   return fs
     .readdirSync('../app-at-version')
     .map(function (file) {
+      if (isClassic) {
+        if (file.includes('vite')) {
+          return;
+        }
+      }
+
       if (file.includes('-canary')) {
         return file;
       }
@@ -45,12 +53,9 @@ function emberVersions() {
         return 1;
       }
 
-
-    return semverCompare(`${a}.0`, `${b}.0`)
+      return semverCompare(`${a}.0`, `${b}.0`);
     });
 }
-
-
 
 let localEmbers = emberVersions();
 

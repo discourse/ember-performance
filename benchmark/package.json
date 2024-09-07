@@ -103,6 +103,7 @@
     "ember-5-7": "workspace:*",
     "ember-5-8": "workspace:*",
     "ember-5-9": "workspace:*",
+    "ember-canary-vite": "workspace:*",
     "ember-canary": "workspace:*",
     "ember-canary-custom": "workspace:*",
     "ember-primitives": "^0.21.0",

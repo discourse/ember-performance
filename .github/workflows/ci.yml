@@ -42,6 +42,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: wyvox/action-setup-pnpm@v3
+      - run: pnpm turbo --filter ember-canary-vite build:dev
       - run: pnpm turbo build:dev
       - uses: actions/upload-artifact@v4
         with:
@@ -63,6 +64,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: wyvox/action-setup-pnpm@v3
+      - run: pnpm turbo --filter ember-canary-vite build:prod
       - run: pnpm turbo build:prod
       - uses: actions/upload-artifact@v4
         with:

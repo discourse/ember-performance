@@ -7,6 +7,8 @@ const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 const MergeTrees = require('broccoli-merge-trees');
 const Funnel = require('broccoli-funnel');
 
+const isClassic = process.env.BUILD === 'classic';
+
 module.exports = async function (defaults) {
   const utils = await import('ember-cli-utils');
 
@@ -24,6 +26,10 @@ module.exports = async function (defaults) {
 
     if (!fs.existsSync(distFolder)) {
       console.warn(`[WARN]: ${appFolderName} has not been built!`);
+      continue;
+    }
+
+    if (isClassic && appFolderName.includes('vite')) {
       continue;
     }
 
@@ -69,6 +75,12 @@ module.exports = async function (defaults) {
       },
     },
   });
+
+  if (isClassic) {
+    const classicApp = app.toTree();
+
+    return new MergeTrees([classicApp, ...appAtVersionPublicTrees]);
+  }
 
   const { Webpack } = require('@embroider/webpack');
 

@@ -20,9 +20,8 @@ export default RouteTemplate(
   </template>
 );
 
-
 class TopLinks extends Component {
-   @service router;
+  @service router;
 
   get qps() {
     return new URLSearchParams(this.router.currentRoute?.queryParams || {});
@@ -35,10 +34,13 @@ class TopLinks extends Component {
       &nbsp;&nbsp;&nbsp;
 
       <ExternalLink href="https://ember-performance-testing-prod.pages.dev/?{{this.qps}}">
-        Production Tests
+        Prod (embroider) Tests
       </ExternalLink>
       <ExternalLink href="https://ember-performance-testing-dev.pages.dev/?{{this.qps}}">
-        Development Tests
+        Dev (embroider) Tests
+      </ExternalLink>
+      <ExternalLink href="https://ember-performance-testing-prod-classic.pages.dev/?{{this.qps}}">
+        Prod (classic) Tests
       </ExternalLink>
       <ExternalLink href="https://github.com/nullvoxpopuli/ember-performance">
         GitHub

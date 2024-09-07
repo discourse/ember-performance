@@ -71,6 +71,27 @@ jobs:
           path: |
             ./benchmark/dist/**
 
+  Build_Prod_Classic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+      - name: TurboRepo local server
+        uses: felixmosh/turborepo-gh-artifacts@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: wyvox/action-setup-pnpm@v3
+      - run: BUILD=CLASSIC pnpm turbo build:prod
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-prep-prod-classic
+          if-no-files-found: error
+          path: |
+            ./benchmark/dist/**
+
 ##############################################################
 ##############################################################
 #
@@ -120,6 +141,29 @@ jobs:
           ls -la
           npx wrangler pages deploy ./ \
             --project-name=ember-performance-testing-prod \
+            --branch=${{ github.event.workflow_run.head_branch }} \
+            --commit-hash=${{ github.event.workflow_run.head_sha }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  Deploy_Prod_Classisc:
+    name: "Deploy: Prod (classic)"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    needs: [Build_Prod_Classic]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        name: deploy-prep-prod-classic
+      - name: Preview Prod
+        working-directory: ./deploy-prep-prod-classic/
+        run: |
+          ls -la
+          npx wrangler pages deploy ./ \
+            --project-name=ember-performance-testing-prod-classic \
             --branch=${{ github.event.workflow_run.head_branch }} \
             --commit-hash=${{ github.event.workflow_run.head_sha }}
         env:

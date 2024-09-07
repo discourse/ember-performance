@@ -11,8 +11,18 @@ module.exports = async function (defaults) {
     // Add options here
   });
 
+  if (process.env.BUILD === 'classic') {
+    return app.toTree();
+  }
+
   const { Webpack } = require('@embroider/webpack');
   return require('@embroider/compat').compatBuild(app, Webpack, {
+    staticAddonTestSupportTrees: true,
+    staticAddonTrees: true,
+    staticHelpers: true,
+    staticModifiers: true,
+    staticComponents: true,
+    staticEmberSource: false,
     skipBabel: [
       {
         package: 'qunit',

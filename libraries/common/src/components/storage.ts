@@ -86,6 +86,7 @@ export function loadAll() {
     results.push({
       name,
       version,
+      altName,
       results: result,
     });
   }

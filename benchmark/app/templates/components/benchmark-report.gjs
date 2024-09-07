@@ -23,6 +23,12 @@ function cleanedVersion(version) {
   return version;
 }
 
+function getAltName({ altName }) {
+  if (altName[0].match(/\d/)) return;
+
+  return `(${altName})`;
+}
+
 export default class BenchmarkReport extends Component {
   get showGraph() {
     return this.args.report.length > 1;
@@ -55,7 +61,7 @@ export default class BenchmarkReport extends Component {
     console.log('sorted data', sorted);
 
     for (let data of sorted) {
-      let { name, results, version } = data;
+      let { name, results, version, altName } = data;
       let result = results;
 
       const test = tests[name] || {
@@ -73,11 +79,13 @@ export default class BenchmarkReport extends Component {
 
       test.data.push({
         emberVersion: cleanedVersion(version),
+        altName,
         result,
       });
 
       test.chartData.push({
         emberVersion: cleanedVersion(version),
+        altName,
         mean: result.mean,
         margin_error_lower: Math.max(result.mean - (result.mean * result.rme) / 100, 0),
         margin_error_upper: result.mean + (result.mean * result.rme) / 100,
@@ -116,7 +124,8 @@ export default class BenchmarkReport extends Component {
                 <tr>
                   <td>
                     <strong>{{test.name}}</strong>
-                    <span class="label label-primary">{{item.emberVersion}}</span>
+                    <span class="label label-primary">{{item.emberVersion}}
+                      {{getAltName item}}</span>
                   </td>
                   <td class="numeric">{{formatNumber
                       item.result.hz

@@ -30,7 +30,13 @@ export default class AreaChart extends Component {
 
     const [axis, ...datasets] = chartData;
 
-    const labels = datasets.map((d) => d.emberVersion);
+    const labels = datasets.map(({ emberVersion, altName }) => {
+      if (altName[0].match(/\d/)) {
+        return emberVersion;
+      }
+
+      return emberVersion + ` (${altName})`;
+    });
 
     const data = {
       labels,

@@ -1,7 +1,7 @@
 {
   "name": "performance-testing-monorepo-root",
   "private": true,
-  "packageManager": "pnpm@9.6.0",
+  "packageManager": "pnpm@9.9.0",
   "scripts": {
     "start": "turbo --filter 'ember-performance' start",
     "lint:fix": "turbo fix",
@@ -11,7 +11,7 @@
   },
   "volta": {
     "node": "22.5.1",
-    "pnpm": "9.6.0"
+    "pnpm": "9.9.0"
   },
   "devDependencies": {
     "turbo": "^2.0.11"

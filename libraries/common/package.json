@@ -92,7 +92,10 @@
     "version": 2,
     "type": "addon",
     "main": "addon-main.cjs",
-    "externals": ["@ember/renderer", "@ember/-internals/glimmer"],
+    "externals": [
+      "@ember/renderer",
+      "@ember/-internals/glimmer"
+    ],
     "app-js": {
       "./services/bench-session.js": "./dist/_app_/services/bench-session.js",
       "./services/runner/for-app-at-version.js": "./dist/_app_/services/runner/for-app-at-version.js",

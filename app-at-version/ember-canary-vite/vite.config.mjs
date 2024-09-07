@@ -24,6 +24,7 @@ const extensions = [
 
 export default defineConfig(({ mode }) => {
   return {
+    base: "/ember-canary-vite/",
     resolve: {
       extensions,
     },

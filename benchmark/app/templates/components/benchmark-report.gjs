@@ -20,10 +20,7 @@ function cleanedVersion(version) {
     return version.split('file:').at(-1).replace('ember-source-', '');
   }
 
-  /**
-   * Version may be the app name instead of the package version
-   */
-  return version.replaceAll('-', '.');
+  return version;
 }
 
 export default class BenchmarkReport extends Component {
@@ -53,6 +50,9 @@ export default class BenchmarkReport extends Component {
         return av.localeCompare(bv);
       }
     });
+
+    // eslint-disable-next-line no-console
+    console.log('sorted data', sorted);
 
     for (let data of sorted) {
       let { name, results, version } = data;

@@ -1,18 +1,23 @@
 const SEP = '____';
 
-function keyFor(name: string, version: string) {
-  return name + SEP + version;
+function keyFor(name: string, version: string, altName: string) {
+  return name + SEP + version + SEP + altName;
 }
 
 function partsForKey(key: string) {
-  let [name, version] = key.split(SEP);
+  let [name, version, altName] = key.split(SEP);
 
-  return { name, version };
+  return { name, version, altName };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function store(testName: string, emberVersion: string, benchmarkResults: any) {
-  let key = keyFor(testName, emberVersion);
+export function store(
+  testName: string,
+  emberVersion: string,
+  altName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  benchmarkResults: any
+) {
+  let key = keyFor(testName, emberVersion, altName);
 
   let results = { ...benchmarkResults };
 
@@ -23,8 +28,8 @@ export function store(testName: string, emberVersion: string, benchmarkResults: 
   localStorage.setItem(key, JSON.stringify(results));
 }
 
-export function load(testName: string, emberVersion: string) {
-  let key = keyFor(testName, emberVersion);
+export function load(testName: string, emberVersion: string, altName: string) {
+  let key = keyFor(testName, emberVersion, altName);
 
   let stringified = localStorage.getItem(key);
 
@@ -72,11 +77,11 @@ export function loadAll() {
 
     if (!key) continue;
 
-    let { name, version } = partsForKey(key);
+    let { name, version, altName } = partsForKey(key);
 
-    if (!name || !version) continue;
+    if (!name || !version || !altName) continue;
 
-    let result = load(name, version);
+    let result = load(name, version, altName);
 
     results.push({
       name,

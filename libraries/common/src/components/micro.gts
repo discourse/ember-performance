@@ -40,6 +40,7 @@ export class MicroBenchmark extends Component<{
 
     let bench = this.bench;
     let version = this.forApp.emberVersion;
+    let altName = this.forApp.name;
 
     this.status = 'Warming up...';
 
@@ -50,7 +51,7 @@ export class MicroBenchmark extends Component<{
       requestIdleCallback(async () => {
         await bench.run();
 
-        store(this.args.name, version, bench.results[0]);
+        store(this.args.name, version, altName, bench.results[0]);
 
         window.top.postMessage('finish');
       });

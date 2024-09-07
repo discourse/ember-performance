@@ -6,7 +6,7 @@ module.exports = function (environment) {
   const ENV = {
     modulePrefix: 'ember-canary-vite',
     environment,
-    rootURL: '/ember-canary-vite',
+    rootURL: '/ember-canary-vite/',
     locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,

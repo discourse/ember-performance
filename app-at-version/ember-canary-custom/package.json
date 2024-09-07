@@ -93,5 +93,8 @@
     "patchedDependencies": {
       "fs-extra@9.1.0": "patches/fs-extra@9.1.0.patch"
     }
+  },
+  "volta": {
+    "extends": "../../package.json"
   }
 }

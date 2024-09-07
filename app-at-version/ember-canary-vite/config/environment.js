@@ -1,10 +1,12 @@
 'use strict';
 
+const envUtils = require('ember-cli-utils/environment');
+
 module.exports = function (environment) {
   const ENV = {
     modulePrefix: 'ember-canary-vite',
     environment,
-    rootURL: '/',
+    rootURL: '/ember-canary-vite',
     locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,
@@ -18,6 +20,8 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    deps: envUtils.getDeps(__dirname),
   };
 
   if (environment === 'development') {

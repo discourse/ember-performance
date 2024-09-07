@@ -21,8 +21,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@ember/string':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^3.0.0
+        version: 3.1.1
       '@ember/test-helpers':
         specifier: ^4.0.4
         version: 4.0.4(@babel/core@7.25.2)(@glint/template@1.4.0)(ember-source@6.0.0-alpha.4(@glimmer/component@1.1.2(@babel/core@7.25.2))(@glint/template@1.4.0)(rsvp@4.8.5)(webpack@5.94.0))
@@ -824,8 +824,9 @@ packages:
     resolution: {integrity: sha512-IXjDpTFhsjPk9h3OXwXjlRfhM/Wjtw2E71Xos/81ZsTTwZMB9H+DWhsxePXOkzYy7Jvw4TIzKbMfcnT8mrtwWQ==}
     engines: {node: 10.* || 12.* || >= 14}
 
-  '@ember/string@4.0.0':
-    resolution: {integrity: sha512-IMVyVE72twuAMSYcHzWSgtgYTtzlHlKSGW8vEbztnnmkU6uo7kVHmiqSN9R4RkBhzvh0VD4G76Eph+55t3iNIA==}
+  '@ember/string@3.1.1':
+    resolution: {integrity: sha512-UbXJ+k3QOrYN4SRPHgXCqYIJ+yWWUg1+vr0H4DhdQPTy8LJfyqwZ2tc5uqpSSnEXE+/1KopHBE5J8GDagAg5cg==}
+    engines: {node: 12.* || 14.* || >= 16}
 
   '@ember/test-helpers@4.0.4':
     resolution: {integrity: sha512-1mbOVyVEcLxYOGzBaeeaQkCrL1o9Av86QaHk/1RvrVBW24I6YUj1ILLEi2qLZT5PzcCy0TdfadHT3hKJwJ0GcQ==}
@@ -7444,7 +7445,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ember/string@4.0.0': {}
+  '@ember/string@3.1.1':
+    dependencies:
+      ember-cli-babel: 7.26.11
+    transitivePeerDependencies:
+      - supports-color
 
   '@ember/test-helpers@4.0.4(@babel/core@7.25.2)(@glint/template@1.4.0)(ember-source@6.0.0-alpha.4(@glimmer/component@1.1.2(@babel/core@7.25.2))(@glint/template@1.4.0)(rsvp@4.8.5)(webpack@5.94.0))':
     dependencies:

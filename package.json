@@ -37,7 +37,7 @@
     "@glimmer/tracking": "^1.1.2",
     "ascii-table": "^0.0.9",
     "benchmark": "bestiejs/benchmark.js#main",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.0.0",
     "broccoli-asset-rev": "^3.0.0",
     "chart.js": "^4.4.3",
     "concurrently": "^8.2.2",

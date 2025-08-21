@@ -52,7 +52,7 @@ importers:
         version: 0.0.9
       benchmark:
         specifier: bestiejs/benchmark.js#main
-        version: https://codeload.github.com/bestiejs/benchmark.js/tar.gz/42f3b732bac3640eddb3ae5f50e445f3141016fd
+        version: git+https://git@github.com:bestiejs/benchmark.js.git#42f3b732bac3640eddb3ae5f50e445f3141016fd
       bootstrap:
         specifier: ^5.0.0
         version: 5.3.7(@popperjs/core@2.11.8)
@@ -1306,8 +1306,8 @@ importers:
         specifier: ^7.24.1
         version: 7.25.1(@babel/core@7.25.2)(eslint@8.57.0)
       '@babel/runtime':
-        specifier: ^7.24.4
-        version: 7.25.0
+        specifier: ^7.26.10
+        version: 7.28.3
       '@embroider/addon-dev':
         specifier: ^4.3.1
         version: 4.3.1(rollup@4.47.1)
@@ -1370,8 +1370,8 @@ importers:
         specifier: ^7.24.1
         version: 7.25.1(@babel/core@7.25.2)(eslint@8.57.0)
       '@babel/runtime':
-        specifier: ^7.24.4
-        version: 7.25.0
+        specifier: ^7.26.10
+        version: 7.28.3
       '@embroider/addon-dev':
         specifier: ^4.3.1
         version: 4.3.1(rollup@4.47.1)
@@ -2065,8 +2065,8 @@ packages:
   '@babel/runtime@7.12.18':
     resolution: {integrity: sha512-BogPQ7ciE6SYAUPtlm9tWbgI9+2AgqSam6QivMgXgAT+fKbgppaj4ZX15MHeLC1PVF5sNk70huBu20XxWOs8Cg==}
 
-  '@babel/runtime@7.25.0':
-    resolution: {integrity: sha512-7dRy4DwXwtzBrPbZflqxnvfxLF8kdZXPkhymtDeFoFqE6ldzjQFgYTtYIFARcLEYDrqfBfYcZt1WqFxRoyC9Rw==}
+  '@babel/runtime@7.28.3':
+    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.25.0':
@@ -3196,8 +3196,8 @@ packages:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
     engines: {node: '>= 0.8'}
 
-  benchmark@https://codeload.github.com/bestiejs/benchmark.js/tar.gz/42f3b732bac3640eddb3ae5f50e445f3141016fd:
-    resolution: {tarball: https://codeload.github.com/bestiejs/benchmark.js/tar.gz/42f3b732bac3640eddb3ae5f50e445f3141016fd}
+  benchmark@git+https://git@github.com:bestiejs/benchmark.js.git#42f3b732bac3640eddb3ae5f50e445f3141016fd:
+    resolution: {commit: 42f3b732bac3640eddb3ae5f50e445f3141016fd, repo: git@github.com:bestiejs/benchmark.js.git, type: git}
     version: 2.1.4
 
   better-path-resolve@1.0.0:
@@ -4653,6 +4653,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   esm@3.2.25:
@@ -5961,9 +5962,11 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.template@4.5.0:
     resolution: {integrity: sha512-84vYFxIkmidUiFxidA/KjjH9pAycqW+h980j7Fuz5qxRtO9pgB7MDFTdys1N7A5mcucRiDyEq4fusljItR1T/A==}
+    deprecated: This package is deprecated. Use https://socket.dev/npm/package/eta instead.
 
   lodash.templatesettings@4.2.0:
     resolution: {integrity: sha512-stgLz+i3Aa9mZgnjr/O+v9ruKZsPsndy7qPZOchbqk2cnTU1ZaldKK+v7m54WoKIyxiuMZTKT2H81F8BeAc3ZQ==}
@@ -6815,9 +6818,6 @@ packages:
 
   regenerator-runtime@0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
-
-  regenerator-runtime@0.14.1:
-    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
   regenerator-transform@0.15.2:
     resolution: {integrity: sha512-hfMp2BoF0qOk3uc5V20ALGDS2ddjQaLrdl7xrGXvAIow7qeWRM2VA2HuCHkUKk9slq3VwEwLNK3DFBqDfPGYtg==}
@@ -8926,9 +8926,7 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.13.11
 
-  '@babel/runtime@7.25.0':
-    dependencies:
-      regenerator-runtime: 0.14.1
+  '@babel/runtime@7.28.3': {}
 
   '@babel/template@7.25.0':
     dependencies:
@@ -10344,7 +10342,7 @@ snapshots:
     dependencies:
       safe-buffer: 5.1.2
 
-  benchmark@https://codeload.github.com/bestiejs/benchmark.js/tar.gz/42f3b732bac3640eddb3ae5f50e445f3141016fd:
+  benchmark@git+https://git@github.com:bestiejs/benchmark.js.git#42f3b732bac3640eddb3ae5f50e445f3141016fd:
     dependencies:
       lodash: 4.17.21
       platform: 1.3.6
@@ -11282,7 +11280,7 @@ snapshots:
 
   date-fns@2.30.0:
     dependencies:
-      '@babel/runtime': 7.25.0
+      '@babel/runtime': 7.28.3
 
   date-fns@3.6.0: {}
 
@@ -13774,7 +13772,7 @@ snapshots:
 
   is-language-code@3.1.0:
     dependencies:
-      '@babel/runtime': 7.25.0
+      '@babel/runtime': 7.28.3
 
   is-map@2.0.3: {}
 
@@ -15006,11 +15004,9 @@ snapshots:
 
   regenerator-runtime@0.13.11: {}
 
-  regenerator-runtime@0.14.1: {}
-
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.25.0
+      '@babel/runtime': 7.28.3
 
   regex-not@1.0.2:
     dependencies:

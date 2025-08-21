@@ -3,7 +3,6 @@
 const EmberApp = require("ember-cli/lib/broccoli/ember-app");
 const MergeTrees = require("broccoli-merge-trees");
 const Concat = require("broccoli-concat");
-const CopyIndex = require("./lib/copy-index");
 const Funnel = require("broccoli-funnel");
 
 const clientDepsTree = new Funnel("node_modules", {
